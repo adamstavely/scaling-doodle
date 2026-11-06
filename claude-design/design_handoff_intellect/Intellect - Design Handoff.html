@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intellect — Design → Developer Handoff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F6FB; --panel:#ffffff; --raised:#F1F5FB;
+  --line:#E6EAF1; --line-2:#DCE3ED; --line-3:#C4CEDD;
+  --ink:#1B2A41; --ink-2:#46536A; --muted:#76829A; --faint:#A7B1C3;
+  --brand:#1D3557; --brand-2:#16293F;
+  --green:#1F9D62; --rose:#D8453D; --amber:#C77D11; --blue:#0073E6; --violet:#5E7596;
+  --sans:"Inter",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --serif:"Spectral",Georgia,serif;
+  --sh-1:0 1px 2px rgba(29,53,87,0.05),0 1px 3px rgba(29,53,87,0.04);
+  --sh-2:0 4px 10px rgba(29,53,87,0.06),0 16px 36px rgba(29,53,87,0.10);
+}
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:15px; line-height:1.62; -webkit-font-smoothing:antialiased; letter-spacing:-0.006em; }
+.doc{ box-sizing:border-box; max-width:8.6in; margin:0 auto; background:var(--bg); padding:64px clamp(24px,5vw,0.85in) 110px; }
+.doc-frame{ width:100%; border-collapse:collapse; }
+.doc-frame td{ padding:0; }
+.hdr-space,.ftr-space{ display:none; }
+
+/* ---- type ---- */
+h1,h2,h3,h4{ margin:0; font-family:var(--serif); font-weight:600; letter-spacing:-0.02em; color:var(--ink); text-wrap:balance; }
+h1{ font-size:46px; line-height:1.04; font-weight:700; }
+h2{ font-size:27px; line-height:1.12; margin:0 0 4px; }
+h3{ font-size:18.5px; line-height:1.2; margin:0 0 4px; }
+h4{ font-size:14.5px; font-family:var(--sans); font-weight:650; letter-spacing:-0.01em; margin:0 0 3px; }
+p,li{ text-wrap:pretty; color:var(--ink-2); }
+p{ margin:0 0 14px; }
+em{ font-style:italic; }
+strong{ color:var(--ink); font-weight:600; }
+a{ color:var(--blue); text-decoration:none; }
+.serif{ font-family:var(--serif); }
+.mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.eyebrow{ font-size:11px; letter-spacing:0.11em; text-transform:uppercase; color:var(--muted); font-weight:650; }
+
+/* ---- masthead ---- */
+.mast{ display:flex; align-items:center; gap:14px; margin-bottom:30px; }
+.mast .logo{ width:46px; height:46px; border-radius:13px; flex:none; display:block; box-shadow:var(--sh-2); }
+.lede{ font-size:18.5px; line-height:1.55; color:var(--ink-2); max-width:62ch; text-wrap:pretty; }
+.lede strong{ color:var(--ink); }
+.metarow{ display:flex; flex-wrap:wrap; gap:8px 10px; margin:22px 0 6px; }
+.tag{ font-family:var(--mono); font-size:11px; letter-spacing:.3px; padding:5px 11px; border-radius:7px; border:1px solid var(--line-2); color:var(--muted); background:var(--panel); }
+.tag b{ color:var(--ink); font-weight:600; }
+
+/* ---- section ---- */
+section{ margin-top:46px; }
+.sec-no{ font-family:var(--mono); font-size:12.5px; color:var(--blue); font-weight:600; letter-spacing:0; }
+.sec-head{ display:flex; align-items:baseline; gap:14px; padding-bottom:13px; border-bottom:1.5px solid var(--line-2); margin-bottom:22px; }
+.sec-head h2{ margin:0; }
+.sec-intro{ font-size:15.5px; color:var(--ink-2); max-width:68ch; margin:-6px 0 22px; }
+
+/* ---- cards / panels ---- */
+.panel{ background:var(--panel); border:1px solid var(--line); border-radius:13px; box-shadow:var(--sh-1); padding:20px 22px; }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+.stack{ display:flex; flex-direction:column; gap:14px; }
+
+/* ---- token swatches ---- */
+.swatches{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.sw{ border:1px solid var(--line); border-radius:11px; overflow:hidden; background:var(--panel); box-shadow:var(--sh-1); }
+.sw .chip{ height:62px; display:block; }
+.sw .meta{ padding:9px 11px 11px; }
+.sw .nm{ font-size:12.5px; font-weight:600; color:var(--ink); }
+.sw .hx{ font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; }
+.sw .role{ font-size:10.5px; color:var(--faint); margin-top:4px; line-height:1.35; }
+
+/* ---- spec table ---- */
+table.spec{ width:100%; border-collapse:collapse; font-size:13.5px; margin:4px 0 6px; }
+table.spec th{ text-align:left; font-family:var(--sans); font-size:10.5px; letter-spacing:0.09em; text-transform:uppercase; color:var(--muted); font-weight:650; padding:0 14px 9px 0; border-bottom:1px solid var(--line-2); }
+table.spec td{ padding:10px 14px 10px 0; border-bottom:1px solid var(--line); color:var(--ink-2); vertical-align:top; }
+table.spec td:first-child{ color:var(--ink); font-weight:550; white-space:nowrap; }
+table.spec code,.ic{ font-family:var(--mono); font-size:12px; background:var(--raised); border:1px solid var(--line-2); border-radius:5px; padding:1px 6px; color:var(--brand); white-space:nowrap; }
+table.spec tr:last-child td{ border-bottom:0; }
+
+/* ---- screen block ---- */
+.screen{ border:1px solid var(--line); border-radius:14px; box-shadow:var(--sh-1); overflow:hidden; background:var(--panel); margin-bottom:16px; }
+.screen-top{ display:flex; align-items:center; gap:13px; padding:15px 20px; border-bottom:1px solid var(--line); background:linear-gradient(90deg,rgba(29,53,87,0.04),transparent); }
+.screen-no{ font-family:var(--mono); font-size:11px; font-weight:600; color:#fff; background:var(--brand); border-radius:7px; padding:5px 9px; flex:none; }
+.screen-top h3{ margin:0; }
+.screen-top .nav{ margin-left:auto; font-family:var(--mono); font-size:10.5px; color:var(--muted); border:1px solid var(--line-2); border-radius:6px; padding:3px 8px; }
+.screen-body{ padding:17px 20px 20px; }
+.screen-body p{ margin:0 0 10px; font-size:14px; }
+.kvs{ display:flex; flex-direction:column; gap:0; margin-top:8px; }
+.kv{ display:grid; grid-template-columns:120px 1fr; gap:14px; padding:9px 0; border-top:1px solid var(--line); font-size:13.5px; }
+.kv .k{ color:var(--muted); font-size:11px; letter-spacing:0.07em; text-transform:uppercase; font-weight:650; padding-top:1px; }
+.kv .v{ color:var(--ink-2); }
+.kv .v b{ color:var(--ink); }
+
+/* ---- callout ---- */
+.callout{ display:flex; gap:13px; border:1px solid var(--line-2); border-left:3px solid var(--blue); border-radius:11px; background:var(--panel); padding:16px 18px; margin:6px 0 16px; box-shadow:var(--sh-1); }
+.callout.new{ border-left-color:var(--green); }
+.callout .ct{ font-size:13.5px; color:var(--ink-2); }
+.callout .ct b{ color:var(--ink); }
+.callout .lbl{ font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; color:var(--blue); margin-bottom:4px; }
+.callout.new .lbl{ color:var(--green); }
+
+ul.clean{ margin:4px 0 14px; padding-left:0; list-style:none; }
+ul.clean li{ position:relative; padding:5px 0 5px 20px; font-size:14px; border-top:1px solid var(--line); }
+ul.clean li:first-child{ border-top:0; }
+ul.clean li::before{ content:""; position:absolute; left:2px; top:13px; width:6px; height:6px; border-radius:50%; background:var(--blue); }
+ul.clean li b{ color:var(--ink); }
+
+.dim{ color:var(--faint); }
+.small{ font-size:12.5px; }
+.divider{ height:1px; background:var(--line); border:0; margin:34px 0; }
+
+/* component preview chips */
+.demo{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:13px 0 4px; }
+.d-chip{ font-family:var(--mono); font-size:10.5px; letter-spacing:.4px; padding:3px 8px; border-radius:6px; border:1px solid var(--line-2); color:var(--muted); display:inline-flex; align-items:center; gap:5px; }
+.d-dot{ width:7px; height:7px; border-radius:50%; }
+.d-badge{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:6px; font-family:var(--mono); font-size:10px; font-weight:700; }
+
+@page{ size:letter; margin:0; }
+@media print{
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  html,body{ margin:0; padding:0; background:#fff; }
+  body{ font-size:10.5pt; }
+  .doc{ max-width:none !important; margin:0 !important; padding:0 0.7in !important; background:#fff; }
+  .hdr-space,.ftr-space{ display:table-cell; height:0.7in; }
+  h1,h2,h3,h4{ break-after:avoid; }
+  .panel,.sw,.screen,.callout,table.spec tr,figure,.kv{ break-inside:avoid; }
+  section{ break-inside:auto; }
+  .screen-only{ display:none !important; }
+}
+</style>
+</head>
+<body>
+<main class="doc">
+<table class="doc-frame" role="presentation">
+<thead><tr><td class="hdr-space"></td></tr></thead>
+<tbody><tr><td>
+
+<!-- ===== Masthead ===== -->
+<div class="mast">
+  <svg class="logo" viewBox="0 0 28 28" aria-hidden="true">
+    <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2FB2F3"/><stop offset="0.5" stop-color="#0073E6"/><stop offset="1" stop-color="#1D3557"/>
+    </linearGradient></defs>
+    <rect x="0.5" y="0.5" width="27" height="27" rx="7.5" fill="url(#lg)"/>
+    <circle cx="14" cy="8.3" r="2.25" fill="#fff"/>
+    <rect x="11.85" y="12.3" width="4.3" height="8.9" rx="2.15" fill="#fff"/>
+  </svg>
+  <div>
+    <div class="eyebrow" style="color:var(--blue);">Design → Developer Handoff</div>
+    <div class="serif" style="font-size:25px;font-weight:700;letter-spacing:-0.02em;line-height:1;margin-top:3px;">Intellect</div>
+  </div>
+</div>
+
+<h1>Research portfolio management,<br><em>documented for build.</em></h1>
+
+<p class="lede" style="margin-top:20px;">Intellect is a portfolio-intelligence console for a research lab director and their principal investigators — it tracks <strong>topics, open questions, knowledge gaps, work in flight, papers, impact, people and money</strong> across the whole organization, with a full traceability spine from question to citation. This document is the complete specification a developer needs to rebuild it.</p>
+
+<div class="metarow">
+  <span class="tag"><b>Fidelity</b> &nbsp;High — pixel-level</span>
+  <span class="tag"><b>Platform</b> &nbsp;Responsive web (desktop-first)</span>
+  <span class="tag"><b>Stack (mock)</b> &nbsp;React 18 + Babel, CSS variables</span>
+  <span class="tag"><b>Views</b> &nbsp;8 screens · 2 modals</span>
+  <span class="tag"><b>Themes</b> &nbsp;Light + Dark</span>
+  <span class="tag"><b>Roles</b> &nbsp;Chief · PI</span>
+</div>
+
+<!-- ===== 01 Overview ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">01</span><h2>What this is &amp; how to read it</h2></div>
+  <p class="sec-intro">Two audiences use Intellect: a <strong>Lab Director (Chief view)</strong> who needs whole-portfolio health, resourcing and risk; and a <strong>Principal Investigator (PI view)</strong> who needs their own topics, gaps and impact. The same screens re-scope to the active role.</p>
+
+  <div class="callout">
+    <div>
+      <div class="lbl">Read the design files as references, not source</div>
+      <div class="ct">The bundled files are a working <b>HTML/React prototype</b> that demonstrates the intended look, layout and behavior. They are not production code to lift directly. The task is to <b>recreate these designs inside the target codebase</b> using its own framework, component library and conventions — or, if starting fresh, to pick an appropriate stack (React, Vue, Svelte, SwiftUI…) and implement them there. Treat every measurement, color and interaction below as the contract; treat the prototype's file structure as illustrative.</div>
+    </div>
+  </div>
+
+  <h4>The mental model</h4>
+  <p>Everything hangs off a single linked data graph. A <strong>Topic</strong> owns <strong>Questions</strong>; questions surface <strong>Gaps</strong>; gaps are addressed by <strong>Work</strong> (projects); work produces <strong>Papers</strong>; papers earn <strong>citations</strong>. The Topic Detail screen renders this chain literally as a left-to-right "traceability spine." Most other screens are roll-ups and rankings over the same graph.</p>
+</section>
+
+<!-- ===== 02 Architecture ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">02</span><h2>Architecture &amp; file map</h2></div>
+  <p class="sec-intro">The prototype is a set of plain <code class="ic">&lt;script&gt;</code> files loaded in order. Each <code class="ic">.jsx</code> is transpiled by in-browser Babel and runs in its <em>own</em> scope; components are shared by assigning them to <code class="ic">window</code>. A real implementation should replace this with proper modules/imports, but the responsibility split is a good blueprint.</p>
+
+  <table class="spec">
+    <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td>styles.css</td><td>The entire design system — CSS custom properties (color, type, radius, shadow), reusable atoms (<code>.panel</code>, <code>.btn</code>, <code>.chip</code>, <code>.dot</code>, <code>.eyebrow</code>, <code>.num</code>, <code>.serif</code>), entrance animation.</td></tr>
+      <tr><td>data.js</td><td>Mock dataset on <code>window.DATA</code> — people, topics, questions, gaps, work, papers, lab aggregates, sub-labs, citations. The single source of truth all screens read via <code>D()</code>.</td></tr>
+      <tr><td>components.jsx</td><td>Shared visual atoms: <code>Avatar</code>, <code>AvatarStack</code>, <code>Sparkline</code>, <code>Ring</code>, <code>StackBar</code>, <code>MiniBars</code>, <code>Progress</code>, <code>Delta</code>, status/severity <code>Tag</code>s, <code>PriorityBadge</code>, plus formatters <code>fmt/pct/money</code>.</td></tr>
+      <tr><td>app.jsx</td><td>App shell — sidebar nav, topbar, search, role switch, routing, theme + accent application, Tweaks panel, modal mounts.</td></tr>
+      <tr><td>dashboard.jsx</td><td>Portfolio Health screen (the landing view).</td></tr>
+      <tr><td>org.jsx</td><td>Organization / Centers &amp; Teams screen.</td></tr>
+      <tr><td>topic.jsx</td><td>Topic Detail with the traceability spine + grade roll-up.</td></tr>
+      <tr><td>gaps.jsx</td><td>Gaps &amp; Coverage board + Research Topics list (<code>TopicsList</code>).</td></tr>
+      <tr><td>resourcing.jsx</td><td>Resourcing — people load + research dollars vs. priority.</td></tr>
+      <tr><td>papers.jsx</td><td>Papers &amp; Impact with per-paper grade.</td></tr>
+      <tr><td>people.jsx</td><td>People &amp; Teams roster.</td></tr>
+      <tr><td>brief.jsx / newtopic.jsx</td><td>Two modals — the Directorate Brief (generated review doc) and the New Topic creation flow.</td></tr>
+      <tr><td>tweaks-panel.jsx</td><td>In-app Tweaks panel scaffold (Theme + Accent controls).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 03 Design tokens ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">03</span><h2>Design tokens — color</h2></div>
+  <p class="sec-intro">The palette is <strong>navy-tinted</strong>: a single brand navy, a true interactive blue, and four semantic signal hues that carry <em>meaning only</em> — never decoration. Neutrals are a warm navy-leaning gray ramp, not flat gray. All values below are the <strong>Light</strong> theme; Dark overrides follow.</p>
+
+  <h4>Brand &amp; interaction</h4>
+  <div class="swatches" style="margin-bottom:18px;">
+    <div class="sw"><span class="chip" style="background:#1D3557;"></span><div class="meta"><div class="nm">Brand / Navy</div><div class="hx">#1D3557 · --brand</div><div class="role">Primary. Logo, P1 badges, active nav accent (re-tintable via Accent tweak).</div></div></div>
+    <div class="sw"><span class="chip" style="background:#16293F;"></span><div class="meta"><div class="nm">Brand deep</div><div class="hx">#16293F · --brand-2</div><div class="role">Hover / pressed state of brand surfaces.</div></div></div>
+    <div class="sw"><span class="chip" style="background:#0073E6;"></span><div class="meta"><div class="nm">Interactive blue</div><div class="hx">#0073E6 · --blue</div><div class="role">Links, focus ring, active work, PI accent.</div></div></div>
+    <div class="sw"><span class="chip" style="background:linear-gradient(120deg,#2FB2F3,#0073E6 48%,#1D3557);"></span><div class="meta"><div class="nm">Brand gradient</div><div class="hx">--brand-grad</div><div class="role">Reserve for the mark / one hero rule only.</div></div></div>
+  </div>
+
+  <h4>Semantic signals — meaning only</h4>
+  <div class="swatches" style="margin-bottom:18px;">
+    <div class="sw"><span class="chip" style="background:#1F9D62;"></span><div class="meta"><div class="nm">Green</div><div class="hx">#1F9D62 · --green</div><div class="role">On track · healthy · positive · complete · upward delta.</div></div></div>
+    <div class="sw"><span class="chip" style="background:#C77D11;"></span><div class="meta"><div class="nm">Amber</div><div class="hx">#C77D11 · --amber</div><div class="role">Watch · addressing · mixed sentiment.</div></div></div>
+    <div class="sw"><span class="chip" style="background:#D8453D;"></span><div class="meta"><div class="nm">Rose</div><div class="hx">#D8453D · --rose</div><div class="role">At risk · open gap · critical · blocked · downward delta.</div></div></div>
+    <div class="sw"><span class="chip" style="background:#5E7596;"></span><div class="meta"><div class="nm">Violet / slate</div><div class="hx">#5E7596 · --violet</div><div class="role">A quiet 5th hue — altmetric, in-review, postdoc role.</div></div></div>
+  </div>
+
+  <h4>Neutral ramp &amp; surfaces</h4>
+  <div class="swatches">
+    <div class="sw"><span class="chip" style="background:#F3F6FB;border-bottom:1px solid var(--line);"></span><div class="meta"><div class="nm">Canvas</div><div class="hx">#F3F6FB · --bg</div><div class="role">App background (carries a 2-hue radial mesh).</div></div></div>
+    <div class="sw"><span class="chip" style="background:#ffffff;border-bottom:1px solid var(--line);"></span><div class="meta"><div class="nm">Panel</div><div class="hx">#ffffff · --panel</div><div class="role">Cards / surfaces.</div></div></div>
+    <div class="sw"><span class="chip" style="background:#E6EAF1;"></span><div class="meta"><div class="nm">Line</div><div class="hx">#E6EAF1 · --line</div><div class="role">Hairline dividers, default borders. (—2 #DCE3ED, —3 #C4CEDD)</div></div></div>
+    <div class="sw"><span class="chip" style="background:#1B2A41;"></span><div class="meta"><div class="nm">Ink ramp</div><div class="hx">#1B2A41 · --ink</div><div class="role">--ink-2 #46536A · --muted #76829A · --faint #A7B1C3</div></div></div>
+  </div>
+
+  <h4 style="margin-top:20px;">Dark theme</h4>
+  <p>Applied by setting <code class="ic">data-theme="dark"</code> and overriding the same variables (deep navy canvas <code class="ic">#0E1626</code>, glass panels <code class="ic">#16223B</code>, lifted blue <code class="ic">#3D9BFF</code>, ink <code class="ic">#EAF0F8</code>). The full map lives in <code class="ic">DARK</code> in <code class="ic">app.jsx</code>. Build both themes off the same token names so a single switch flips everything.</p>
+
+  <table class="spec">
+    <thead><tr><th>Token group</th><th>Light → Dark</th></tr></thead>
+    <tbody>
+      <tr><td>Canvas / panel</td><td><code>#F3F6FB / #fff</code> → <code>#0E1626 / #16223B</code></td></tr>
+      <tr><td>Ink primary</td><td><code>#1B2A41</code> → <code>#EAF0F8</code></td></tr>
+      <tr><td>Interactive blue</td><td><code>#0073E6</code> → <code>#3D9BFF</code></td></tr>
+      <tr><td>Radii</td><td><code>--r-sm 8 · --r 10 · --r-lg 12 · --r-xl 16</code> (px, both themes)</td></tr>
+      <tr><td>Elevation</td><td><code>--sh-1</code> subtle · <code>--sh-2</code> card lift · <code>--sh-pop</code> popover — all navy-tinted in light, black in dark</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <div>
+      <div class="lbl">Accent is user-swappable</div>
+      <div class="ct">A Tweak lets the user repoint the primary accent (<code>--gold/-2/-dim</code>, used by P1 badges &amp; active nav) to one of three navies/teals: <b>#1D3557</b>, <b>#0073E6</b>, <b>#0E7C86</b>. Each has light + dark variants (<code>SIGNAL</code> map). Build the accent as a themeable token, not a hardcoded color.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 04 Typography ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">04</span><h2>Typography</h2></div>
+  <p class="sec-intro">Three families. <strong>Spectral</strong> (serif) is the display voice — headings and hero numbers; its italic is the one expressive flourish. <strong>Inter</strong> carries all UI text. <strong>JetBrains Mono</strong> sets every number, code, eyebrow metric and chip — tabular figures keep tables steady.</p>
+
+  <div class="grid3" style="margin-bottom:8px;">
+    <div class="panel"><div class="eyebrow" style="margin-bottom:8px;">Display · Spectral</div><div class="serif" style="font-size:30px;font-weight:600;letter-spacing:-0.02em;">Portfolio <em style="font-style:italic;">Health</em></div><div class="small dim" style="margin-top:10px;">600/700, letter-spacing −0.02em. H1 30px in-app, hero numbers in Rings.</div></div>
+    <div class="panel"><div class="eyebrow" style="margin-bottom:8px;">UI · Inter</div><div style="font-size:15px;line-height:1.5;">The quick brown fox jumps. <b>Semibold 600.</b></div><div class="small dim" style="margin-top:10px;">Body 14px, base letter-spacing −0.006em. Weights 400/500/550/600/700.</div></div>
+    <div class="panel"><div class="eyebrow" style="margin-bottom:8px;">Numeric · JetBrains Mono</div><div class="mono" style="font-size:22px;font-weight:600;letter-spacing:-0.3px;">18.4k · 73 · 42%</div><div class="small dim" style="margin-top:10px;"><code class="ic">.num</code> tabular-nums, −0.3px. All metrics, deltas, dates, chips.</div></div>
+  </div>
+
+  <table class="spec">
+    <thead><tr><th>Role</th><th>Family / size / weight</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Screen H1</td><td>Spectral · 30px · 500</td><td>letter-spacing −0.4px, nowrap</td></tr>
+      <tr><td>Panel title (H3)</td><td>Spectral · 15–16px · 500</td><td><code>PanelHead</code></td></tr>
+      <tr><td>Hero metric</td><td>JetBrains Mono · 24–30px · 600</td><td>KPI values, ring labels</td></tr>
+      <tr><td>Body</td><td>Inter · 13–14px · 450</td><td>line-height 1.5</td></tr>
+      <tr><td>Eyebrow</td><td>Inter · 10.5px · 600</td><td>uppercase, letter-spacing 0.09em, color --muted</td></tr>
+      <tr><td>Chip / metadata</td><td>JetBrains Mono · 10.5px</td><td>letter-spacing 0.4px</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 05 Layout & shell ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">05</span><h2>App shell &amp; layout</h2></div>
+  <p class="sec-intro">A fixed left sidebar, a sticky topbar, and a scrolling content column. Every screen's inner content is centered at <code class="ic">max-width:1440px</code> with <code class="ic">22–26px</code> horizontal padding.</p>
+
+  <div class="kvs">
+    <div class="kv"><div class="k">Sidebar</div><div class="v"><b>212px</b> fixed. Logo, 7 nav items, flexible spacer, "Portfolio review" promo card with a <b>Prep brief</b> button. Active item: <code class="ic">linear-gradient(90deg,--gold-dim,transparent)</code> + a 2.5px accent rail + accent-colored icon. Background <code class="ic">--bg-2</code>, right hairline border.</div></div>
+    <div class="kv"><div class="k">Topbar</div><div class="v"><b>60px</b> sticky, <code class="ic">backdrop-filter:blur(8px)</code>, translucent. Holds a centered 440px search field (placeholder + ⌘K hint), the role switch, a notification bell with unread dot, and the current user's avatar + name + role.</div></div>
+    <div class="kv"><div class="k">Nav items</div><div class="v">Dashboard · Organization · Research Topics · Gaps &amp; Coverage · Resourcing · Papers &amp; Impact · People. Each a stroke icon (1.6 weight, 24px grid) + label.</div></div>
+    <div class="kv"><div class="k">Content grids</div><div class="v">Dashboard 2.05fr / 1fr; Papers 320px / 1fr; most detail screens use 1fr / 1fr or a stat-cluster header. Card gap <b>14px</b>.</div></div>
+    <div class="kv"><div class="k">Atoms (.css)</div><div class="v"><code class="ic">.panel</code> white card, 1px --line, radius 12px, --sh-1. <code class="ic">.btn</code> / <code class="ic">.btn-gold</code> (filled accent) / <code class="ic">.btn-ghost</code>. <code class="ic">.chip</code> mono pill. <code class="ic">.dot</code> health dot with colored halo.</div></div>
+  </div>
+</section>
+
+<!-- ===== 06 Component catalog ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">06</span><h2>Component catalog</h2></div>
+  <p class="sec-intro">Reusable building blocks shared across every screen (in <code class="ic">components.jsx</code>). Recreate these as your codebase's components — their props are the API.</p>
+
+  <table class="spec">
+    <thead><tr><th>Component</th><th>Props</th><th>What it renders</th></tr></thead>
+    <tbody>
+      <tr><td>Avatar</td><td>id, size=26, ring</td><td>Round monogram tile; color keyed to role (Chief→accent, PI→blue, Staff→green, Postdoc→violet). Optional ring + halo.</td></tr>
+      <tr><td>AvatarStack</td><td>ids, size=24</td><td>Overlapping avatars (−8px), caps at 4 then "+N".</td></tr>
+      <tr><td>Sparkline</td><td>data, w, h, color, fill, dot</td><td>SVG line + optional gradient area + end dot. 1.6px stroke.</td></tr>
+      <tr><td>Ring</td><td>value 0–1, size, stroke, color, label, sub</td><td>Donut gauge, −90° start, 0.9s ease dash animation, centered mono label.</td></tr>
+      <tr><td>StackBar</td><td>parts[{label,v,color}], h, radius</td><td>Proportional horizontal stacked bar.</td></tr>
+      <tr><td>MiniBars</td><td>data, w, h, color, gap</td><td>Mini bar chart, opacity scaled by value.</td></tr>
+      <tr><td>Progress</td><td>v 0–1, color, h</td><td>Rounded track + fill, 0.7s width transition.</td></tr>
+      <tr><td>Delta</td><td>v</td><td>Signed % with up/down triangle; green up / rose down.</td></tr>
+      <tr><td>PriorityBadge</td><td>bin 1–4, size</td><td>Square numeric badge. P1 filled accent, P2 tinted, P3/P4 outlined.</td></tr>
+      <tr><td>KPI</td><td>label, value, sub, accent, spark, delta</td><td>Metric tile — eyebrow, big mono value, optional sparkline + delta.</td></tr>
+      <tr><td>Tag / HealthTag</td><td>map, k</td><td>Status chips: health, work status, gap status, severity.</td></tr>
+      <tr><td>PanelHead</td><td>title, hint, action</td><td>Card header — serif title + right-aligned hint or action node.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="panel" style="margin-top:6px;">
+    <div class="eyebrow" style="margin-bottom:2px;">Live token preview</div>
+    <div class="demo">
+      <span class="d-chip"><span class="d-dot" style="background:#1F9D62;box-shadow:0 0 0 3px rgba(31,157,98,0.12);"></span>On track</span>
+      <span class="d-chip"><span class="d-dot" style="background:#C77D11;box-shadow:0 0 0 3px rgba(199,125,17,0.13);"></span>Watch</span>
+      <span class="d-chip"><span class="d-dot" style="background:#D8453D;box-shadow:0 0 0 3px rgba(216,69,61,0.11);"></span>At risk</span>
+      <span class="d-chip" style="color:#0073E6;border-color:rgba(0,115,230,0.3);">Active</span>
+      <span class="d-chip" style="color:#D8453D;border-color:rgba(216,69,61,0.3);">Blocked</span>
+      <span class="d-badge" style="background:#1D3557;color:#fff;">1</span>
+      <span class="d-badge" style="background:rgba(29,53,87,0.07);color:#1D3557;border:1px solid rgba(29,53,87,0.4);">2</span>
+      <span class="d-badge" style="color:#76829A;border:1px solid #C4CEDD;">3</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 07 Screens ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">07</span><h2>Screens</h2></div>
+  <p class="sec-intro">Eight primary views. Each re-scopes to the active role: the <strong>Chief</strong> sees the whole institute; a <strong>PI</strong> sees only topics they lead or that belong to their team.</p>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S1</span><h3>Portfolio Health <span class="dim" style="font-weight:400;font-size:14px;">— Dashboard (landing)</span></h3><span class="nav">view: dashboard</span></div>
+    <div class="screen-body">
+      <p>The command center. Opens on every login. Chief sees "Portfolio Health"; PI sees "Your Portfolio."</p>
+      <div class="kvs">
+        <div class="kv"><div class="k">Header</div><div class="v">Eyebrow (scope) + H1, plus a "This quarter ▾" filter and a <b>+ New topic</b> accent button (opens modal).</div></div>
+        <div class="kv"><div class="k">KPI strip</div><div class="v">6 tiles: Active priorities · Open gaps · Gap coverage · Work in flight · Papers (YTD) · Readership (YTD, with sparkline + delta for chief).</div></div>
+        <div class="kv"><div class="k">Left (2.05fr)</div><div class="v"><b>Priorities</b> table — rows of Topic, momentum sparkline+delta, coverage bar, open-gap chip, work count. Sorted at-risk → healthy. Header shows health mix chips. Row click → Topic Detail.</div></div>
+        <div class="kv"><div class="k">Right rail (1fr)</div><div class="v">Gap-coverage ring + stacked health bar · <b>Gaps needing attention</b> (top 5 by severity, "No work" flag) · <b>Impact pulse</b> (top 3 papers by downloads).</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S2</span><h3>Centers &amp; Teams <span class="dim" style="font-weight:400;font-size:14px;">— Organization</span></h3><span class="nav">view: org</span></div>
+    <div class="screen-body">
+      <p>The institute's structure: 3 <b>Centers</b> (sub-labs), each rolling up several teams, each rolling up its topics. A <b>Directorate brief</b> button opens the review modal.</p>
+      <div class="kvs">
+        <div class="kv"><div class="k">Center card</div><div class="v">Code badge (CIS/CEC/CQL) + name + focus line, aggregate rollup (health mix bar, coverage, gaps, work, budget, FTE), and expandable team rows.</div></div>
+        <div class="kv"><div class="k">Team row</div><div class="v">Collapsible (<code class="ic">TeamRow</code>) — lead, mini health, coverage bar; expands to its topic list.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S3</span><h3>Topic Detail <span class="dim" style="font-weight:400;font-size:14px;">— the traceability spine</span></h3><span class="nav">view: topic · params.topicId</span></div>
+    <div class="screen-body">
+      <p>The richest screen and the heart of the product. Reached from any topic reference.</p>
+      <div class="kvs">
+        <div class="kv"><div class="k">Header panel</div><div class="v">Priority badge + health dot/tag + bin·team eyebrow; H1 topic name + summary; lead avatar, sponsors, tags. Right: coverage <b>Ring</b> + a 2×2 stat cluster (Questions / Open gaps / Work / Papers).</div></div>
+        <div class="kv"><div class="k">Resourcing strip</div><div class="v">FY26 budget (spent/allocated + progress) · People (FTE + avatar stack) · Experiments funded · <b>Paper grades roll-up</b> (see §09).</div></div>
+        <div class="kv"><div class="k">Trace map</div><div class="v"><code class="ic">TraceMap</code> — Questions → Gaps → Work → Papers → Citations as columns of <code class="ic">NodeCard</code>s with SVG connector curves. Click a node to highlight its full upstream/downstream chain (others dim to 0.32).</div></div>
+        <div class="kv"><div class="k">Below</div><div class="v">Work board strip and citation/paper lists for the topic.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S4</span><h3>Research Topics <span class="dim" style="font-weight:400;font-size:14px;">— TopicsList</span></h3><span class="nav">view: topics</span></div>
+    <div class="screen-body">
+      <p>The canonical topic index, grouped by <b>priority bin</b> (P1 Top → P4 Watching) with a health filter (all / at-risk / watch / healthy). Each row mirrors the dashboard topic row and links to Topic Detail.</p>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S5</span><h3>Gaps &amp; Coverage</h3><span class="nav">view: gaps</span></div>
+    <div class="screen-body">
+      <p>A strategic board of every open knowledge gap. Group toggle (by <b>priority</b> / others) and a coverage filter (all / uncovered). An <b>Export gap review</b> button.</p>
+      <div class="kvs">
+        <div class="kv"><div class="k">Gap row</div><div class="v">Severity label (critical/high/medium), topic name, gap text, owner, and a <b>CoverageChip</b> — "No work" (rose) when nothing addresses it, else the work count. Click → owning Topic.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S6</span><h3>Resourcing</h3><span class="nav">view: resourcing</span></div>
+    <div class="screen-body">
+      <p>Where people and dollars sit relative to priority. Header eyebrow shows FY26 scope; a <b>Plan allocation</b> button.</p>
+      <div class="kvs">
+        <div class="kv"><div class="k">Resource row</div><div class="v">Per topic: budget burn (spent/allocated), FTE share bar, priority. Surfaces over/under-investment vs. priority bin.</div></div>
+        <div class="kv"><div class="k">Person load</div><div class="v"><code class="ic">PersonLoad</code> — FTE allocation across topics; flags people over 1.0 capacity (e.g. Arjun Mehta at 1.2).</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S7</span><h3>Papers &amp; Impact</h3><span class="nav">view: papers · params.paperId</span></div>
+    <div class="screen-body">
+      <p>Two-column: a 320px publication list (left) + a deep <b>PaperDetail</b> (right). List rows show a <b>grade dot</b>, title, venue, downloads, citations.</p>
+      <div class="kvs">
+        <div class="kv"><div class="k">Detail header</div><div class="v">Venue chip + date + topic link; title; <b>Grade badge</b> (Assessment); authors; "resolves gap" chips.</div></div>
+        <div class="kv"><div class="k">Metrics</div><div class="v">Downloads · Views · Citations (accent) · Altmetric (violet) + cumulative-reads sparkline. Below: news / policy / social / patents mention tiles.</div></div>
+        <div class="kv"><div class="k">Audience &amp; geo</div><div class="v">Reader sector mix (bar rows), internal/external split, top geographies.</div></div>
+        <div class="kv"><div class="k">Feedback</div><div class="v">Peer / reader / sponsor comments with sentiment (positive/mixed/critical), filterable by source.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen">
+    <div class="screen-top"><span class="screen-no">S8</span><h3>People &amp; Teams</h3><span class="nav">view: people</span></div>
+    <div class="screen-body">
+      <p>Roster of the lab — members grouped/listed with role, team and load. Avatars follow the role-color convention.</p>
+    </div>
+  </div>
+
+  <h4 style="margin-top:22px;">Modals</h4>
+  <ul class="clean">
+    <li><b>Directorate Brief</b> (<code class="ic">brief.jsx</code>) — a generated, print-ready quarterly review document. Has a brief "loading/generating" phase, then renders numbered sections (decisions, health, impact) over the portfolio. Period: <code class="ic">FY26 · Q2</code>. Triggered from the sidebar "Prep brief", Org, or the promo card.</li>
+    <li><b>New Topic</b> (<code class="ic">newtopic.jsx</code>) — creation flow for a new research topic; opens from the dashboard <b>+ New topic</b> button.</li>
+  </ul>
+</section>
+
+<!-- ===== 08 Roles & scope ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">08</span><h2>Roles, scope &amp; navigation</h2></div>
+  <div class="kvs">
+    <div class="kv"><div class="k">Role switch</div><div class="v">Pill toggle in the topbar: <b>PI view</b> (Marcus Okonkwo) ↔ <b>Chief view</b> (Helena Vance). Default = Chief. Switching recomputes <code class="ic">scope</code>.</div></div>
+    <div class="kv"><div class="k">Scope object</div><div class="v"><code class="ic">{ isChief, topics, person }</code>. Chief → all topics + lab aggregates. PI → only topics they lead or on their team. Every screen takes <code class="ic">scope</code> and renders accordingly; chief sees institute-wide roll-ups, PI sees per-topic sums.</div></div>
+    <div class="kv"><div class="k">Routing</div><div class="v">Single <code class="ic">route = {view, params}</code> in <code class="ic">App</code>. <code class="ic">go(view, params)</code> sets it and scrolls content to top. No URL routing in the mock — add real routes (<code class="ic">/topic/:id</code>, <code class="ic">/papers/:id</code>) in production.</div></div>
+    <div class="kv"><div class="k">Deep-link params</div><div class="v"><code class="ic">topic→topicId</code>, <code class="ic">papers→paperId</code>. Cross-screen links (gap→topic, impact→paper) pass these.</div></div>
+  </div>
+</section>
+
+<!-- ===== 09 The grade feature ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">09</span><h2>Paper grades</h2></div>
+  <p class="sec-intro">A qualitative assessment attached to each paper, surfaced in three places. A four-level scale, color-coded on the semantic ramp.</p>
+
+  <div class="demo" style="gap:10px;padding-bottom:14px;">
+    <span class="d-chip" style="padding:6px 11px;background:rgba(31,157,98,0.12);border-color:rgba(31,157,98,0.32);color:#1F9D62;font-weight:600;"><span class="d-dot" style="background:#1F9D62;"></span>Outstanding</span>
+    <span class="d-chip" style="padding:6px 11px;background:rgba(0,115,230,0.11);border-color:rgba(0,115,230,0.32);color:#0073E6;font-weight:600;"><span class="d-dot" style="background:#0073E6;"></span>Excellent</span>
+    <span class="d-chip" style="padding:6px 11px;background:rgba(199,125,17,0.13);border-color:rgba(199,125,17,0.32);color:#C77D11;font-weight:600;"><span class="d-dot" style="background:#C77D11;"></span>Satisfactory</span>
+    <span class="d-chip" style="padding:6px 11px;background:rgba(216,69,61,0.11);border-color:rgba(216,69,61,0.32);color:#D8453D;font-weight:600;"><span class="d-dot" style="background:#D8453D;"></span>Dissatisfactory</span>
+  </div>
+
+  <div class="kvs">
+    <div class="kv"><div class="k">Data</div><div class="v">A <code class="ic">grade</code> string on each paper: <code class="ic">"outstanding" | "excellent" | "satisfactory" | "dissatisfactory"</code>. The <code class="ic">GRADE</code> map holds label + color + tint per level.</div></div>
+    <div class="kv"><div class="k">Paper detail</div><div class="v">A labeled <b>"Assessment"</b> badge top-right of the paper header — colored dot + level name on a tinted pill.</div></div>
+    <div class="kv"><div class="k">Paper list</div><div class="v">A small color dot beside each title for scannability.</div></div>
+    <div class="kv"><div class="k">Topic roll-up</div><div class="v">In the Topic Detail resourcing strip: a stacked color bar + per-grade counts ("N assessed"). Zero-count grades show dimmed for a stable legend.</div></div>
+  </div>
+
+  <div class="callout new">
+    <div>
+      <div class="lbl">Build note</div>
+      <div class="ct">Grade is the contract: a fixed 4-level enum, never free text. In production it should be an <b>editable field</b> (a reviewer assigns it), with the roll-up recomputing live. Keep the color mapping centralized so badge, dot, list and roll-up stay in lockstep.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 10 Interactions ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">10</span><h2>Interactions &amp; motion</h2></div>
+  <table class="spec">
+    <thead><tr><th>Pattern</th><th>Spec</th></tr></thead>
+    <tbody>
+      <tr><td>Screen entrance</td><td><code>riseIn</code> — translateY(12px)→0 over <b>0.5s</b> <code>cubic-bezier(.2,.7,.2,1)</code>. Disabled under <code>prefers-reduced-motion</code>.</td></tr>
+      <tr><td>Button hover</td><td>Border/color/bg shift 0.12–0.15s; <code>.btn-gold</code> lifts <code>translateY(-1px)</code> + deeper shadow.</td></tr>
+      <tr><td>Nav / row hover</td><td>Background fades to <code>--panel</code> / <code>--raised</code>; active item keeps gradient + accent rail.</td></tr>
+      <tr><td>Trace-map select</td><td>Click a node → BFS over the linked graph highlights the chain; unrelated nodes drop to opacity 0.32; SVG edges recompute on layout/resize.</td></tr>
+      <tr><td>Gauges &amp; bars</td><td>Ring dash 0.9s, Progress width 0.7s, StackBar/BarRow width 0.6s — all eased.</td></tr>
+      <tr><td>Focus</td><td>2px <code>--blue</code> outline, 2px offset (<code>:focus-visible</code>).</td></tr>
+      <tr><td>Topbar</td><td>Sticky, <code>backdrop-filter:blur(8px)</code> over translucent surface.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 11 State ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">11</span><h2>State management</h2></div>
+  <p class="sec-intro">The mock keeps state local with React hooks. In production, lift the data graph into a store/query layer; keep UI state (selection, filters, role) local.</p>
+  <table class="spec">
+    <thead><tr><th>State</th><th>Where</th><th>Drives</th></tr></thead>
+    <tbody>
+      <tr><td>role</td><td>App</td><td>Chief / PI → recomputes <code>scope</code> (memoized)</td></tr>
+      <tr><td>route {view, params}</td><td>App</td><td>Which screen + deep-link ids</td></tr>
+      <tr><td>brief / newTopic</td><td>App</td><td>Modal open/close</td></tr>
+      <tr><td>tw {theme, signal}</td><td>App (useTweaks)</td><td>Light/Dark + accent; applied to <code>documentElement</code> vars</td></tr>
+      <tr><td>sel (paper / node)</td><td>PapersView / TraceMap</td><td>Active paper, highlighted chain</td></tr>
+      <tr><td>filters</td><td>Gaps, TopicsList, PaperDetail</td><td>group / coverage / health / feedback-source toggles</td></tr>
+      <tr><td>phase</td><td>DirectorateBrief</td><td>"loading" → rendered brief</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Data fetching: the mock reads a synchronous <code class="ic">window.DATA</code>. Replace with API/query hooks returning the same entity shapes; all screens are pure functions of (scope, data).</p>
+</section>
+
+<!-- ===== 12 Data model ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">12</span><h2>Data model</h2></div>
+  <p class="sec-intro">One linked graph, cross-referenced by short string ids. This is the backbone — model your API/schema on it.</p>
+  <table class="spec">
+    <thead><tr><th>Entity</th><th>Key fields</th><th>Links</th></tr></thead>
+    <tbody>
+      <tr><td>Person</td><td>id, name, init, role, title (Chief/PI/Staff/Postdoc), team, alloc[[topic,fte]], cap, load</td><td>leads/owns topics, gaps, work</td></tr>
+      <tr><td>Topic</td><td>id, bin 1–4, name, lead, team, health, coverage, momentum, summary, questions/gaps/work/papers counts, tags, sponsors, budget, fte, team_ids</td><td>→ questions, gaps, work, papers</td></tr>
+      <tr><td>Question</td><td>id, topic, text, status (open/partially/answered), owner</td><td>→ gaps[]</td></tr>
+      <tr><td>Gap</td><td>id, topic, text, severity (critical/high/medium), status (open/addressing/closing/closed), owner</td><td>→ work[]</td></tr>
+      <tr><td>Work</td><td>id, topic, title, status (planning/active/blocked/review/complete), lead, team[], progress, due, budget, fte, note</td><td>→ papers[]</td></tr>
+      <tr><td>Paper</td><td>id, topic, title, venue, year/month, authors[], <b>grade</b>, reads{downloads,views,citations,altmetric}, readTrend, audience, geo, split, mentions, feedback[], citedBy[]</td><td>resolves gaps; cited by external work</td></tr>
+      <tr><td>Lab</td><td>name, portfolio aggregates, readTrend, healthMix, binMix, budget, headcount, binBudget/binFte, sponsors</td><td>institute roll-up</td></tr>
+      <tr><td>SubLab (Center)</td><td>id, name, code, lead, teams[], focus</td><td>groups teams → topics</td></tr>
+    </tbody>
+  </table>
+  <p class="small">The chain <b>Question → Gap → Work → Paper → Citation</b> is what the Topic Detail trace map walks. Keep these relations bidirectionally queryable so any node can light its full lineage.</p>
+</section>
+
+<!-- ===== 13 Implementation notes ===== -->
+<section>
+  <div class="sec-head"><span class="sec-no">13</span><h2>Implementation notes</h2></div>
+  <ul class="clean">
+    <li><b>Tokens first.</b> Port <code class="ic">styles.css</code> custom properties into your theming system before building any screen. Both Light and Dark must come off the same names; the accent must be swappable.</li>
+    <li><b>Numbers are mono &amp; tabular.</b> Every metric, delta, date and chip uses JetBrains Mono with <code class="ic">font-variant-numeric:tabular-nums</code>. This is load-bearing for table alignment — don't substitute the UI font.</li>
+    <li><b>Color = meaning.</b> Green/amber/rose/blue are reserved for status. Never use them decoratively; never invent new hues for new states — extend the semantic set deliberately.</li>
+    <li><b>Charts are hand-rolled SVG</b> (Sparkline, Ring, StackBar, MiniBars) — lightweight and themeable. You may swap in a chart lib, but match stroke weights, easing and the no-axis, label-light aesthetic.</li>
+    <li><b>Scope everything by role.</b> Every list, sum and roll-up must respect the active Chief/PI scope. Build it as a single source of filtering, not per-screen conditionals.</li>
+    <li><b>Density is intentional.</b> 13–14px body, tight 14px gaps, hairline dividers. Resist inflating spacing — the product reads as an instrument panel, not a marketing site.</li>
+    <li><b>Accessibility.</b> Keep the <code class="ic">:focus-visible</code> ring, honor <code class="ic">prefers-reduced-motion</code>, and don't rely on the health/grade dot color alone — always pair it with a text label (as the chips do).</li>
+  </ul>
+  <p class="small dim">Bundled with this document: the prototype source (<code class="ic">styles.css</code>, <code class="ic">data.js</code>, all <code class="ic">.jsx</code> views) plus a README that mirrors these sections. Open <code class="ic">Intellect.html</code> to run the live reference.</p>
+</section>
+
+<hr class="divider">
+<p class="small dim" style="text-align:center;">Intellect — Design → Developer Handoff · Generated from the live prototype · Meridian Research Institute (mock)</p>
+
+</td></tr>
+<tfoot><tr><td class="ftr-space"></td></tr></tfoot>
+</table>
+</main>
+</body>
+</html>
