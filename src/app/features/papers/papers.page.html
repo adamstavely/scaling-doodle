@@ -1,0 +1,58 @@
+<header class="page-head">
+  <h1>Papers &amp; Impact</h1>
+</header>
+
+<div class="layout">
+  <div class="list">
+    @if (listError()) {
+      <p role="alert" class="note">Couldn't load papers. Is intellect-api running?</p>
+    } @else if (listReady()) {
+      <tc-results-list
+        heading="Papers"
+        group="none"
+        [results]="results()"
+        [selected]="id() ?? null"
+        (tc-open)="openPaper($event)"
+      ></tc-results-list>
+    } @else {
+      <tc-skeleton height="420" radius="12"></tc-skeleton>
+    }
+  </div>
+
+  <div class="detail">
+    @if (detailError()) {
+      <p role="alert" class="note">Couldn't load this paper. It may not exist, or it's outside your view.</p>
+    } @else if (impact(); as p) {
+      @if (isChief()) {
+        <section class="grade" aria-labelledby="grade-heading">
+          <h2 id="grade-heading">Assessment</h2>
+          <tc-segmented-control
+            aria-label="Paper grade"
+            [options]="gradeOptions"
+            [value]="gradeValue()"
+            [disabled]="saving()"
+            (tc-value-change)="onGradeChange($event)"
+          ></tc-segmented-control>
+          @if (saveError(); as e) {
+            <p role="alert" class="note">{{ e }}</p>
+          }
+        </section>
+      }
+      <tc-publication-impact
+        [heading]="p.heading"
+        [venue]="p.venue"
+        [date]="p.date"
+        [topic]="p.topic"
+        [grade]="p.grade"
+        [authors]="p.authors"
+        [metrics]="p.metrics"
+        [reads]="p.reads"
+        [mentions]="p.mentions"
+        [audience]="p.audience"
+        [feedback]="p.feedback"
+      ></tc-publication-impact>
+    } @else if (id()) {
+      <tc-skeleton height="640" radius="12"></tc-skeleton>
+    }
+  </div>
+</div>
