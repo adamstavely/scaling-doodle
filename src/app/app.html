@@ -1,0 +1,32 @@
+<div class="shell">
+  <nav class="sidebar" aria-label="Main">
+    <a class="brand" routerLink="/">Intellect</a>
+    <ul>
+      @for (item of nav; track item.path) {
+        <li>
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="current"
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="{ exact: item.exact }"
+            >{{ item.label }}</a
+          >
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <header class="topbar">
+    <tc-segmented-control
+      aria-label="View as"
+      [options]="viewOptions"
+      [value]="session.viewAs()"
+      (tc-value-change)="onViewChange($event)"
+    ></tc-segmented-control>
+    <tc-header-nav [user]="user()"></tc-header-nav>
+  </header>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
