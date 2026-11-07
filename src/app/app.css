@@ -19,12 +19,12 @@
   grid-area: sidebar;
   background: var(--app-chrome);
   border-right-color: transparent;
-  /* The links' text, a little larger than the body's 13px; the side nav's links take their size from it. */
-  font-size: 15px;
+  /* The links' text, larger than the body's 13px; the side nav's links take their size from it. */
+  font-size: 16px;
   /* A larger INTELLECT name and logo, with room under them before the first link. */
   --tc-snav-brand-size: var(--tc-font-size-xl);
   --tc-snav-logo-size: 32px;
-  --tc-snav-head-gap: var(--tc-space-6);
+  --tc-snav-head-gap: var(--tc-space-12);
 }
 
 .topbar {
