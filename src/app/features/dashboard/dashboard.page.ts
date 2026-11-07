@@ -2,21 +2,18 @@ import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
-import { ResultsList } from '@adamstavely/trenchcoat/angular/results-list';
 import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { PriorityFigureColumn, PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
-import type { ResultsOpen, SearchResult } from '@adamstavely/trenchcoat/results-list';
 import type { SegmentValueChange } from '@adamstavely/trenchcoat/segmented-control';
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
 import type { RecentPapersDto } from '../../api/generated/models/recent-papers-dto';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
-import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
-import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { periodOptions, todayIso } from '../../core/period';
 import { topicPriorityItem } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
@@ -54,7 +51,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [PriorityList, SegmentedBar, ResultsList, Skeleton, SegmentedControl, BriefDialog],
+  imports: [PriorityList, SegmentedBar, Skeleton, SegmentedControl, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -78,17 +75,16 @@ export class DashboardPage {
 
   readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
-  readonly #papers = scopedResource((api) => api.invoke(papersControllerTop, { limit: 3, period: this.period() }), undefined, () => this.period());
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
 
   protected readonly error = computed(
-    () => this.#summary.error() ?? this.#topics.error() ?? this.#papers.error() ?? this.#org.error(),
+    () => this.#summary.error() ?? this.#topics.error() ?? this.#org.error(),
   );
 
   /** Elements show "Nothing to show" for empty data, so hold them back until the first load lands. */
   protected readonly ready = computed(
     () =>
-      this.#summary.hasValue() && this.#topics.hasValue() && this.#papers.hasValue() && this.#org.hasValue(),
+      this.#summary.hasValue() && this.#topics.hasValue() && this.#org.hasValue(),
   );
 
   protected readonly isChief = computed(() => this.#session.viewAs() === 'chief');
@@ -116,18 +112,6 @@ export class DashboardPage {
   );
 
 
-  protected readonly papers = computed<SearchResult[]>(() =>
-    (read(this.#papers) ?? []).map((p) => ({
-      id: p.id,
-      title: p.title,
-      source: p.venue,
-      kind: p.topic.name,
-      href: `/papers/${p.id}`,
-      date: localDate(p.published),
-      meta: [`${compactNumber(p.totals.downloads)} downloads`, `${p.totals.citations} citations`],
-    })),
-  );
-
   protected openTopic(event: CustomEvent<PriorityOpen>): void {
     void this.#router.navigate(['/topics', event.detail.id]);
   }
@@ -139,11 +123,6 @@ export class DashboardPage {
   /** A center-by-priority row opens its center; the row id is `<center>:<tier>`. */
   protected openCenterTier(event: CustomEvent<PriorityOpen>): void {
     void this.#router.navigate(['/org'], { fragment: event.detail.id.split(':')[0] });
-  }
-
-  protected openPaper(event: CustomEvent<ResultsOpen>): void {
-    event.preventDefault();
-    void this.#router.navigate(['/papers', event.detail.id]);
   }
 
   protected onPeriodChange(event: CustomEvent<SegmentValueChange>): void {

@@ -61,7 +61,6 @@ describe('DashboardPage', () => {
     http.match((r) => r.url === '/api/me').forEach((r) => r.flush({ id: 'hv', name: 'Helena Vance' }));
     http.expectOne((r) => r.url === '/api/portfolio/summary' && r.params.has('period')).flush(summary);
     http.expectOne((r) => r.url === '/api/topics').flush([topic]);
-    http.expectOne((r) => r.url === '/api/papers/top').flush([]);
     http.expectOne('/api/org').flush({ centers: [center], otherTeams: [] });
     await fixture.whenStable();
 
