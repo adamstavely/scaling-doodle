@@ -1,6 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
-import { Button } from '@adamstavely/trenchcoat/angular/button';
 import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
 import { CoverageRing } from '@adamstavely/trenchcoat/angular/coverage-ring';
 import { GapExposure } from '@adamstavely/trenchcoat/angular/gap-exposure';
@@ -32,7 +31,6 @@ import { topicPriorityItem } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
-import { NewTopicDialog } from '../dialogs/new-topic-dialog';
 
 const PAPER_COLUMNS: PriorityFigureColumn[] = [
   // Short, to fit the column; each list's description says these count papers published.
@@ -65,7 +63,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [OpsOverview, PriorityList, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, Button, SegmentedControl, NewTopicDialog, BriefDialog],
+  imports: [OpsOverview, PriorityList, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, SegmentedControl, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -73,8 +71,7 @@ export class DashboardPage {
   readonly #router = inject(Router);
   readonly #session = inject(Session);
 
-  /** `?new=topic` opens the New Topic dialog and `?brief=<period>` the Directorate Brief, so both can be linked to. */
-  readonly newParam = input<string | undefined>(undefined, { alias: 'new' });
+  /** `?brief=<period>` opens the Directorate Brief, so it can be linked to. */
   readonly brief = input<string | undefined>();
   /** `?period=` picks the reporting period; unset is this quarter. */
   readonly periodParam = input<string | undefined>(undefined, { alias: 'period' });
@@ -106,10 +103,6 @@ export class DashboardPage {
   );
 
   protected readonly isChief = computed(() => this.#session.viewAs() === 'chief');
-
-  protected readonly scopeLabel = computed(() =>
-    this.isChief() ? 'Directorate · whole portfolio' : `${read(this.#session.me)?.name ?? ''} · your topics`,
-  );
 
   protected readonly status = computed(() => {
     const s = read(this.#summary);
@@ -202,18 +195,11 @@ export class DashboardPage {
     void this.#router.navigate(['/papers', event.detail.id]);
   }
 
-  /** A topic made from the New Topic dialog shows up behind it straight away. */
-  protected onTopicCreated(): void {
-    this.#topics.reload();
-    this.#summary.reload();
-    this.#org.reload();
-  }
-
   protected onPeriodChange(event: CustomEvent<SegmentValueChange>): void {
     void this.#router.navigate([], { queryParams: { period: event.detail.value }, queryParamsHandling: 'merge' });
   }
 
-  protected setDialog(params: { new?: string | null; brief?: string | null }): void {
+  protected setDialog(params: { brief?: string | null }): void {
     void this.#router.navigate([], { queryParams: params, queryParamsHandling: 'merge' });
   }
 }

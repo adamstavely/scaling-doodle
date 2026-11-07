@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    title: 'Portfolio Health · INTELLECT',
+    title: 'Metrics Summary · INTELLECT',
     loadComponent: () => import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
   },
   {
