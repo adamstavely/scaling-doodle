@@ -1,10 +1,16 @@
 @import '@adamstavely/trenchcoat/tokens.css';
 @import '@fontsource-variable/inter';
 
+/* The page canvas: in light mode a navy-tinted white, the side nav's #081d35 taken almost to white, so white cards
+   stand off it; dark mode keeps Trench Coat's base surface. */
+:root {
+  --app-canvas: light-dark(#f2f5f9, var(--tc-surface-base));
+}
+
 html,
 body {
   margin: 0;
-  background: var(--tc-surface-base);
+  background: var(--app-canvas);
   color: var(--tc-text-primary);
   font-family: var(--tc-font-sans);
 }
