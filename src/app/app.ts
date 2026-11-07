@@ -8,7 +8,7 @@ import { LookProvider } from '@adamstavely/trenchcoat/angular/look-provider';
 import { Notifications } from '@adamstavely/trenchcoat/angular/notifications';
 import { SideNav } from '@adamstavely/trenchcoat/angular/side-nav';
 import type { HeaderNavAccountSelect } from '@adamstavely/trenchcoat/header-nav';
-import type { ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
+import { profileMenuIcon, type ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
 import { Apps } from './core/apps';
 import { icon } from './core/icons';
@@ -81,7 +81,8 @@ export class App {
       label: VIEW_AS[value].label,
       badge: this.session.viewAs() === value ? 'Current' : undefined,
     })),
-    { id: THEME_ITEM, label: 'Dark mode', badge: this.#theme.theme() === 'dark' ? 'On' : 'Off' },
+    // A switch: the card stays open while it's flipped.
+    { id: THEME_ITEM, label: 'Dark mode', icon: profileMenuIcon('moon'), checked: this.#theme.theme() === 'dark' },
   ]);
 
   protected readonly user = computed(() => {
@@ -98,7 +99,7 @@ export class App {
 
   protected onAccountSelect(event: CustomEvent<HeaderNavAccountSelect>): void {
     const id = event.detail.id;
-    if (id === THEME_ITEM) this.#theme.toggle();
+    if (id === THEME_ITEM) this.#theme.set(event.detail.checked ? 'dark' : 'light');
     else if (id in VIEW_AS) this.session.setViewAs(id as ViewAs);
   }
 }

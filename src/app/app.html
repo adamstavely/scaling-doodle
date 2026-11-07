@@ -13,9 +13,10 @@
       (tc-navigate)="onNavigate($event)"
     ></tc-side-nav>
 
-    <!-- The navy bar spans the row; tc-header-nav is its right end. Pinned dark like the side nav. -->
-    <header class="topbar" data-tc-theme="dark">
-      <tc-header-nav [user]="user()" [accountItems]="accountItems()" (tc-account-select)="onAccountSelect($event)">
+    <!-- The navy bar spans the row; tc-header-nav is its right end. `inverse` draws its buttons for the dark bar while
+         their menus keep the page's light or dark theme. -->
+    <header class="topbar">
+      <tc-header-nav inverse [user]="user()" [accountItems]="accountItems()" (tc-account-select)="onAccountSelect($event)">
         <!-- Empty until there's a notifications feed. -->
         <tc-notifications heading="Notifications" [items]="[]"></tc-notifications>
         <tc-app-picker label="Apps" [apps]="apps.config.value().apps" [current]="apps.config.value().current"></tc-app-picker>
