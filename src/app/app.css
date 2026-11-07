@@ -14,9 +14,6 @@
   grid-area: sidebar;
   background: #081d35;
   border-right-color: transparent;
-  /* A larger INTELLECT name and logo; tc-side-nav reads these from Trench Coat 0.7.0. */
-  --tc-snav-brand-size: var(--tc-font-size-xl);
-  --tc-snav-logo-size: 32px;
 }
 
 .topbar {
