@@ -9,15 +9,12 @@
     (tc-navigate)="onNavigate($event)"
   ></tc-side-nav>
 
-  <header class="topbar">
-    <tc-segmented-control
-      aria-label="View as"
-      [options]="viewOptions"
-      [value]="session.viewAs()"
-      (tc-value-change)="onViewChange($event)"
-    ></tc-segmented-control>
-    <tc-header-nav [user]="user()"></tc-header-nav>
-  </header>
+  <tc-header-nav
+    class="topbar"
+    [user]="user()"
+    [accountItems]="accountItems()"
+    (tc-account-select)="onAccountSelect($event)"
+  ></tc-header-nav>
 
   <main class="content">
     <router-outlet />

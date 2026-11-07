@@ -3,9 +3,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { HeaderNav } from '@adamstavely/trenchcoat/angular/header-nav';
-import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
 import { SideNav } from '@adamstavely/trenchcoat/angular/side-nav';
-import type { SegmentValueChange } from '@adamstavely/trenchcoat/segmented-control';
+import type { HeaderNavAccountSelect } from '@adamstavely/trenchcoat/header-nav';
+import type { ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
 import { icon } from './core/icons';
 import { Session, VIEW_AS, ViewAs } from './core/session';
@@ -21,7 +21,7 @@ function navIdFor(url: string): string {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderNav, SegmentedControl, SideNav],
+  imports: [RouterOutlet, HeaderNav, SideNav],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -44,10 +44,14 @@ export class App {
     { initialValue: navIdFor(this.#router.url) },
   );
 
-  protected readonly viewOptions = (Object.keys(VIEW_AS) as ViewAs[]).map((value) => ({
-    value,
-    label: VIEW_AS[value].label,
-  }));
+  /** The account card switches between the Chief's and a PI's view; the current one is marked. */
+  protected readonly accountItems = computed<ProfileMenuItem[]>(() =>
+    (Object.keys(VIEW_AS) as ViewAs[]).map((value) => ({
+      id: value,
+      label: VIEW_AS[value].label,
+      badge: this.session.viewAs() === value ? 'Current' : undefined,
+    })),
+  );
 
   protected readonly user = computed(() => {
     const me = this.session.me.value();
@@ -61,7 +65,8 @@ export class App {
     void this.#router.navigateByUrl(event.detail.href);
   }
 
-  protected onViewChange(event: CustomEvent<SegmentValueChange>): void {
-    this.session.setViewAs(event.detail.value as ViewAs);
+  protected onAccountSelect(event: CustomEvent<HeaderNavAccountSelect>): void {
+    const id = event.detail.id;
+    if (id in VIEW_AS) this.session.setViewAs(id as ViewAs);
   }
 }
