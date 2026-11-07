@@ -1,11 +1,12 @@
 <header class="page-head">
   <h1>Metrics Summary</h1>
-  <tc-segmented-control
-    aria-label="Reporting period"
+  <tc-select
+    label="Reporting period"
+    align="end"
     [options]="periodChoices"
     [value]="period()"
     (tc-value-change)="onPeriodChange($event)"
-  ></tc-segmented-control>
+  ></tc-select>
 </header>
 
 <!-- Opened by a `?brief=<period>` link. -->

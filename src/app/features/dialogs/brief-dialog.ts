@@ -9,7 +9,7 @@ import '@adamstavely/trenchcoat/gap-exposure';
 import '@adamstavely/trenchcoat/ops-overview';
 import '@adamstavely/trenchcoat/results-list';
 import '@adamstavely/trenchcoat/segmented-bar';
-import '@adamstavely/trenchcoat/segmented-control';
+import '@adamstavely/trenchcoat/select';
 import '@adamstavely/trenchcoat/thinking-loader';
 import '@adamstavely/trenchcoat/shimmer-loader';
 import { Api } from '../../api/generated/api';

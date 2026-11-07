@@ -1,11 +1,10 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
-import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
+import { Select } from '@adamstavely/trenchcoat/angular/select';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
 import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { PriorityFigureColumn, PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
-import type { SegmentValueChange } from '@adamstavely/trenchcoat/segmented-control';
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
 import type { RecentPapersDto } from '../../api/generated/models/recent-papers-dto';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
@@ -14,7 +13,7 @@ import { topicsControllerList } from '../../api/generated/fn/topics/topics-contr
 import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth, PRIORITY_TIERS } from '../../core/format';
-import { periodOptions, todayIso } from '../../core/period';
+import { DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { topicPriorityItem } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
@@ -51,7 +50,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [PriorityList, SegmentedBar, Skeleton, SegmentedControl, BriefDialog],
+  imports: [PriorityList, SegmentedBar, Skeleton, Select, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -67,7 +66,7 @@ export class DashboardPage {
   protected readonly periods = periodOptions(todayIso());
   protected readonly period = computed(() => {
     const p = this.periodParam();
-    return this.periods.some((o) => o.value === p) ? p! : this.periods[0].value;
+    return this.periods.some((o) => o.value === p) ? p! : this.periods[DEFAULT_PERIOD_INDEX].value;
   });
   protected readonly periodChoices = this.periods.map((p) => ({ value: p.value, label: p.label }));
 
@@ -125,7 +124,7 @@ export class DashboardPage {
     void this.#router.navigate(['/org'], { fragment: event.detail.id.split(':')[0] });
   }
 
-  protected onPeriodChange(event: CustomEvent<SegmentValueChange>): void {
+  protected onPeriodChange(event: CustomEvent<{ value: string }>): void {
     void this.#router.navigate([], { queryParams: { period: event.detail.value }, queryParamsHandling: 'merge' });
   }
 

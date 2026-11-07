@@ -1,5 +1,5 @@
 /**
- * Reporting periods, in the API's terms (`ytd`, `FY27`, `FY27-Q1`). Fiscal years follow the US federal calendar:
+ * Reporting periods, in the API's terms (`2026-11`, `ytd`, `FY27`, `FY27-Q1`). Fiscal years follow the US federal calendar:
  * FY27 runs 2026-10-01 to 2027-09-30, and Q1 is Oct–Dec.
  */
 export interface PeriodOption {
@@ -7,7 +7,7 @@ export interface PeriodOption {
   value: string;
   /** What the picker shows. */
   label: string;
-  /** Short form for tile labels: "Q1 FY27", "YTD", "FY27". */
+  /** Short form for tile labels: "Nov 2026", "Q1 FY27", "YTD", "FY27". */
   short: string;
 }
 
@@ -21,11 +21,21 @@ export function fiscalQuarter(date: string): { fy: number; q: number } {
 
 const yy = (fy: number) => String(fy % 100).padStart(2, '0');
 
-/** The dashboard's choices, newest first: this quarter, last quarter, year to date, this fiscal year. */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** A calendar month as the API takes it ("2026-11") and as a tile shows it ("Nov 2026"). */
+function monthOption(y: number, m: number, label: string): PeriodOption {
+  return { value: `${y}-${String(m).padStart(2, '0')}`, label, short: `${MONTHS[m - 1]} ${y}` };
+}
+
+/** The pickers' choices, shortest first: this and last month, this and last quarter, year to date, this fiscal year. */
 export function periodOptions(today: string): PeriodOption[] {
+  const [y, m] = today.split('-').map(Number);
   const { fy, q } = fiscalQuarter(today);
   const last = q === 1 ? { fy: fy - 1, q: 4 } : { fy, q: q - 1 };
   return [
+    monthOption(y, m, 'This month'),
+    m === 1 ? monthOption(y - 1, 12, 'Last month') : monthOption(y, m - 1, 'Last month'),
     { value: `FY${yy(fy)}-Q${q}`, label: 'This quarter', short: `Q${q} FY${yy(fy)}` },
     { value: `FY${yy(last.fy)}-Q${last.q}`, label: 'Last quarter', short: `Q${last.q} FY${yy(last.fy)}` },
     { value: 'ytd', label: 'Year to date', short: 'YTD' },
@@ -33,8 +43,13 @@ export function periodOptions(today: string): PeriodOption[] {
   ];
 }
 
+/** The period a page shows when none is picked: this quarter. */
+export const DEFAULT_PERIOD_INDEX = 2;
+
 /** The short label for any period value the API accepts. */
 export function periodShort(value: string): string {
+  const month = /^(\d{4})-(\d{2})$/.exec(value);
+  if (month) return `${MONTHS[Number(month[2]) - 1]} ${month[1]}`;
   const m = /^FY(\d{2})(?:-Q([1-4]))?$/i.exec(value);
   if (!m) return 'YTD';
   return m[2] ? `Q${m[2]} FY${m[1]}` : `FY${m[1]}`;

@@ -6,7 +6,7 @@ import type { SearchResult } from '@adamstavely/trenchcoat/results-list';
 import type { BriefDto } from '../../api/generated/models/brief-dto';
 import { collaborationParts, jointShare } from '../../core/collaboration';
 import { compactNumber, localDate, percent, PRIORITY_TIERS } from '../../core/format';
-import { daysToQuarterEnd, periodOptions, todayIso } from '../../core/period';
+import { daysToQuarterEnd, periodOptions, periodShort, todayIso } from '../../core/period';
 import { portfolioTiles } from '../../core/portfolio';
 
 const CENTER_COLUMNS: DataColumn[] = [
@@ -85,15 +85,13 @@ export function briefModel(b: BriefDto) {
   };
 }
 
-const PERIOD_LABEL: Record<string, string> = { ytd: 'Year to date' };
-
 export function briefTemplate(
   b: BriefDto,
   on: { route: (url: string) => void; period: (value: string) => void },
   today = todayIso(),
 ) {
   const m = briefModel(b);
-  const period = PERIOD_LABEL[b.period.label] ?? b.period.label;
+  const period = b.period.label === 'ytd' ? 'Year to date' : periodShort(b.period.label);
   const periods = periodOptions(today).map((p) => ({ value: p.value, label: p.label }));
   const review = daysToQuarterEnd(today);
   // Links inside the brief route in-app instead of reloading the page.
@@ -105,12 +103,12 @@ export function briefTemplate(
   return html`
     <div class="brief">
       <div class="brief-head">
-        <tc-segmented-control
-          aria-label="Brief period"
+        <tc-select
+          label="Brief period"
           .options=${periods}
           .value=${b.period.label}
           @tc-value-change=${(e: CustomEvent<{ value: string }>) => on.period(e.detail.value)}
-        ></tc-segmented-control>
+        ></tc-select>
         <p class="brief-review">
           Next quarterly review ${review === 0 ? html`<strong>today</strong>` : html`in <strong>${review} ${review === 1 ? 'day' : 'days'}</strong>`}
         </p>
