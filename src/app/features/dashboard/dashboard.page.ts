@@ -1,6 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
-import { CoverageRing, GapExposure, OpsOverview, PriorityList, ResultsList, Skeleton } from '@adamstavely/trenchcoat/angular';
+import { Button, CoverageRing, GapExposure, OpsOverview, PriorityList, ResultsList, Skeleton } from '@adamstavely/trenchcoat/angular';
 import type { CoverageSegment } from '@adamstavely/trenchcoat/coverage-ring';
 import type { ExposureGap, GapOpen } from '@adamstavely/trenchcoat/gap-exposure';
 import type { OpsHealth, OpsTile } from '@adamstavely/trenchcoat/ops-overview';
@@ -10,19 +10,26 @@ import { gapsControllerList } from '../../api/generated/fn/gaps/gaps-controller-
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
-import { compactNumber, localDate, percent, priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { portfolioTiles } from '../../core/portfolio';
 import { scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
+import { BriefDialog } from '../dialogs/brief-dialog';
+import { NewTopicDialog } from '../dialogs/new-topic-dialog';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [OpsOverview, PriorityList, CoverageRing, GapExposure, ResultsList, Skeleton],
+  imports: [OpsOverview, PriorityList, CoverageRing, GapExposure, ResultsList, Skeleton, Button, NewTopicDialog, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
 export class DashboardPage {
   readonly #router = inject(Router);
   readonly #session = inject(Session);
+
+  /** `?new=topic` opens the New Topic dialog and `?brief=<period>` the Directorate Brief, so both can be linked to. */
+  readonly newParam = input<string | undefined>(undefined, { alias: 'new' });
+  readonly brief = input<string | undefined>();
 
   protected readonly tiers = PRIORITY_TIERS;
   protected readonly healthLabels = { nominal: 'Portfolio healthy', degraded: 'Topics at risk', down: 'Portfolio at risk' };
@@ -63,28 +70,7 @@ export class DashboardPage {
 
   protected readonly tiles = computed<OpsTile[]>(() => {
     const s = this.#summary.value();
-    if (!s) return [];
-    const coverageTone = s.gapsCovered >= 0.7 ? 'success' : s.gapsCovered >= 0.5 ? 'warning' : 'danger';
-    return [
-      { id: 'topics', label: this.isChief() ? 'Active topics' : 'Your topics', value: s.topics, sub: 'tracked' },
-      { id: 'gaps', label: 'Open gaps', value: s.openGaps, sub: 'unresolved', goodWhen: 'down' },
-      {
-        id: 'coverage',
-        label: 'Gap coverage',
-        value: percent(s.gapsCovered),
-        sub: 'have active work',
-        tone: coverageTone,
-      },
-      { id: 'work', label: 'Work in flight', value: s.workInFlight, sub: 'projects active' },
-      { id: 'papers', label: 'Papers (YTD)', value: s.papersInPeriod, sub: 'published' },
-      {
-        id: 'reads',
-        label: 'Readership (YTD)',
-        value: compactNumber(s.readsInPeriod),
-        sub: 'views',
-        trend: s.readTrend.map((m) => m.views),
-      },
-    ];
+    return s ? portfolioTiles(s, this.isChief()) : [];
   });
 
   protected readonly priorities = computed<PriorityItem[]>(() =>
@@ -152,5 +138,9 @@ export class DashboardPage {
   protected openPaper(event: CustomEvent<ResultsOpen>): void {
     event.preventDefault();
     void this.#router.navigate(['/papers', event.detail.id]);
+  }
+
+  protected setDialog(params: { new?: string | null; brief?: string | null }): void {
+    void this.#router.navigate([], { queryParams: params, queryParamsHandling: 'merge' });
   }
 }
