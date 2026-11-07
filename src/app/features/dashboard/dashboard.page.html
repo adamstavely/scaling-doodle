@@ -50,6 +50,18 @@
         (tc-open)="openCenter($event)"
       ></tc-priority-list>
 
+      <tc-coverage-matrix
+        heading="Centers by priority"
+        description="How each center's topics are doing in each priority tier · a cell shows its weakest topic"
+        check-label="Center"
+        total-label="On track"
+        [checks]="centerPriorities().checks"
+        [parts]="centerPriorities().parts"
+        [coverage]="centerPriorities().coverage"
+        [statusLabels]="centerPriorityLabels"
+        default-status="none"
+      ></tc-coverage-matrix>
+
       <tc-priority-list
         heading="Priorities"
         description="Topics most at risk first · papers published last month and this month"
