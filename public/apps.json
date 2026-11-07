@@ -1,0 +1,12 @@
+{
+  "current": "intellect",
+  "apps": [
+    {
+      "id": "intellect",
+      "name": "Intellect",
+      "href": "/",
+      "description": "Research portfolio health, papers and impact",
+      "tone": "blue"
+    }
+  ]
+}

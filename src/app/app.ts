@@ -2,11 +2,14 @@ import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { AppPicker } from '@adamstavely/trenchcoat/angular/app-picker';
 import { HeaderNav } from '@adamstavely/trenchcoat/angular/header-nav';
+import { Notifications } from '@adamstavely/trenchcoat/angular/notifications';
 import { SideNav } from '@adamstavely/trenchcoat/angular/side-nav';
 import type { HeaderNavAccountSelect } from '@adamstavely/trenchcoat/header-nav';
 import type { ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
+import { Apps } from './core/apps';
 import { icon } from './core/icons';
 import { Session, VIEW_AS, ViewAs } from './core/session';
 
@@ -21,12 +24,13 @@ function navIdFor(url: string): string {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderNav, SideNav],
+  imports: [RouterOutlet, HeaderNav, Notifications, AppPicker, SideNav],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
   protected readonly session = inject(Session);
+  protected readonly apps = inject(Apps);
   readonly #router = inject(Router);
 
   protected readonly navItems: SideNavItem[] = [
