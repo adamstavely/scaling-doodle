@@ -1,20 +1,12 @@
 <div class="shell">
-  <nav class="sidebar" aria-label="Main">
-    <a class="brand" routerLink="/">Intellect</a>
-    <ul>
-      @for (item of nav; track item.path) {
-        <li>
-          <a
-            [routerLink]="item.path"
-            routerLinkActive="current"
-            ariaCurrentWhenActive="page"
-            [routerLinkActiveOptions]="{ exact: item.exact }"
-            >{{ item.label }}</a
-          >
-        </li>
-      }
-    </ul>
-  </nav>
+  <tc-side-nav
+    class="sidebar"
+    brand="Intellect"
+    collapsible
+    [items]="navItems"
+    [current]="currentNav()"
+    (tc-navigate)="onNavigate($event)"
+  ></tc-side-nav>
 
   <header class="topbar">
     <tc-segmented-control

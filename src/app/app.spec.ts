@@ -17,7 +17,10 @@ describe('App', () => {
   it('renders the main nav', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
-    const nav = (fixture.nativeElement as HTMLElement).querySelector('nav[aria-label="Main"]');
-    expect(nav?.textContent).toContain('Papers & Impact');
+    const nav = (fixture.nativeElement as HTMLElement).querySelector('tc-side-nav') as
+      | (HTMLElement & { items: { label: string }[]; current: string | null })
+      | null;
+    expect(nav?.items.map((i) => i.label)).toContain('Papers & Impact');
+    expect(nav?.current).toBe('dashboard');
   });
 });
