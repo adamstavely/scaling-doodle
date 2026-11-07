@@ -22,6 +22,7 @@ import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tre
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
+import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { periodOptions, todayIso } from '../../core/period';
@@ -146,6 +147,11 @@ export class DashboardPage {
   /** One row per center in the caller's view, laid out like the priorities. */
   protected readonly centers = computed<PriorityItem[]>(() => (read(this.#org)?.centers ?? []).map(centerRow));
 
+  /** Each center against each priority tier, from the same topics the Priorities list shows. */
+  protected readonly centerPriorities = computed<PriorityItem[]>(() =>
+    centerPriorityRows(read(this.#org)?.centers ?? [], read(this.#topics) ?? []),
+  );
+
   protected readonly coverage = computed(() => read(this.#summary)?.gapsCovered ?? 0);
 
   protected readonly healthSegments = computed<CoverageSegment[]>(() => {
@@ -179,6 +185,11 @@ export class DashboardPage {
 
   protected openCenter(event: CustomEvent<PriorityOpen>): void {
     void this.#router.navigate(['/org'], { fragment: event.detail.id });
+  }
+
+  /** A center-by-priority row opens its center; the row id is `<center>:<tier>`. */
+  protected openCenterTier(event: CustomEvent<PriorityOpen>): void {
+    void this.#router.navigate(['/org'], { fragment: event.detail.id.split(':')[0] });
   }
 
   protected openGap(event: CustomEvent<GapOpen>): void {

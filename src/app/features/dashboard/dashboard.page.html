@@ -51,6 +51,18 @@
       ></tc-priority-list>
 
       <tc-priority-list
+        heading="Centers by priority"
+        description="Each center's topics in each priority tier · papers published last month and this month"
+        name-label="Center"
+        open-unit="gaps"
+        no-filters
+        [items]="centerPriorities()"
+        [tiers]="tiers"
+        [figures]="paperColumns"
+        (tc-open)="openCenterTier($event)"
+      ></tc-priority-list>
+
+      <tc-priority-list
         heading="Priorities"
         description="Topics most at risk first · papers published last month and this month"
         [items]="priorities()"
