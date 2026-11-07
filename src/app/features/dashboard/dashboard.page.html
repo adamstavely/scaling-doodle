@@ -1,7 +1,18 @@
 <header class="page-head">
-  <p class="eyebrow">{{ scopeLabel() }}</p>
-  <h1>Portfolio Health</h1>
+  <div>
+    <p class="eyebrow">{{ scopeLabel() }}</p>
+    <h1>Portfolio Health</h1>
+  </div>
+  <div class="head-actions">
+    @if (isChief()) {
+      <tc-button label="Directorate brief" variant="secondary" (click)="setDialog({ brief: 'ytd' })"></tc-button>
+    }
+    <tc-button label="New topic" variant="primary" (click)="setDialog({ new: 'topic' })"></tc-button>
+  </div>
 </header>
+
+<app-new-topic-dialog [open]="newParam() === 'topic'" (closed)="setDialog({ new: null })" />
+<app-brief-dialog [period]="isChief() ? brief() : undefined" (closed)="setDialog({ brief: null })" />
 
 @if (error()) {
   <p role="alert" class="error">Couldn't load the portfolio. Is intellect-api running?</p>
