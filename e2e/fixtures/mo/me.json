@@ -1,0 +1,1 @@
+{"id":"mo","name":"Marcus Okonkwo","initials":"MO","role":"pi","title":"Principal Investigator","team":"team-cognitive-systems","allocations":[{"topicId":"t-neuro","fte":0.5},{"topicId":"t-advml","fte":0.3}],"capacity":1,"scope":{"all":false,"topicIds":["t-advml","t-neuro"]}}

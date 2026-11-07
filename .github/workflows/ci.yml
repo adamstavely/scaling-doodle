@@ -11,7 +11,8 @@ permissions:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright 1.56 doesn't install browsers on.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,3 +29,17 @@ jobs:
       - run: npm run lint:tc
       - run: npm test -- --watch=false
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: intellect-web:ci
+          secrets: npm_token=${{ secrets.GITHUB_TOKEN }}

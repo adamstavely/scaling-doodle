@@ -1,0 +1,12 @@
+node_modules
+dist
+.angular
+.git
+.github
+.claude
+claude-design
+docs
+e2e
+test-results
+playwright-report
+src/app/api/generated
