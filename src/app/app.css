@@ -20,9 +20,9 @@
   background: var(--app-chrome);
   border-right-color: transparent;
   /* A larger INTELLECT name and logo, with room under them before the first link. */
-  --tc-snav-brand-size: 32px;
+  --tc-snav-brand-size: 48px;
   --tc-snav-logo-size: 40px;
-  --tc-snav-width: 280px;
+  --tc-snav-width: 368px;
   --tc-snav-head-gap: var(--tc-space-6);
 }
 
