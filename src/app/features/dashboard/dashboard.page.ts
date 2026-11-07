@@ -167,6 +167,12 @@ export class DashboardPage {
     void this.#router.navigate(['/papers', event.detail.id]);
   }
 
+  /** A topic made from the New Topic dialog shows up behind it straight away. */
+  protected onTopicCreated(): void {
+    this.#topics.reload();
+    this.#summary.reload();
+  }
+
   protected onPeriodChange(event: CustomEvent<SegmentValueChange>): void {
     void this.#router.navigate([], { queryParams: { period: event.detail.value }, queryParamsHandling: 'merge' });
   }

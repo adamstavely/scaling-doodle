@@ -17,7 +17,7 @@
   </div>
 </header>
 
-<app-new-topic-dialog [open]="newParam() === 'topic'" (closed)="setDialog({ new: null })" />
+<app-new-topic-dialog [open]="newParam() === 'topic'" (closed)="setDialog({ new: null })" (created)="onTopicCreated()" />
 <app-brief-dialog
   [period]="isChief() ? brief() : undefined"
   (closed)="setDialog({ brief: null })"

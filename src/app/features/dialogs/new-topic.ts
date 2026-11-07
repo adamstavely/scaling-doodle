@@ -3,6 +3,7 @@ import type { StepperFormStep } from '@adamstavely/trenchcoat/stepper-form';
 import type { CreateTopicDto } from '../../api/generated/models/create-topic-dto';
 import type { OrgDto } from '../../api/generated/models/org-dto';
 import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
+import type { PriorityItem } from '@adamstavely/trenchcoat/priority-list';
 import { PRIORITY_TIERS } from '../../core/format';
 
 export type NewTopicValues = {
@@ -14,6 +15,8 @@ export type NewTopicValues = {
   teamId: string;
   questions: string;
   budget: string;
+  /** People planned for the topic, in FTE. */
+  fte: number;
   sponsors: string[];
 };
 
@@ -26,6 +29,7 @@ export const EMPTY_TOPIC: NewTopicValues = {
   teamId: '',
   questions: '',
   budget: '1.5',
+  fte: 1,
   sponsors: [],
 };
 
@@ -61,6 +65,21 @@ export function teamOptions(org: OrgDto | undefined, people: PersonSummaryDto[],
 }
 
 /** The form's values → the API's create body. The Chief assigns the team's PI as lead; a PI leads their own topic. */
+/** The topic as it will appear in Priorities, for the dialog's live preview. A new topic starts on track. */
+export function previewItem(v: NewTopicValues, teams: TeamOption[], me: { name: string; role: string }): PriorityItem {
+  const team = teams.find((t) => t.id === v.teamId);
+  return {
+    id: 'preview',
+    name: v.name.trim() || 'Untitled topic',
+    owner: me.role === 'chief' ? (team?.leadName ?? me.name) : me.name,
+    team: team?.name,
+    priority: Number(v.bin) || 2,
+    health: 'on-track',
+    open: 0,
+    work: 0,
+  };
+}
+
 export function createBody(v: NewTopicValues, teams: TeamOption[], me: { id: string; role: string }): CreateTopicDto {
   const team = teams.find((t) => t.id === v.teamId);
   const questions = v.questions
@@ -77,6 +96,7 @@ export function createBody(v: NewTopicValues, teams: TeamOption[], me: { id: str
     leadId: me.role === 'chief' ? (team?.leadId ?? me.id) : me.id,
     questions: questions.length ? questions : undefined,
     budget: allocated > 0 ? { allocated } : undefined,
+    plannedFte: v.fte > 0 ? Math.round(v.fte * 10) / 10 : undefined,
     sponsors: v.sponsors.length ? v.sponsors : undefined,
   };
 }
@@ -181,6 +201,16 @@ export function newTopicSteps(teams: TeamOption[]): StepperFormStep<NewTopicValu
         <tc-stepper-field name="budget" label="Budget ($M)" hint="Millions of dollars allocated this fiscal year.">
           ${input(values.budget, (budget) => setValues({ budget }), { type: 'number', step: '0.1', min: '0', prefix: '$' })}
         </tc-stepper-field>
+        <tc-slider-field
+          name="fte"
+          label="People allocated (FTE)"
+          description="Full-time equivalents planned. Actual allocation comes from people's assignments."
+          min="0"
+          max="6"
+          step="0.1"
+          .value=${values.fte}
+          @tc-value-change=${(e: CustomEvent<{ value: number }>) => setValues({ fte: e.detail.value })}
+        ></tc-slider-field>
         <tc-stepper-field name="sponsors" label="Sponsors" optional hint="Press Enter after each sponsor.">
           <tc-stepper-tags
             .value=${values.sponsors}
@@ -206,6 +236,7 @@ export function newTopicSteps(teams: TeamOption[]): StepperFormStep<NewTopicValu
             { label: 'Team', value: team ? `${team.name} (lead: ${team.leadName ?? 'you'})` : '—', step: 'scope' },
             { label: 'Opening questions', value: String(values.questions.split('\n').filter((q) => q.trim()).length), step: 'scope' },
             { label: 'Budget', value: `$${values.budget}M`, step: 'resourcing' },
+            { label: 'People allocated', value: `${values.fte} FTE`, step: 'resourcing' },
             { label: 'Sponsors', value: values.sponsors.join(', ') || '—', step: 'resourcing' },
           ]}
         ></tc-stepper-review>`;

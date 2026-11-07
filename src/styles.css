@@ -55,6 +55,13 @@ body {
   min-height: 320px;
 }
 
+/* New Topic: the form with its live preview under it (rendered inside tc-dialog, so styled here). The preview is a
+   one-row tc-priority-list, which needs the dialog's full width to show the topic's name. */
+.new-topic {
+  display: grid;
+  gap: var(--tc-space-5);
+}
+
 /* Printing the brief prints just the brief. */
 @media print {
   .brief-head tc-segmented-control {
