@@ -1,6 +1,12 @@
 @import '@adamstavely/trenchcoat/tokens.css';
 @import '@fontsource-variable/inter';
 
+/* @fontsource-variable/inter names its face "Inter Variable", which Trench Coat's font stack doesn't list, so without
+   this the bundled Inter never loads and text falls back to the system font. */
+:root {
+  --tc-font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
 html,
 body {
   margin: 0;
