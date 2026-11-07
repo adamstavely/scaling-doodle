@@ -1,0 +1,62 @@
+<header class="page-head">
+  <p class="eyebrow">{{ scopeLabel() }}</p>
+  <h1>Portfolio Health</h1>
+</header>
+
+@if (error()) {
+  <p role="alert" class="error">Couldn't load the portfolio. Is intellect-api running?</p>
+}
+
+@if (ready()) {
+  <tc-ops-overview
+    heading="Portfolio at a glance"
+    [status]="status()"
+    [health]="health()"
+    [healthLabels]="healthLabels"
+    [tiles]="tiles()"
+  ></tc-ops-overview>
+
+  <div class="grid">
+    <tc-priority-list
+      heading="Priorities"
+      description="Topics most at risk first"
+      [items]="priorities()"
+      [tiers]="tiers"
+      (tc-open)="openTopic($event)"
+    ></tc-priority-list>
+
+    <aside class="rail">
+      <tc-coverage-ring
+        heading="Gap coverage"
+        description="Share of open gaps with active work against them"
+        caption="covered"
+        unit="topics"
+        unit-one="topic"
+        [value]="coverage()"
+        [segments]="healthSegments()"
+      ></tc-coverage-ring>
+
+      <tc-gap-exposure
+        heading="Gaps needing attention"
+        [gaps]="gaps()"
+        [tiers]="tiers"
+        (tc-open)="openGap($event)"
+      ></tc-gap-exposure>
+
+      <tc-results-list
+        heading="Impact pulse"
+        group="none"
+        [results]="papers()"
+        (tc-open)="openPaper($event)"
+      ></tc-results-list>
+    </aside>
+  </div>
+} @else if (!error()) {
+  <div class="loading" aria-busy="true" aria-label="Loading the portfolio">
+    <tc-skeleton height="96" radius="12"></tc-skeleton>
+    <div class="grid">
+      <tc-skeleton height="480" radius="12"></tc-skeleton>
+      <tc-skeleton height="480" radius="12"></tc-skeleton>
+    </div>
+  </div>
+}
