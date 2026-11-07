@@ -11,7 +11,10 @@ import type { ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
 import { Apps } from './core/apps';
 import { icon } from './core/icons';
+import { ThemeService } from './core/theme';
 import { Session, VIEW_AS, ViewAs } from './core/session';
+
+const THEME_ITEM = 'theme';
 
 /** Which nav item a URL belongs to; topic pages are reached from the dashboard. */
 function navIdFor(url: string): string {
@@ -31,6 +34,7 @@ function navIdFor(url: string): string {
 export class App {
   protected readonly session = inject(Session);
   protected readonly apps = inject(Apps);
+  readonly #theme = inject(ThemeService);
   readonly #router = inject(Router);
 
   protected readonly navItems: SideNavItem[] = [
@@ -48,14 +52,15 @@ export class App {
     { initialValue: navIdFor(this.#router.url) },
   );
 
-  /** The account card switches between the Chief's and a PI's view; the current one is marked. */
-  protected readonly accountItems = computed<ProfileMenuItem[]>(() =>
-    (Object.keys(VIEW_AS) as ViewAs[]).map((value) => ({
+  /** The account card switches between the Chief's and a PI's view (the current one marked), and light and dark. */
+  protected readonly accountItems = computed<ProfileMenuItem[]>(() => [
+    ...(Object.keys(VIEW_AS) as ViewAs[]).map((value) => ({
       id: value,
       label: VIEW_AS[value].label,
       badge: this.session.viewAs() === value ? 'Current' : undefined,
     })),
-  );
+    { id: THEME_ITEM, label: 'Dark mode', badge: this.#theme.theme() === 'dark' ? 'On' : 'Off' },
+  ]);
 
   protected readonly user = computed(() => {
     const me = this.session.me.value();
@@ -71,6 +76,7 @@ export class App {
 
   protected onAccountSelect(event: CustomEvent<HeaderNavAccountSelect>): void {
     const id = event.detail.id;
-    if (id in VIEW_AS) this.session.setViewAs(id as ViewAs);
+    if (id === THEME_ITEM) this.#theme.toggle();
+    else if (id in VIEW_AS) this.session.setViewAs(id as ViewAs);
   }
 }
