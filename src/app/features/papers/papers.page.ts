@@ -1,5 +1,6 @@
 import { Component, computed, effect, inject, input, resource, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { PublicationImpact } from '@adamstavely/trenchcoat/angular/publication-impact';
 import { ResultsList } from '@adamstavely/trenchcoat/angular/results-list';
 import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
@@ -13,11 +14,13 @@ import type {
 import type { ResultsOpen, SearchResult } from '@adamstavely/trenchcoat/results-list';
 import type { SegmentValueChange } from '@adamstavely/trenchcoat/segmented-control';
 import { Api } from '../../api/generated/api';
+import { papersControllerFirstCitation } from '../../api/generated/fn/papers/papers-controller-first-citation';
 import { papersControllerGet } from '../../api/generated/fn/papers/papers-controller-get';
 import { papersControllerGrade } from '../../api/generated/fn/papers/papers-controller-grade';
 import { papersControllerList } from '../../api/generated/fn/papers/papers-controller-list';
 import type { PaperDetailDto } from '../../api/generated/models/paper-detail-dto';
 import { collaborationLabel } from '../../core/collaboration';
+import { firstCitationLabel, firstCitationTiles } from '../../core/first-citation';
 import { compactNumber, localDate } from '../../core/format';
 import { GRADES, GradeId, gradeInfo } from '../../core/grades';
 import { scopedResource } from '../../core/scoped-resource';
@@ -75,7 +78,7 @@ export function impactOf(p: PaperDetailDto) {
 
 @Component({
   selector: 'app-papers-page',
-  imports: [ResultsList, PublicationImpact, SegmentedControl, Skeleton],
+  imports: [OpsOverview, ResultsList, PublicationImpact, SegmentedControl, Skeleton],
   templateUrl: './papers.page.html',
   styleUrl: './papers.page.css',
 })
@@ -88,6 +91,7 @@ export class PapersPage {
   readonly id = input<string>();
 
   readonly #list = scopedResource((api) => api.invoke(papersControllerList));
+  readonly #firstCitation = scopedResource((api) => api.invoke(papersControllerFirstCitation));
   readonly #detail = resource({
     params: () => (this.id() ? { id: this.id()!, as: this.#session.viewAs() } : undefined),
     loader: ({ params }) => this.#api.invoke(papersControllerGet, { id: params.id }),
@@ -103,6 +107,12 @@ export class PapersPage {
     return p ? impactOf(p) : undefined;
   });
 
+  /** Time to first citation across the papers in view. */
+  protected readonly citationTiles = computed(() => {
+    const s = this.#firstCitation.value();
+    return s ? firstCitationTiles(s) : [];
+  });
+
   protected readonly results = computed<SearchResult[]>(() =>
     (this.#list.value() ?? []).map((p) => ({
       id: p.id,
@@ -111,7 +121,13 @@ export class PapersPage {
       kind: gradeInfo(p.grade)?.label ?? 'Ungraded',
       href: `/papers/${p.id}`,
       date: localDate(p.published),
-      meta: [p.topic.name, collaborationLabel(p.partners), `${compactNumber(p.totals.downloads)} downloads`, `${p.totals.citations} citations`],
+      meta: [
+        p.topic.name,
+        collaborationLabel(p.partners),
+        `${compactNumber(p.totals.downloads)} downloads`,
+        `${p.totals.citations} citations`,
+        firstCitationLabel(p.firstCitation),
+      ],
     })),
   );
 
