@@ -1,15 +1,13 @@
 import { Component, computed, inject, input, resource } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  BudgetBurn,
-  CapacityBars,
-  CoverageRing,
-  GradeDistribution,
-  ProfileHeader,
-  Skeleton,
-  TraceabilitySpine,
-  WorkItem,
-} from '@adamstavely/trenchcoat/angular';
+import { BudgetBurn } from '@adamstavely/trenchcoat/angular/budget-burn';
+import { CapacityBars } from '@adamstavely/trenchcoat/angular/capacity-bars';
+import { CoverageRing } from '@adamstavely/trenchcoat/angular/coverage-ring';
+import { GradeDistribution } from '@adamstavely/trenchcoat/angular/grade-distribution';
+import { ProfileHeader } from '@adamstavely/trenchcoat/angular/profile-header';
+import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
+import { TraceabilitySpine } from '@adamstavely/trenchcoat/angular/traceability-spine';
+import { WorkItem } from '@adamstavely/trenchcoat/angular/work-item';
 import type { BurnItem } from '@adamstavely/trenchcoat/budget-burn';
 import type { CapacityPerson } from '@adamstavely/trenchcoat/capacity-bars';
 import type { CoverageSegment } from '@adamstavely/trenchcoat/coverage-ring';

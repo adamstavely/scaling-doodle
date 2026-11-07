@@ -1,6 +1,12 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
-import { Button, CoverageRing, GapExposure, OpsOverview, PriorityList, ResultsList, Skeleton } from '@adamstavely/trenchcoat/angular';
+import { Button } from '@adamstavely/trenchcoat/angular/button';
+import { CoverageRing } from '@adamstavely/trenchcoat/angular/coverage-ring';
+import { GapExposure } from '@adamstavely/trenchcoat/angular/gap-exposure';
+import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
+import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
+import { ResultsList } from '@adamstavely/trenchcoat/angular/results-list';
+import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { CoverageSegment } from '@adamstavely/trenchcoat/coverage-ring';
 import type { ExposureGap, GapOpen } from '@adamstavely/trenchcoat/gap-exposure';
 import type { OpsHealth, OpsTile } from '@adamstavely/trenchcoat/ops-overview';

@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output, resource } from '@angular/core';
 import { Router } from '@angular/router';
 import { html } from 'lit';
-import { Dialog } from '@adamstavely/trenchcoat/angular';
+import { Dialog } from '@adamstavely/trenchcoat/angular/dialog';
 import '@adamstavely/trenchcoat/button';
 import '@adamstavely/trenchcoat/data-table';
 import '@adamstavely/trenchcoat/digest';

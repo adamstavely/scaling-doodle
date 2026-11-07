@@ -1,5 +1,7 @@
 import { Component, computed } from '@angular/core';
-import { CapacityBars, DataTable, Skeleton } from '@adamstavely/trenchcoat/angular';
+import { CapacityBars } from '@adamstavely/trenchcoat/angular/capacity-bars';
+import { DataTable } from '@adamstavely/trenchcoat/angular/data-table';
+import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { CapacityPerson } from '@adamstavely/trenchcoat/capacity-bars';
 import type { DataColumn, DataRow, TagTone } from '@adamstavely/trenchcoat/data-table';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';

@@ -1,7 +1,7 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
 import { html } from 'lit';
-import { Dialog } from '@adamstavely/trenchcoat/angular';
+import { Dialog } from '@adamstavely/trenchcoat/angular/dialog';
 import '@adamstavely/trenchcoat/stepper-form';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
 import { peopleControllerList } from '../../api/generated/fn/people/people-controller-list';
