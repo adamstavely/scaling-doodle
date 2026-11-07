@@ -2,6 +2,14 @@
   <h1>Papers &amp; Impact</h1>
 </header>
 
+@if (citationTiles().length) {
+  <tc-ops-overview
+    heading="Time to first citation"
+    status="Months from publication to the first month a paper is cited"
+    [tiles]="citationTiles()"
+  ></tc-ops-overview>
+}
+
 <div class="layout">
   <div class="list">
     @if (listError()) {
