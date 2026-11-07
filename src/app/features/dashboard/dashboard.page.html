@@ -4,8 +4,14 @@
     <h1>Portfolio Health</h1>
   </div>
   <div class="head-actions">
+    <tc-segmented-control
+      aria-label="Reporting period"
+      [options]="periodChoices"
+      [value]="period()"
+      (tc-value-change)="onPeriodChange($event)"
+    ></tc-segmented-control>
     @if (isChief()) {
-      <tc-button label="Directorate brief" variant="secondary" (click)="setDialog({ brief: 'ytd' })"></tc-button>
+      <tc-button label="Directorate brief" variant="secondary" (click)="setDialog({ brief: period() })"></tc-button>
     }
     <tc-button label="New topic" variant="primary" (click)="setDialog({ new: 'topic' })"></tc-button>
   </div>

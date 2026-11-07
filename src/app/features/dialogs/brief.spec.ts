@@ -2,6 +2,7 @@ import type { BriefDto } from '../../api/generated/models/brief-dto';
 import { briefModel } from './brief';
 
 const summary = {
+  period: { label: 'ytd', from: '2026-01-01', to: '2026-11-07' },
   topics: 12,
   openGaps: 11,
   gapsCovered: 0.363,
