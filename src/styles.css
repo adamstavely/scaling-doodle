@@ -1,0 +1,10 @@
+@import '@adamstavely/trenchcoat/tokens.css';
+@import '@fontsource-variable/inter';
+
+html,
+body {
+  margin: 0;
+  background: var(--tc-surface-base);
+  color: var(--tc-text-primary);
+  font-family: var(--tc-font-sans);
+}

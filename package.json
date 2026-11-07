@@ -1,0 +1,41 @@
+{
+  "name": "intellect",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "api:gen": "ng-openapi-gen",
+    "api:sync": "curl -fsSL https://raw.githubusercontent.com/adamstavely/intellect-api/main/openapi.json -o api/openapi.json && npm run api:gen",
+    "prestart": "npm run api:gen",
+    "prebuild": "npm run api:gen",
+    "pretest": "npm run api:gen",
+    "lint:tc": "trenchcoat lint src"
+  },
+  "private": true,
+  "packageManager": "npm@11.21.2",
+  "dependencies": {
+    "@adamstavely/trenchcoat": "0.1.1",
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^21.2.29",
+    "@angular/cli": "^21.2.29",
+    "@angular/compiler-cli": "^21.2.0",
+    "jsdom": "^28.0.0",
+    "ng-openapi-gen": "^1.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  }
+}
