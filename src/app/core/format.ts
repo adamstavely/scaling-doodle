@@ -15,4 +15,13 @@ export function priorityHealth(health: 'healthy' | 'watch' | 'at-risk'): 'on-tra
   return health === 'healthy' ? 'on-track' : health;
 }
 
+/**
+ * A date-only ISO string ("2026-08-15") as local midnight, in ms. `Date.parse` reads date-only strings as UTC,
+ * which shows the day before anywhere west of Greenwich.
+ */
+export function localDate(iso: string): number {
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  return new Date(y, m - 1, d).getTime();
+}
+
 export const PRIORITY_TIERS: Record<number, string> = { 1: 'P1 · Flagship', 2: 'P2 · Core', 3: 'P3 · Core', 4: 'P4 · Emerging' };

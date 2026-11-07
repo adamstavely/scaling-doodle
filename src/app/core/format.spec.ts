@@ -1,4 +1,4 @@
-import { compactNumber, percent, priorityHealth } from './format';
+import { compactNumber, localDate, percent, priorityHealth } from './format';
 
 describe('format', () => {
   it('compacts big numbers', () => {
@@ -14,5 +14,10 @@ describe('format', () => {
   it("maps the API's health words to Trench Coat's", () => {
     expect(priorityHealth('healthy')).toBe('on-track');
     expect(priorityHealth('at-risk')).toBe('at-risk');
+  });
+
+  it('reads date-only strings as local dates', () => {
+    const d = new Date(localDate('2026-08-15'));
+    expect([d.getFullYear(), d.getMonth(), d.getDate()]).toEqual([2026, 7, 15]);
   });
 });
