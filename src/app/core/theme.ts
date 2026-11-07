@@ -25,8 +25,19 @@ function systemTheme(): Theme {
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   readonly theme = signal<Theme>(storedTheme() ?? systemTheme());
+  #picked = storedTheme() !== null;
+
+  constructor() {
+    // While nothing is picked, keep up with the OS switching between light and dark.
+    if (typeof matchMedia === 'function') {
+      matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!this.#picked) this.theme.set(e.matches ? 'dark' : 'light');
+      });
+    }
+  }
 
   set(theme: Theme): void {
+    this.#picked = true;
     this.theme.set(theme);
     document.documentElement.dataset['tcTheme'] = theme;
     try {

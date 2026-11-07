@@ -11,10 +11,19 @@ import type { ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
 import { Apps } from './core/apps';
 import { icon } from './core/icons';
-import { ThemeService } from './core/theme';
+import { Theme, ThemeService } from './core/theme';
 import { Session, VIEW_AS, ViewAs } from './core/session';
 
 const THEME_ITEM = 'theme';
+
+function brandLogo(theme: Theme): HTMLImageElement {
+  const img = document.createElement('img');
+  img.src = `/brand/logo-${theme}.png`;
+  img.alt = '';
+  img.width = 28;
+  img.height = 28;
+  return img;
+}
 
 /** Which nav item a URL belongs to; topic pages are reached from the dashboard. */
 function navIdFor(url: string): string {
@@ -36,6 +45,9 @@ export class App {
   protected readonly apps = inject(Apps);
   readonly #theme = inject(ThemeService);
   readonly #router = inject(Router);
+
+  /** The logo, drawn for the theme in use; tc-side-nav keeps it in the collapsed rail too. */
+  protected readonly brandIcon = computed(() => brandLogo(this.#theme.theme()));
 
   protected readonly navItems: SideNavItem[] = [
     { id: 'dashboard', label: 'Dashboard', href: '/', icon: icon('dashboard') },
