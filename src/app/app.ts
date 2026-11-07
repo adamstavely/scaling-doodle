@@ -28,9 +28,10 @@ function brandLogo(): HTMLImageElement {
   return img;
 }
 
-/** Which nav item a URL belongs to; topic pages are reached from the dashboard. */
+/** Which nav item a URL belongs to; a topic's page sits under Research Topics. */
 function navIdFor(url: string): string {
   const path = url.split(/[?#]/)[0];
+  if (path.startsWith('/topics')) return 'topics';
   if (path.startsWith('/papers')) return 'papers';
   if (path.startsWith('/org')) return 'org';
   if (path.startsWith('/people')) return 'people';
@@ -53,9 +54,11 @@ export class App {
   protected readonly brandIcon = brandLogo();
 
   protected readonly navItems: SideNavItem[] = [
+    // The mockup's order.
     { id: 'dashboard', label: 'Dashboard', href: '/', icon: icon('dashboard') },
-    { id: 'papers', label: 'Papers & Impact', href: '/papers', icon: icon('papers') },
     { id: 'org', label: 'Centers & Teams', href: '/org', icon: icon('org') },
+    { id: 'topics', label: 'Research Topics', href: '/topics', icon: icon('topics') },
+    { id: 'papers', label: 'Papers & Impact', href: '/papers', icon: icon('papers') },
     { id: 'people', label: 'People', href: '/people', icon: icon('people') },
   ];
 

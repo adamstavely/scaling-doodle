@@ -19,6 +19,15 @@ test.describe('smoke', () => {
       .toBe(2);
   });
 
+  test('research topics lists every topic in view, grouped by priority', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/topics');
+    await expect(page.getByRole('heading', { name: 'Research Topics' })).toBeVisible();
+    const list = page.locator('tc-priority-list');
+    expect(await list.evaluate((e) => (e as unknown as { grouped: boolean; items: unknown[] }).grouped)).toBe(true);
+    expect(await list.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');

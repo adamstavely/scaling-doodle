@@ -1,0 +1,24 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ scopeLabel() }}</p>
+    <h1>Research Topics</h1>
+  </div>
+  <tc-button label="New topic" variant="primary" (click)="setNew('topic')"></tc-button>
+</header>
+
+<app-new-topic-dialog [open]="newParam() === 'topic'" (closed)="setNew(null)" (created)="onTopicCreated()" />
+
+@if (error()) {
+  <p role="alert" class="note">Couldn't load the topics. Is intellect-api running?</p>
+} @else if (ready()) {
+  <tc-priority-list
+    heading="Topics"
+    description="Grouped by priority, most at risk first"
+    grouped
+    [items]="items()"
+    [tiers]="tiers"
+    (tc-open)="openTopic($event)"
+  ></tc-priority-list>
+} @else {
+  <tc-skeleton height="560" radius="12"></tc-skeleton>
+}
