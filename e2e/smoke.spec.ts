@@ -37,6 +37,15 @@ test.describe('smoke', () => {
     expect(gaps.find((g) => g.id === 'g2')).toMatchObject({ work: 0, budget: 900_000 });
   });
 
+  test('resourcing weighs dollars and people against priority', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/resourcing');
+    await expect(page.getByRole('heading', { name: 'Resourcing' })).toBeVisible();
+    const tiers = await page.locator('tc-investment-balance').evaluate((e) => (e as unknown as { tiers: { items: number }[] }).tiers);
+    expect(tiers.reduce((s, t) => s + t.items, 0)).toBe(12);
+    expect(await page.locator('tc-budget-burn').evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');

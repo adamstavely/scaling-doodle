@@ -22,6 +22,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/gaps/gaps.page').then((m) => m.GapsPage),
   },
   {
+    path: 'resourcing',
+    title: 'Resourcing · INTELLECT',
+    loadComponent: () => import('./features/resourcing/resourcing.page').then((m) => m.ResourcingPage),
+  },
+  {
     path: 'papers',
     title: 'Papers & Impact · INTELLECT',
     loadComponent: () => import('./features/papers/papers.page').then((m) => m.PapersPage),
