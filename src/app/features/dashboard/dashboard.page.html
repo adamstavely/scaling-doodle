@@ -20,14 +20,6 @@
 }
 
 @if (ready()) {
-  <tc-ops-overview
-    heading="Portfolio at a glance"
-    [status]="status()"
-    [health]="health()"
-    [healthLabels]="healthLabels"
-    [tiles]="tiles()"
-  ></tc-ops-overview>
-
   <div class="grid">
     <div class="main">
       <tc-priority-list
@@ -82,7 +74,6 @@
   </div>
 } @else if (!error()) {
   <div class="loading" aria-busy="true" aria-label="Loading the portfolio">
-    <tc-skeleton height="96" radius="12"></tc-skeleton>
     <div class="grid">
       <tc-skeleton height="480" radius="12"></tc-skeleton>
       <tc-skeleton height="480" radius="12"></tc-skeleton>

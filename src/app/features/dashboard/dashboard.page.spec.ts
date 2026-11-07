@@ -53,7 +53,7 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('maps the API onto the KPI tiles and priorities', async () => {
+  it('maps the API onto the priorities', async () => {
     const fixture = TestBed.createComponent(DashboardPage);
     fixture.detectChanges();
     await Promise.resolve();
@@ -66,12 +66,9 @@ describe('DashboardPage', () => {
     await fixture.whenStable();
 
     const page = fixture.componentInstance as unknown as {
-      tiles(): { id: string; value: unknown }[];
       priorities(): { id: string; health: string; change: number }[];
       centers(): { id: string }[];
     };
-    expect(page.tiles().find((t) => t.id === 'coverage')?.value).toBe('36%');
-    expect(page.tiles().find((t) => t.id === 'reads')?.value).toBe('101K');
     expect(page.priorities()).toEqual([
       expect.objectContaining({ id: 't-neuro', health: 'at-risk', change: -0.03, figures: { lastMonth: 2, thisMonth: 1 } }),
     ]);
