@@ -1,6 +1,6 @@
 .shell {
   display: grid;
-  grid-template-columns: 212px 1fr;
+  grid-template-columns: auto 1fr;
   grid-template-rows: 60px 1fr;
   grid-template-areas:
     'sidebar topbar'
@@ -8,37 +8,8 @@
   min-height: 100dvh;
 }
 
-/* Temporary sidebar until Trench Coat's side-nav element lands (plan step A2). Tokens only. */
 .sidebar {
   grid-area: sidebar;
-  background: var(--tc-surface-sunken);
-  border-right: 1px solid var(--tc-border-subtle);
-  padding: var(--tc-space-4) var(--tc-space-3);
-}
-.brand {
-  display: block;
-  font-size: var(--tc-font-size-lg);
-  font-weight: var(--tc-font-weight-semibold);
-  color: var(--tc-text-strong);
-  text-decoration: none;
-  padding: 0 var(--tc-space-2) var(--tc-space-4);
-}
-.sidebar ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.sidebar li a {
-  display: block;
-  padding: var(--tc-space-2);
-  border-radius: var(--tc-radius-md);
-  color: var(--tc-text-secondary);
-  text-decoration: none;
-}
-.sidebar li a.current {
-  background: var(--tc-surface-raised);
-  color: var(--tc-text-strong);
-  font-weight: var(--tc-font-weight-medium);
 }
 
 .topbar {
