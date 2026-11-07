@@ -32,9 +32,35 @@ body {
   font-size: var(--tc-font-size-sm);
   color: var(--tc-text-muted);
 }
+.brief-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tc-space-3);
+}
+.brief-review {
+  margin: 0;
+  font-size: var(--tc-font-size-sm);
+  color: var(--tc-text-secondary);
+}
+.brief-review strong {
+  font-size: var(--tc-font-size-lg);
+  color: var(--tc-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+.brief-loading {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+}
 
 /* Printing the brief prints just the brief. */
 @media print {
+  .brief-head tc-segmented-control {
+    display: none;
+  }
+
   app-root .shell > :not(main),
   app-root main > :not(app-dashboard-page),
   app-dashboard-page > :not(app-brief-dialog) {
