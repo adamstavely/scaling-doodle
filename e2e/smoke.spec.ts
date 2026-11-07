@@ -6,9 +6,11 @@ test.describe('smoke', () => {
     void errors;
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Portfolio Health' })).toBeVisible();
-    const priorities = page.locator('tc-priority-list');
+    const priorities = page.locator('tc-priority-list[heading="Priorities"]');
     await expect(priorities).toBeVisible();
     expect(await priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
+    const centers = page.locator('tc-priority-list[heading="Centers"]');
+    expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['CEC', 'CIS', 'CQL']);
 
     // The view switch lives in the avatar's account card.
     await page.getByRole('button', { name: /^Account/ }).click();

@@ -1,5 +1,5 @@
-import { Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { afterRenderEffect, Component, computed, inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { OrgUnitCard } from '@adamstavely/trenchcoat/angular/org-unit-card';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
@@ -124,6 +124,7 @@ export function centerCard(c: OrgCenterDto) {
 })
 export class OrgPage {
   readonly #router = inject(Router);
+  #fragment = inject(ActivatedRoute).snapshot.fragment;
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
   readonly #people = scopedResource((api) => api.invoke(peopleControllerList));
 
@@ -136,6 +137,16 @@ export class OrgPage {
     return org && people ? orgSummaryTiles(org, people) : [];
   });
   protected readonly otherTeams = computed(() => (read(this.#org)?.otherTeams ?? []).map(team));
+
+  /** `/org#<center id>`, from the dashboard's Centers list, scrolls to that center once the cards are drawn. */
+  readonly #scrollToFragment = afterRenderEffect(() => {
+    const id = this.#fragment;
+    // Wait for the summary row too: it lands above the cards and would push the center back down.
+    const settled = this.ready() && (this.#people.hasValue() || !!this.#people.error());
+    if (!id || !settled) return;
+    this.#fragment = null;
+    document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
 
   protected openTopic(event: CustomEvent<OrgOpen>): void {
     void this.#router.navigate(['/topics', event.detail.item.id]);
