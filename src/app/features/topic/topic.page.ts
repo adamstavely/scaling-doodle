@@ -97,7 +97,17 @@ export class TopicPage {
       t.center?.name,
       t.sponsors.length ? `Sponsors: ${t.sponsors.join(', ')}` : undefined,
       `Health ${t.healthScore}/100`,
+      this.funded(),
     ].filter((m): m is string => !!m);
+  });
+
+  /** "Experiments funded: 4 in flight · $2.4M committed" – work not yet complete and the budget allocated to it. */
+  protected readonly funded = computed(() => {
+    const spine = read(this.#spine);
+    if (!spine) return undefined;
+    const live = spine.work.filter((w) => w.status !== 'complete');
+    const committed = live.reduce((s, w) => s + w.budget.allocated, 0);
+    return `Experiments funded: ${live.length} in flight · $${Math.round(committed * 10) / 10}M committed`;
   });
 
   protected readonly coverageSegments = computed<CoverageSegment[]>(() => {
