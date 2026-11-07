@@ -36,6 +36,7 @@ function navIdFor(url: string): string {
   if (path.startsWith('/gaps')) return 'gaps';
   if (path.startsWith('/resourcing')) return 'resourcing';
   if (path.startsWith('/papers')) return 'papers';
+  if (path.startsWith('/partners')) return 'partners';
   if (path.startsWith('/org')) return 'org';
   if (path.startsWith('/people')) return 'people';
   return 'dashboard';
@@ -64,6 +65,7 @@ export class App {
     { id: 'gaps', label: 'Gaps & Coverage', href: '/gaps', icon: icon('gaps') },
     { id: 'resourcing', label: 'Resourcing', href: '/resourcing', icon: icon('resourcing') },
     { id: 'papers', label: 'Papers & Impact', href: '/papers', icon: icon('papers') },
+    { id: 'partners', label: 'Partner Labs', href: '/partners', icon: icon('partners') },
     { id: 'people', label: 'People', href: '/people', icon: icon('people') },
   ];
 

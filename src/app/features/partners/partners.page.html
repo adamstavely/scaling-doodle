@@ -1,0 +1,38 @@
+<header class="page-head">
+  <p class="eyebrow">{{ scopeLabel() }}</p>
+  <h1>Partner Labs</h1>
+</header>
+
+@if (error()) {
+  <p role="alert" class="note">Couldn't load partner labs. Is intellect-api running?</p>
+} @else if (ready()) {
+  <tc-ops-overview heading="Joint research" [tiles]="tiles()"></tc-ops-overview>
+
+  @if (hasLabs()) {
+    <div class="grid">
+      <tc-breakdown-chart
+        heading="Joint papers by lab"
+        fill
+        [records]="breakdown().records"
+        [dimensions]="breakdown().dimensions"
+        [measures]="breakdown().measures"
+        slice="lab"
+        segment="started"
+      ></tc-breakdown-chart>
+
+      <tc-segmented-bar
+        heading="Who started our joint work"
+        description="Joint papers we took to a partner lab, and ones a lab brought to us"
+        [highlight]="'We started'"
+        sort="false"
+        [data]="split()"
+      ></tc-segmented-bar>
+    </div>
+
+    <tc-results-list heading="Joint papers" group="none" [results]="papers()" (tc-open)="openPaper($event)"></tc-results-list>
+  } @else {
+    <p class="note">No joint papers yet. Papers written with a partner lab show here.</p>
+  }
+} @else {
+  <tc-skeleton height="560" radius="12"></tc-skeleton>
+}
