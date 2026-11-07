@@ -23,17 +23,6 @@
   <div class="grid">
     <div class="main">
       <tc-priority-list
-        heading="Centers"
-        description="Each center's topics rolled up · papers published last month and this month"
-        name-label="Center"
-        open-unit="gaps"
-        no-filters
-        [items]="centers()"
-        [figures]="paperColumns"
-        (tc-open)="openCenter($event)"
-      ></tc-priority-list>
-
-      <tc-priority-list
         heading="Centers by priority"
         description="Each center's topics in each priority tier · papers published last month and this month"
         name-label="Center"
@@ -56,6 +45,17 @@
     </div>
 
     <aside class="rail">
+      <tc-priority-list
+        heading="Centers"
+        description="Each center's topics rolled up · papers published last month and this month"
+        name-label="Center"
+        open-unit="gaps"
+        no-filters
+        [items]="centers()"
+        [figures]="paperColumns"
+        (tc-open)="openCenter($event)"
+      ></tc-priority-list>
+
       <tc-segmented-bar
         heading="Unilateral vs. joint research"
         [highlight]="'Joint'"
