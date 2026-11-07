@@ -23,6 +23,7 @@ import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { periodOptions, todayIso } from '../../core/period';
 import { portfolioTiles } from '../../core/portfolio';
+import { topicPriorityItem } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
@@ -100,21 +101,7 @@ export class DashboardPage {
     return s ? portfolioTiles(s, this.isChief()) : [];
   });
 
-  protected readonly priorities = computed<PriorityItem[]>(() =>
-    (read(this.#topics) ?? []).map((t) => ({
-      id: t.id,
-      name: t.name,
-      owner: t.lead?.name,
-      priority: t.bin,
-      health: priorityHealth(t.health),
-      trend: t.trend,
-      // Momentum is health points on a 0–100 scale; the list wants a fraction, so −3 points shows as ▼ 3%.
-      change: t.momentum / 100,
-      coverage: t.stats.coverage,
-      open: t.stats.openGaps,
-      work: t.stats.work,
-    })),
-  );
+  protected readonly priorities = computed<PriorityItem[]>(() => (read(this.#topics) ?? []).map(topicPriorityItem));
 
   protected readonly coverage = computed(() => read(this.#summary)?.gapsCovered ?? 0);
 

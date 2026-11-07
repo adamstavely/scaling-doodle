@@ -7,6 +7,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
   },
   {
+    path: 'topics',
+    title: 'Research Topics · INTELLECT',
+    loadComponent: () => import('./features/topics/topics.page').then((m) => m.TopicsPage),
+  },
+  {
     path: 'topics/:id',
     title: 'Topic · INTELLECT',
     loadComponent: () => import('./features/topic/topic.page').then((m) => m.TopicPage),
