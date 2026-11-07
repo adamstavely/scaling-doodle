@@ -40,6 +40,15 @@ export function periodShort(value: string): string {
   return m[2] ? `Q${m[2]} FY${m[1]}` : `FY${m[1]}`;
 }
 
+/** Days from `today` to the last day of its fiscal quarter, when the quarterly review falls; 0 on that day. */
+export function daysToQuarterEnd(today: string): number {
+  const [y, m, d] = today.split('-').map(Number);
+  // Fiscal quarters end with Dec, Mar, Jun and Sep.
+  const endMonth = Math.ceil(m / 3) * 3;
+  const end = Date.UTC(y, endMonth, 0);
+  return Math.round((end - Date.UTC(y, m - 1, d)) / 86_400_000);
+}
+
 export function todayIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

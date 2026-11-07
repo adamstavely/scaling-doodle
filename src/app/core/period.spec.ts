@@ -1,4 +1,4 @@
-import { fiscalQuarter, periodOptions, periodShort } from './period';
+import { daysToQuarterEnd, fiscalQuarter, periodOptions, periodShort } from './period';
 
 describe('periods', () => {
   it('places dates in the US federal fiscal year', () => {
@@ -15,6 +15,12 @@ describe('periods', () => {
       ['ytd', 'YTD'],
       ['FY27', 'FY27'],
     ]);
+  });
+
+  it('counts the days to the end of the fiscal quarter', () => {
+    expect(daysToQuarterEnd('2026-11-07')).toBe(54);
+    expect(daysToQuarterEnd('2026-12-31')).toBe(0);
+    expect(daysToQuarterEnd('2027-02-01')).toBe(58);
   });
 
   it('shortens any period', () => {
