@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { Button } from '@adamstavely/trenchcoat/angular/button';
+import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
 import { CoverageRing } from '@adamstavely/trenchcoat/angular/coverage-ring';
 import { GapExposure } from '@adamstavely/trenchcoat/angular/gap-exposure';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
@@ -13,12 +14,14 @@ import type { ExposureGap, GapOpen } from '@adamstavely/trenchcoat/gap-exposure'
 import type { OpsHealth, OpsTile } from '@adamstavely/trenchcoat/ops-overview';
 import type { PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
 import type { ResultsOpen, SearchResult } from '@adamstavely/trenchcoat/results-list';
+import type { SegmentValueChange } from '@adamstavely/trenchcoat/segmented-control';
 import { gapsControllerList } from '../../api/generated/fn/gaps/gaps-controller-list';
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { periodOptions, todayIso } from '../../core/period';
 import { portfolioTiles } from '../../core/portfolio';
 import { scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
@@ -27,7 +30,7 @@ import { NewTopicDialog } from '../dialogs/new-topic-dialog';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [OpsOverview, PriorityList, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, Button, NewTopicDialog, BriefDialog],
+  imports: [OpsOverview, PriorityList, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, Button, SegmentedControl, NewTopicDialog, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -38,14 +41,23 @@ export class DashboardPage {
   /** `?new=topic` opens the New Topic dialog and `?brief=<period>` the Directorate Brief, so both can be linked to. */
   readonly newParam = input<string | undefined>(undefined, { alias: 'new' });
   readonly brief = input<string | undefined>();
+  /** `?period=` picks the reporting period; unset is this quarter. */
+  readonly periodParam = input<string | undefined>(undefined, { alias: 'period' });
+
+  protected readonly periods = periodOptions(todayIso());
+  protected readonly period = computed(() => {
+    const p = this.periodParam();
+    return this.periods.some((o) => o.value === p) ? p! : this.periods[0].value;
+  });
+  protected readonly periodChoices = this.periods.map((p) => ({ value: p.value, label: p.label }));
 
   protected readonly tiers = PRIORITY_TIERS;
   protected readonly healthLabels = { nominal: 'Portfolio healthy', degraded: 'Topics at risk', down: 'Portfolio at risk' };
 
-  readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary));
+  readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
   readonly #gaps = scopedResource((api) => api.invoke(gapsControllerList, { attention: true, limit: 5 }));
-  readonly #papers = scopedResource((api) => api.invoke(papersControllerTop, { limit: 3 }));
+  readonly #papers = scopedResource((api) => api.invoke(papersControllerTop, { limit: 3, period: this.period() }), undefined, () => this.period());
 
   protected readonly error = computed(
     () => this.#summary.error() ?? this.#topics.error() ?? this.#gaps.error() ?? this.#papers.error(),
@@ -78,9 +90,10 @@ export class DashboardPage {
 
   /** This period's papers, done alone vs. with partner labs, over the caller's scope. */
   protected readonly collaboration = computed(() => collaborationParts(this.#summary.value()?.collaborationInPeriod));
-  protected readonly collaborationNote = computed(() =>
-    this.isChief() ? 'Papers published this year across the portfolio' : 'Papers published this year on your topics',
-  );
+  protected readonly collaborationNote = computed(() => {
+    const when = this.periods.find((p) => p.value === this.period())?.label.toLowerCase() ?? 'this period';
+    return `Papers published ${when === 'year to date' ? 'this year' : when === 'fiscal year' ? 'this fiscal year' : when}${this.isChief() ? ' across the portfolio' : ' on your topics'}`;
+  });
 
   protected readonly tiles = computed<OpsTile[]>(() => {
     const s = this.#summary.value();
@@ -152,6 +165,10 @@ export class DashboardPage {
   protected openPaper(event: CustomEvent<ResultsOpen>): void {
     event.preventDefault();
     void this.#router.navigate(['/papers', event.detail.id]);
+  }
+
+  protected onPeriodChange(event: CustomEvent<SegmentValueChange>): void {
+    void this.#router.navigate([], { queryParams: { period: event.detail.value }, queryParamsHandling: 'merge' });
   }
 
   protected setDialog(params: { new?: string | null; brief?: string | null }): void {

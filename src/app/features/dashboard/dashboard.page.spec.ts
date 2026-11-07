@@ -6,6 +6,7 @@ import { provideApiConfiguration } from '../../api/generated/api-configuration';
 import { DashboardPage } from './dashboard.page';
 
 const summary = {
+  period: { label: 'ytd', from: '2026-01-01', to: '2026-11-07' },
   topics: 12,
   openGaps: 11,
   gapsCovered: 0.363,
@@ -40,7 +41,7 @@ describe('DashboardPage', () => {
     await Promise.resolve();
     const http = TestBed.inject(HttpTestingController);
     http.match((r) => r.url === '/api/me').forEach((r) => r.flush({ id: 'hv', name: 'Helena Vance' }));
-    http.expectOne('/api/portfolio/summary').flush(summary);
+    http.expectOne((r) => r.url === '/api/portfolio/summary' && r.params.has('period')).flush(summary);
     http.expectOne((r) => r.url === '/api/topics').flush([topic]);
     http.expectOne((r) => r.url === '/api/gaps').flush([]);
     http.expectOne((r) => r.url === '/api/papers/top').flush([]);
