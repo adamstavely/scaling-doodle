@@ -13,7 +13,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: clamp(360px, 26%, 480px) minmax(0, 1fr);
   gap: var(--tc-space-4);
   align-items: start;
 }
