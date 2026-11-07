@@ -1,0 +1,74 @@
+<a class="back" routerLink="/">← Portfolio</a>
+
+@if (error()) {
+  <p role="alert" class="error">Couldn't load this topic. It may not exist, or it's outside your view.</p>
+} @else if (ready() && topic(); as t) {
+  <tc-profile-header kind="account" [name]="t.name" [status]="status()" [tags]="tags()" [meta]="meta()"></tc-profile-header>
+  <p class="summary">{{ t.summary }}</p>
+
+  <div class="strip">
+    <tc-coverage-ring
+      heading="Gap coverage"
+      description="Open gaps with active work against them"
+      caption="covered"
+      unit="gaps"
+      unit-one="gap"
+      [value]="t.stats.coverage"
+      [segments]="coverageSegments()"
+    ></tc-coverage-ring>
+    <tc-grade-distribution
+      heading="Paper grades"
+      assessed-label="assessed"
+      bar
+      [grades]="grades()"
+    ></tc-grade-distribution>
+    <tc-capacity-bars
+      heading="People on this topic"
+      [description]="t.stats.fte + ' FTE in total'"
+      unit="FTE"
+      [people]="capacity()"
+    ></tc-capacity-bars>
+  </div>
+
+  <tc-traceability-spine
+    heading="Traceability spine"
+    description="Follow the chain from open questions, through the work and papers that resolve them, to the work that cites ours. Pick any card to trace its path."
+    [stages]="stages"
+    [nodes]="nodes()"
+  ></tc-traceability-spine>
+
+  <section class="work" aria-labelledby="work-heading">
+    <h2 id="work-heading">Work</h2>
+    @if (work().length) {
+      <div class="work-grid">
+        @for (w of work(); track w.id) {
+          <tc-work-item
+            [heading]="w.title"
+            [status]="w.status"
+            [note]="w.note"
+            [progress]="w.progress"
+            [due]="w.due"
+            [people]="w.people"
+            [spent]="w.spent"
+            [budget]="w.budget"
+            [effort]="w.effort"
+          ></tc-work-item>
+        }
+      </div>
+    } @else {
+      <p class="empty">No work against this topic yet.</p>
+    }
+  </section>
+
+  <tc-budget-burn
+    heading="Budget by work item"
+    [description]="'FY26 · $' + t.budget.spent + 'M of $' + t.budget.allocated + 'M spent on the topic'"
+    [items]="burn()"
+  ></tc-budget-burn>
+} @else {
+  <div class="loading" aria-busy="true" aria-label="Loading the topic">
+    <tc-skeleton height="140" radius="12"></tc-skeleton>
+    <tc-skeleton height="220" radius="12"></tc-skeleton>
+    <tc-skeleton height="420" radius="12"></tc-skeleton>
+  </div>
+}

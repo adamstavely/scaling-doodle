@@ -10,7 +10,7 @@ import { gapsControllerList } from '../../api/generated/fn/gaps/gaps-controller-
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
-import { compactNumber, percent, priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { compactNumber, localDate, percent, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 
@@ -135,7 +135,7 @@ export class DashboardPage {
       source: p.venue,
       kind: p.topic.name,
       href: `/papers/${p.id}`,
-      date: Date.parse(p.published),
+      date: localDate(p.published),
       meta: [`${compactNumber(p.totals.downloads)} downloads`, `${p.totals.citations} citations`],
     })),
   );
