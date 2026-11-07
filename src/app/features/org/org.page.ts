@@ -4,7 +4,7 @@ import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { OrgUnitCard } from '@adamstavely/trenchcoat/angular/org-unit-card';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { OpsTile } from '@adamstavely/trenchcoat/ops-overview';
-import type { OrgHealthCounts, OrgOpen, OrgStat, OrgTeam } from '@adamstavely/trenchcoat/org-unit-card';
+import type { OrgFigure, OrgHealthCounts, OrgOpen, OrgStat, OrgTeam } from '@adamstavely/trenchcoat/org-unit-card';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
 import { peopleControllerList } from '../../api/generated/fn/people/people-controller-list';
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
@@ -59,6 +59,12 @@ function joint(r: OrgRollupDto): OrgStat {
   };
 }
 
+/** A team row's joint-research figure: the joint share of what the team has published. */
+function jointFigure(r: OrgRollupDto): OrgFigure {
+  const share = jointShare(r.collaboration);
+  return { id: 'joint', value: share === null ? '—' : percent(share), label: 'joint' };
+}
+
 function team(t: OrgTeamDto): OrgTeam {
   return {
     id: t.id,
@@ -68,6 +74,7 @@ function team(t: OrgTeamDto): OrgTeam {
     coverage: t.rollup.coverage,
     gaps: t.rollup.openGaps,
     fte: t.rollup.fte,
+    figures: [jointFigure(t.rollup)],
     items: t.topics.map((topic) => ({
       id: topic.id,
       label: topic.name,
