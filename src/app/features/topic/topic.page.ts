@@ -5,6 +5,7 @@ import { CapacityBars } from '@adamstavely/trenchcoat/angular/capacity-bars';
 import { CoverageRing } from '@adamstavely/trenchcoat/angular/coverage-ring';
 import { GradeDistribution } from '@adamstavely/trenchcoat/angular/grade-distribution';
 import { ProfileHeader } from '@adamstavely/trenchcoat/angular/profile-header';
+import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import { TraceabilitySpine } from '@adamstavely/trenchcoat/angular/traceability-spine';
 import { WorkItem } from '@adamstavely/trenchcoat/angular/work-item';
@@ -19,6 +20,7 @@ import { topicsControllerGet } from '../../api/generated/fn/topics/topics-contro
 import { topicsControllerSpine } from '../../api/generated/fn/topics/topics-controller-spine';
 import type { WorkDto } from '../../api/generated/models/work-dto';
 import { scopedResource } from '../../core/scoped-resource';
+import { collaborationParts } from '../../core/collaboration';
 import { gradeCounts } from '../../core/grades';
 import { localDate, PRIORITY_TIERS } from '../../core/format';
 import { Session } from '../../core/session';
@@ -48,6 +50,7 @@ const WORK_STATUS: Record<WorkDto['status'], WorkStatus> = {
     BudgetBurn,
     CapacityBars,
     GradeDistribution,
+    SegmentedBar,
     WorkItem,
     Skeleton,
   ],
@@ -130,6 +133,7 @@ export class TopicPage {
   });
 
   protected readonly grades = computed(() => gradeCounts(this.topic()?.stats.grades ?? {}));
+  protected readonly collaboration = computed(() => collaborationParts(this.topic()?.stats.collaboration));
   protected readonly gradedCount = computed(() => this.grades().reduce((n, g) => n + g.count, 0));
 
   protected readonly stages = SPINE_STAGES;

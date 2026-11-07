@@ -4,6 +4,7 @@ import type { DigestItem } from '@adamstavely/trenchcoat/digest';
 import type { ExposureGap } from '@adamstavely/trenchcoat/gap-exposure';
 import type { SearchResult } from '@adamstavely/trenchcoat/results-list';
 import type { BriefDto } from '../../api/generated/models/brief-dto';
+import { collaborationParts, jointShare } from '../../core/collaboration';
 import { compactNumber, localDate, percent, PRIORITY_TIERS } from '../../core/format';
 import { portfolioTiles } from '../../core/portfolio';
 
@@ -14,6 +15,7 @@ const CENTER_COLUMNS: DataColumn[] = [
   { key: 'coverage', label: 'Coverage', type: 'text' },
   { key: 'gaps', label: 'Open gaps', type: 'number' },
   { key: 'budget', label: 'Budget spent', type: 'text' },
+  { key: 'joint', label: 'Joint research', type: 'text' },
 ];
 
 const INVESTMENT_COLUMNS: DataColumn[] = [
@@ -22,6 +24,12 @@ const INVESTMENT_COLUMNS: DataColumn[] = [
   { key: 'budget', label: 'Budget', type: 'text' },
   { key: 'fte', label: 'FTE', type: 'text' },
 ];
+
+/** "1 of 2 (50%)": joint papers out of everything published; "—" with none. */
+function jointOf(c: BriefDto['centers'][number]['rollup']['collaboration']): string {
+  const share = jointShare(c);
+  return share === null ? '—' : `${c.joint} of ${c.joint + c.unilateral} (${percent(share)})`;
+}
 
 /** The API's brief → the pieces each section renders. Pure, so it's tested without the DOM. */
 export function briefModel(b: BriefDto) {
@@ -38,6 +46,7 @@ export function briefModel(b: BriefDto) {
     coverage: percent(c.rollup.coverage),
     gaps: c.rollup.openGaps,
     budget: `$${c.rollup.budget.spent}M of $${c.rollup.budget.allocated}M`,
+    joint: jointOf(c.rollup.collaboration),
   }));
   const exposure: ExposureGap[] = b.exposure.map((g) => ({
     id: g.id,
@@ -67,6 +76,7 @@ export function briefModel(b: BriefDto) {
     summary: b.executiveSummary,
     decisions,
     tiles: portfolioTiles(b.atAGlance, true),
+    collaboration: collaborationParts(b.atAGlance.collaborationInPeriod),
     centers,
     exposure,
     investment,
@@ -124,6 +134,13 @@ export function briefTemplate(
       ></tc-data-table>
 
       <h3>6. Impact</h3>
+      <tc-segmented-bar
+        heading="Unilateral vs. joint research"
+        description="Papers published this period, done alone or with partner labs"
+        sort="false"
+        .highlight=${'Joint'}
+        .data=${m.collaboration}
+      ></tc-segmented-bar>
       <tc-results-list
         heading="Top papers this period"
         group="none"

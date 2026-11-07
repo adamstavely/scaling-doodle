@@ -6,6 +6,7 @@ import { GapExposure } from '@adamstavely/trenchcoat/angular/gap-exposure';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
 import { ResultsList } from '@adamstavely/trenchcoat/angular/results-list';
+import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { CoverageSegment } from '@adamstavely/trenchcoat/coverage-ring';
 import type { ExposureGap, GapOpen } from '@adamstavely/trenchcoat/gap-exposure';
@@ -16,6 +17,7 @@ import { gapsControllerList } from '../../api/generated/fn/gaps/gaps-controller-
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
+import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { portfolioTiles } from '../../core/portfolio';
 import { scopedResource } from '../../core/scoped-resource';
@@ -25,7 +27,7 @@ import { NewTopicDialog } from '../dialogs/new-topic-dialog';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [OpsOverview, PriorityList, CoverageRing, GapExposure, ResultsList, Skeleton, Button, NewTopicDialog, BriefDialog],
+  imports: [OpsOverview, PriorityList, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, Button, NewTopicDialog, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -73,6 +75,12 @@ export class DashboardPage {
     const atRiskShare = s.topics ? s.healthMix.atRisk / s.topics : 0;
     return atRiskShare >= 0.5 ? 'down' : atRiskShare > 0 ? 'degraded' : 'nominal';
   });
+
+  /** This period's papers, done alone vs. with partner labs, over the caller's scope. */
+  protected readonly collaboration = computed(() => collaborationParts(this.#summary.value()?.collaborationInPeriod));
+  protected readonly collaborationNote = computed(() =>
+    this.isChief() ? 'Papers published this year across the portfolio' : 'Papers published this year on your topics',
+  );
 
   protected readonly tiles = computed<OpsTile[]>(() => {
     const s = this.#summary.value();
