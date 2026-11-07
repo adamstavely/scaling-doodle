@@ -51,6 +51,10 @@ describe('centerCard', () => {
     });
   });
 
+  it('gives each team row its joint-research share', () => {
+    expect(card.teams[0].figures).toEqual([{ id: 'joint', value: '40%', label: 'joint' }]);
+  });
+
   it('nests topics under teams with momentum as a fraction', () => {
     expect(card.teams[0].items?.[0]).toMatchObject({ id: 't-climate', health: 'at-risk', momentum: -0.03, tag: 'P2 · Core' });
   });
