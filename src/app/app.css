@@ -8,19 +8,25 @@
   min-height: 100dvh;
 }
 
-/* Brand navy in both themes. The nav is pinned to the dark theme (data-tc-theme in app.html) so its text, icons and
-   hover fills are drawn for a dark background. */
+/* Brand navy in both themes, on the side nav and the top bar. Both are pinned to the dark theme (data-tc-theme in
+   app.html) so their text, icons and hover fills are drawn for a dark background. */
+.shell {
+  --app-chrome: #081d35;
+}
+
 .sidebar {
   grid-area: sidebar;
-  background: #081d35;
+  background: var(--app-chrome);
   border-right-color: transparent;
 }
 
 .topbar {
   grid-area: topbar;
-  justify-self: end;
-  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   padding: 0 var(--tc-space-6);
+  background: var(--app-chrome);
 }
 
 .content {
