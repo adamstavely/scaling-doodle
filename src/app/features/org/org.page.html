@@ -1,0 +1,34 @@
+<header class="page-head">
+  <h1>Centers &amp; Teams</h1>
+  <p>Each center rolls up its teams, and each team its topics. Open a team to see its topics.</p>
+</header>
+
+@if (error()) {
+  <p role="alert" class="note">Couldn't load the organization. Is intellect-api running?</p>
+} @else if (ready()) {
+  @for (c of centers(); track c.id) {
+    <tc-org-unit-card
+      [heading]="c.heading"
+      [code]="c.code"
+      [description]="c.description"
+      [lead]="c.lead"
+      [stats]="c.stats"
+      [health]="c.health"
+      [teams]="c.teams"
+      (tc-open)="openTopic($event)"
+    ></tc-org-unit-card>
+  } @empty {
+    <p class="note">No centers in your view.</p>
+  }
+  @if (otherTeams().length) {
+    <tc-org-unit-card
+      heading="Other teams"
+      description="Teams that aren't part of a center"
+      [teams]="otherTeams()"
+      (tc-open)="openTopic($event)"
+    ></tc-org-unit-card>
+  }
+} @else {
+  <tc-skeleton height="320" radius="12"></tc-skeleton>
+  <tc-skeleton height="320" radius="12"></tc-skeleton>
+}
