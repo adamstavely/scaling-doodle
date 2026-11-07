@@ -29,8 +29,9 @@
   background: var(--app-chrome);
 }
 
+/* Pages use the full width beside the nav; side columns grow with it (see each page's grid). */
 .content {
   grid-area: content;
+  min-width: 0;
   padding: var(--tc-space-6);
-  max-width: 1440px;
 }
