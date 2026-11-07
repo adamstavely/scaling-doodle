@@ -10,7 +10,7 @@ export interface AppsConfig {
 /** What the picker shows when apps.json is missing or unreadable: just Intellect. */
 export const DEFAULT_APPS: AppsConfig = {
   current: 'intellect',
-  apps: [{ id: 'intellect', name: 'Intellect', href: '/', description: 'Research portfolio health, papers and impact', tone: 'blue' }],
+  apps: [{ id: 'intellect', name: 'INTELLECT', href: '/', description: 'Research portfolio health, papers and impact', tone: 'blue' }],
 };
 
 /** Keeps only well-formed entries, so a bad edit to apps.json can't break the header. */
