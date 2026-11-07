@@ -3,7 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideApiConfiguration } from '../../api/generated/api-configuration';
-import { DashboardPage } from './dashboard.page';
+import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
+import { centerRow, DashboardPage } from './dashboard.page';
 
 const summary = {
   period: { label: 'ytd', from: '2026-01-01', to: '2026-11-07' },
@@ -25,7 +26,24 @@ const topic = {
   trend: [3, 0],
   lead: { id: 'mo', name: 'Marcus Okonkwo', initials: 'MO' },
   stats: { coverage: 0.4, openGaps: 5, work: 4 },
+  recentPapers: { lastMonth: 2, thisMonth: 1 },
 };
+const center = {
+  id: 'sl-intel',
+  name: 'Center for Intelligent Systems',
+  code: 'CIS',
+  lead: { id: 'mo', name: 'Marcus Okonkwo', initials: 'MO' },
+  rollup: {
+    health: 'healthy',
+    trend: [70, 72, 75],
+    momentum: 5,
+    coverage: 0.5,
+    openGaps: 4,
+    work: 6,
+    recentPapers: { lastMonth: 3, thisMonth: 0 },
+  },
+  teams: [],
+} as unknown as OrgCenterDto;
 
 describe('DashboardPage', () => {
   beforeEach(() => {
@@ -45,16 +63,35 @@ describe('DashboardPage', () => {
     http.expectOne((r) => r.url === '/api/topics').flush([topic]);
     http.expectOne((r) => r.url === '/api/gaps').flush([]);
     http.expectOne((r) => r.url === '/api/papers/top').flush([]);
+    http.expectOne('/api/org').flush({ centers: [center], otherTeams: [] });
     await fixture.whenStable();
 
     const page = fixture.componentInstance as unknown as {
       tiles(): { id: string; value: unknown }[];
       priorities(): { id: string; health: string; change: number }[];
+      centers(): { id: string }[];
     };
     expect(page.tiles().find((t) => t.id === 'coverage')?.value).toBe('36%');
     expect(page.tiles().find((t) => t.id === 'reads')?.value).toBe('101K');
     expect(page.priorities()).toEqual([
-      expect.objectContaining({ id: 't-neuro', health: 'at-risk', change: -0.03 }),
+      expect.objectContaining({ id: 't-neuro', health: 'at-risk', change: -0.03, figures: { lastMonth: 2, thisMonth: 1 } }),
     ]);
+    expect(page.centers().map((c) => c.id)).toEqual(['sl-intel']);
+  });
+
+  it('turns a center into a priority row with its code as the badge', () => {
+    expect(centerRow(center)).toEqual({
+      id: 'sl-intel',
+      name: 'Center for Intelligent Systems',
+      badge: 'CIS',
+      owner: 'Marcus Okonkwo',
+      health: 'on-track',
+      trend: [70, 72, 75],
+      change: 0.05,
+      coverage: 0.5,
+      open: 4,
+      work: 6,
+      figures: { lastMonth: 3, thisMonth: 0 },
+    });
   });
 });

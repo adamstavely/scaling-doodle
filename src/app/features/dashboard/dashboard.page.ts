@@ -12,10 +12,13 @@ import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { CoverageSegment } from '@adamstavely/trenchcoat/coverage-ring';
 import type { ExposureGap, GapOpen } from '@adamstavely/trenchcoat/gap-exposure';
 import type { OpsHealth, OpsTile } from '@adamstavely/trenchcoat/ops-overview';
-import type { PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
+import type { PriorityFigureColumn, PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
 import type { ResultsOpen, SearchResult } from '@adamstavely/trenchcoat/results-list';
 import type { SegmentValueChange } from '@adamstavely/trenchcoat/segmented-control';
+import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
+import type { RecentPapersDto } from '../../api/generated/models/recent-papers-dto';
 import { gapsControllerList } from '../../api/generated/fn/gaps/gaps-controller-list';
+import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
@@ -29,6 +32,35 @@ import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
 import { NewTopicDialog } from '../dialogs/new-topic-dialog';
+
+const PAPER_COLUMNS: PriorityFigureColumn[] = [
+  // Short, to fit the column; each list's description says these count papers published.
+  { id: 'lastMonth', label: 'Last mo.' },
+  { id: 'thisMonth', label: 'This mo.' },
+];
+
+function paperFigures(r: RecentPapersDto | undefined): Record<string, number> {
+  return { lastMonth: r?.lastMonth ?? 0, thisMonth: r?.thisMonth ?? 0 };
+}
+
+/** A center → a priority-list row: its code in place of a tier, health from its mean score. */
+export function centerRow(c: OrgCenterDto): PriorityItem {
+  const r = c.rollup;
+  return {
+    id: c.id,
+    name: c.name,
+    badge: c.code ?? undefined,
+    owner: c.lead?.name,
+    // A center with no topics has no health of its own; show it as on track rather than alarm.
+    health: priorityHealth(r.health ?? 'healthy'),
+    trend: r.trend,
+    change: r.momentum / 100,
+    coverage: r.coverage,
+    open: r.openGaps,
+    work: r.work,
+    figures: paperFigures(r.recentPapers),
+  };
+}
 
 @Component({
   selector: 'app-dashboard-page',
@@ -60,14 +92,16 @@ export class DashboardPage {
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
   readonly #gaps = scopedResource((api) => api.invoke(gapsControllerList, { attention: true, limit: 5 }));
   readonly #papers = scopedResource((api) => api.invoke(papersControllerTop, { limit: 3, period: this.period() }), undefined, () => this.period());
+  readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
 
   protected readonly error = computed(
-    () => this.#summary.error() ?? this.#topics.error() ?? this.#gaps.error() ?? this.#papers.error(),
+    () => this.#summary.error() ?? this.#topics.error() ?? this.#gaps.error() ?? this.#papers.error() ?? this.#org.error(),
   );
 
   /** Elements show "Nothing to show" for empty data, so hold them back until the first load lands. */
   protected readonly ready = computed(
-    () => this.#summary.hasValue() && this.#topics.hasValue() && this.#gaps.hasValue() && this.#papers.hasValue(),
+    () =>
+      this.#summary.hasValue() && this.#topics.hasValue() && this.#gaps.hasValue() && this.#papers.hasValue() && this.#org.hasValue(),
   );
 
   protected readonly isChief = computed(() => this.#session.viewAs() === 'chief');
@@ -102,7 +136,15 @@ export class DashboardPage {
     return s ? portfolioTiles(s, this.isChief()) : [];
   });
 
-  protected readonly priorities = computed<PriorityItem[]>(() => (read(this.#topics) ?? []).map(topicPriorityItem));
+  protected readonly priorities = computed<PriorityItem[]>(() =>
+    (read(this.#topics) ?? []).map((t) => ({ ...topicPriorityItem(t), figures: paperFigures(t.recentPapers) })),
+  );
+
+  /** The paper-count columns both lists share. */
+  protected readonly paperColumns = PAPER_COLUMNS;
+
+  /** One row per center in the caller's view, laid out like the priorities. */
+  protected readonly centers = computed<PriorityItem[]>(() => (read(this.#org)?.centers ?? []).map(centerRow));
 
   protected readonly coverage = computed(() => read(this.#summary)?.gapsCovered ?? 0);
 
@@ -135,6 +177,10 @@ export class DashboardPage {
     void this.#router.navigate(['/topics', event.detail.id]);
   }
 
+  protected openCenter(event: CustomEvent<PriorityOpen>): void {
+    void this.#router.navigate(['/org'], { fragment: event.detail.id });
+  }
+
   protected openGap(event: CustomEvent<GapOpen>): void {
     const gap = read(this.#gaps)?.find((g) => g.id === event.detail.id);
     if (gap) void this.#router.navigate(['/topics', gap.topicId]);
@@ -149,6 +195,7 @@ export class DashboardPage {
   protected onTopicCreated(): void {
     this.#topics.reload();
     this.#summary.reload();
+    this.#org.reload();
   }
 
   protected onPeriodChange(event: CustomEvent<SegmentValueChange>): void {

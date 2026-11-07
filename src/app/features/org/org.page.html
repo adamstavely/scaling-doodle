@@ -11,6 +11,7 @@
   }
   @for (c of centers(); track c.id) {
     <tc-org-unit-card
+      [id]="c.id"
       [heading]="c.heading"
       [code]="c.code"
       [description]="c.description"

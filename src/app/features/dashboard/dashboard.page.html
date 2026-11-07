@@ -38,13 +38,27 @@
   ></tc-ops-overview>
 
   <div class="grid">
-    <tc-priority-list
-      heading="Priorities"
-      description="Topics most at risk first"
-      [items]="priorities()"
-      [tiers]="tiers"
-      (tc-open)="openTopic($event)"
-    ></tc-priority-list>
+    <div class="main">
+      <tc-priority-list
+        heading="Centers"
+        description="Each center's topics rolled up · papers published last month and this month"
+        name-label="Center"
+        open-unit="gaps"
+        no-filters
+        [items]="centers()"
+        [figures]="paperColumns"
+        (tc-open)="openCenter($event)"
+      ></tc-priority-list>
+
+      <tc-priority-list
+        heading="Priorities"
+        description="Topics most at risk first · papers published last month and this month"
+        [items]="priorities()"
+        [tiers]="tiers"
+        [figures]="paperColumns"
+        (tc-open)="openTopic($event)"
+      ></tc-priority-list>
+    </div>
 
     <aside class="rail">
       <tc-coverage-ring
