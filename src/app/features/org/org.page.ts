@@ -1,12 +1,17 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { OrgUnitCard } from '@adamstavely/trenchcoat/angular/org-unit-card';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
+import type { OpsTile } from '@adamstavely/trenchcoat/ops-overview';
 import type { OrgHealthCounts, OrgOpen, OrgStat, OrgTeam } from '@adamstavely/trenchcoat/org-unit-card';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
+import { peopleControllerList } from '../../api/generated/fn/people/people-controller-list';
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
+import type { OrgDto } from '../../api/generated/models/org-dto';
 import type { OrgRollupDto } from '../../api/generated/models/org-rollup-dto';
 import type { OrgTeamDto } from '../../api/generated/models/org-team-dto';
+import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
 import { jointShare } from '../../core/collaboration';
 import { percent, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { read, scopedResource } from '../../core/scoped-resource';
@@ -77,6 +82,19 @@ function team(t: OrgTeamDto): OrgTeam {
   };
 }
 
+/** The row above the centers: topics, researchers and budget across everything in view. */
+export function orgSummaryTiles(org: OrgDto, people: PersonSummaryDto[]): OpsTile[] {
+  const rollups = [...org.centers.map((c) => c.rollup), ...org.otherTeams.map((t) => t.rollup)];
+  const sum = (pick: (r: OrgRollupDto) => number) => Math.round(rollups.reduce((s, r) => s + pick(r), 0) * 10) / 10;
+  // Researchers: anyone allocated to at least one topic in view.
+  const researchers = people.filter((p) => p.allocations.length > 0).length;
+  return [
+    { id: 'topics', label: 'Active topics', value: sum((r) => r.topics), sub: 'tracked' },
+    { id: 'researchers', label: 'Researchers', value: researchers, sub: `${sum((r) => r.fte)} FTE allocated` },
+    { id: 'budget', label: 'Budget', value: `$${sum((r) => r.budget.allocated)}M`, sub: `$${sum((r) => r.budget.spent)}M spent` },
+  ];
+}
+
 /** One center → tc-org-unit-card's properties. */
 export function centerCard(c: OrgCenterDto) {
   return {
@@ -93,17 +111,23 @@ export function centerCard(c: OrgCenterDto) {
 
 @Component({
   selector: 'app-org-page',
-  imports: [OrgUnitCard, Skeleton],
+  imports: [OpsOverview, OrgUnitCard, Skeleton],
   templateUrl: './org.page.html',
   styleUrl: './org.page.css',
 })
 export class OrgPage {
   readonly #router = inject(Router);
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
+  readonly #people = scopedResource((api) => api.invoke(peopleControllerList));
 
   protected readonly error = computed(() => this.#org.error());
   protected readonly ready = computed(() => this.#org.hasValue());
   protected readonly centers = computed(() => (read(this.#org)?.centers ?? []).map(centerCard));
+  protected readonly summary = computed(() => {
+    const org = read(this.#org);
+    const people = read(this.#people);
+    return org && people ? orgSummaryTiles(org, people) : [];
+  });
   protected readonly otherTeams = computed(() => (read(this.#org)?.otherTeams ?? []).map(team));
 
   protected openTopic(event: CustomEvent<OrgOpen>): void {
