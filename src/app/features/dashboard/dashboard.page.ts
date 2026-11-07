@@ -22,6 +22,7 @@ import { topicsControllerList } from '../../api/generated/fn/topics/topics-contr
 import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { periodOptions, todayIso } from '../../core/period';
+import { exposureGap } from '../../core/gaps';
 import { portfolioTiles } from '../../core/portfolio';
 import { topicPriorityItem } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
@@ -115,18 +116,8 @@ export class DashboardPage {
     ];
   });
 
-  protected readonly gaps = computed<ExposureGap[]>(() => {
-    const bins = new Map((read(this.#topics) ?? []).map((t) => [t.id, t.bin]));
-    return (read(this.#gaps) ?? []).map((g) => ({
-      id: g.id,
-      text: g.text,
-      severity: g.severity,
-      item: g.topic.name,
-      priority: bins.get(g.topicId),
-      work: g.covered ? 1 : 0,
-      owner: g.owner?.name,
-    }));
-  });
+  protected readonly gaps = computed<ExposureGap[]>(() => (read(this.#gaps) ?? []).map(exposureGap));
+
 
   protected readonly papers = computed<SearchResult[]>(() =>
     (read(this.#papers) ?? []).map((p) => ({

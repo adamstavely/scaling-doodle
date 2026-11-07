@@ -28,6 +28,15 @@ test.describe('smoke', () => {
     expect(await list.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
   });
 
+  test('gaps and coverage lists every gap still open, with what is invested', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/gaps');
+    await expect(page.getByRole('heading', { name: 'Gaps & Coverage' })).toBeVisible();
+    const gaps = await page.locator('tc-gap-exposure').evaluate((e) => (e as unknown as { gaps: { id: string; work: number; budget?: number }[] }).gaps);
+    expect(gaps.length).toBe(11);
+    expect(gaps.find((g) => g.id === 'g2')).toMatchObject({ work: 0, budget: 900_000 });
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');
