@@ -7,6 +7,17 @@
   --app-canvas: light-dark(#f2f5f9, var(--tc-surface-base));
 }
 
+/* Primary buttons in the nav's navy (#081d35) in light mode; dark mode keeps Trench Coat's, since navy would vanish on
+   the dark page. Trench Coat sets these tokens at :root and again on every element with a look, so this matches both. */
+:root,
+[data-tc-look],
+[data-look] {
+  --tc-action-primary-bg: light-dark(#081d35, var(--tc-surface-inverse));
+  --tc-action-primary-bg-hover: light-dark(#14325a, var(--tc-surface-inverse-hover));
+  --tc-action-primary-bg-active: light-dark(#0c2747, var(--tc-surface-inverse-active));
+  --tc-action-primary-fg: light-dark(#ffffff, var(--tc-text-on-inverse));
+}
+
 html,
 body {
   margin: 0;
