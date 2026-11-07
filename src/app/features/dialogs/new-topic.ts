@@ -12,7 +12,7 @@ export type NewTopicValues = {
   bin: string;
   centerId: string;
   teamId: string;
-  question: string;
+  questions: string;
   budget: string;
   sponsors: string[];
 };
@@ -24,7 +24,7 @@ export const EMPTY_TOPIC: NewTopicValues = {
   bin: '2',
   centerId: '',
   teamId: '',
-  question: '',
+  questions: '',
   budget: '1.5',
   sponsors: [],
 };
@@ -63,7 +63,10 @@ export function teamOptions(org: OrgDto | undefined, people: PersonSummaryDto[],
 /** The form's values → the API's create body. The Chief assigns the team's PI as lead; a PI leads their own topic. */
 export function createBody(v: NewTopicValues, teams: TeamOption[], me: { id: string; role: string }): CreateTopicDto {
   const team = teams.find((t) => t.id === v.teamId);
-  const question = v.question.trim();
+  const questions = v.questions
+    .split('\n')
+    .map((q) => q.trim())
+    .filter(Boolean);
   const allocated = Number(v.budget);
   return {
     name: v.name.trim(),
@@ -72,7 +75,7 @@ export function createBody(v: NewTopicValues, teams: TeamOption[], me: { id: str
     bin: Number(v.bin),
     teamId: v.teamId,
     leadId: me.role === 'chief' ? (team?.leadId ?? me.id) : me.id,
-    questions: question ? [question] : undefined,
+    questions: questions.length ? questions : undefined,
     budget: allocated > 0 ? { allocated } : undefined,
     sponsors: v.sponsors.length ? v.sponsors : undefined,
   };
@@ -157,8 +160,14 @@ export function newTopicSteps(teams: TeamOption[]): StepperFormStep<NewTopicValu
                 ></tc-stepper-choices>
               </tc-stepper-field>`
             : null}
-          <tc-stepper-field name="question" label="Opening question" optional hint="The first research question. It's owned by the topic lead.">
-            ${input(values.question, (question) => setValues({ question }))}
+          <tc-stepper-field name="questions" label="Opening questions" optional hint="One per line. They're owned by the topic lead.">
+            <tc-stepper-input>
+              <textarea
+                rows="3"
+                .value=${values.questions}
+                @input=${(e: Event) => setValues({ questions: (e.target as HTMLTextAreaElement).value })}
+              ></textarea>
+            </tc-stepper-input>
           </tc-stepper-field>
         `;
       },
@@ -195,7 +204,7 @@ export function newTopicSteps(teams: TeamOption[]): StepperFormStep<NewTopicValu
             { label: 'Name', value: values.name, step: 'define' },
             { label: 'Priority', value: PRIORITY_TIERS[Number(values.bin)], step: 'scope' },
             { label: 'Team', value: team ? `${team.name} (lead: ${team.leadName ?? 'you'})` : '—', step: 'scope' },
-            { label: 'Opening question', value: values.question.trim() || '—', step: 'scope' },
+            { label: 'Opening questions', value: String(values.questions.split('\n').filter((q) => q.trim()).length), step: 'scope' },
             { label: 'Budget', value: `$${values.budget}M`, step: 'resourcing' },
             { label: 'Sponsors', value: values.sponsors.join(', ') || '—', step: 'resourcing' },
           ]}

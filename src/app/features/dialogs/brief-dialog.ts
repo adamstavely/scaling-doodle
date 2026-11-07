@@ -20,6 +20,7 @@ import { briefTemplate } from './brief';
   template: `
     <tc-dialog
       class="brief-dialog"
+      size="xl"
       label="Directorate brief"
       description="The portfolio's state for the period, ready to print or share."
       close-label="Close"
