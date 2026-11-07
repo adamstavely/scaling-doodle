@@ -97,6 +97,7 @@ export class TopicPage {
       t.center?.name,
       t.sponsors.length ? `Sponsors: ${t.sponsors.join(', ')}` : undefined,
       `Health ${t.healthScore}/100`,
+      t.plannedFte ? `Staffing: ${t.stats.fte} of ${t.plannedFte} FTE planned` : undefined,
       this.funded(),
     ].filter((m): m is string => !!m);
   });
