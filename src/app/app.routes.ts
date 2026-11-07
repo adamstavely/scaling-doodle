@@ -37,6 +37,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/papers/papers.page').then((m) => m.PapersPage),
   },
   {
+    path: 'partners',
+    title: 'Partner Labs · INTELLECT',
+    loadComponent: () => import('./features/partners/partners.page').then((m) => m.PartnersPage),
+  },
+  {
     path: 'org',
     title: 'Centers & Teams · INTELLECT',
     loadComponent: () => import('./features/org/org.page').then((m) => m.OrgPage),

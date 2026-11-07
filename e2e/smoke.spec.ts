@@ -88,6 +88,16 @@ test.describe('smoke', () => {
     await expect(page.locator('tc-org-unit-card')).toHaveCount(3);
   });
 
+  test('partner labs shows each lab and who started the work', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/partners');
+    await expect(page.getByRole('heading', { name: 'Partner Labs' })).toBeVisible();
+    const chart = page.locator('tc-breakdown-chart');
+    await expect(chart).toBeVisible();
+    expect(await chart.evaluate((e) => (e as unknown as { records: unknown[] }).records.length)).toBe(3);
+    await expect(page.locator('tc-results-list')).toContainText('Sparse Spiking Networks');
+  });
+
   test('people lists the roster', async ({ page, errors }) => {
     void errors;
     await page.goto('/people');
