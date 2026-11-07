@@ -14,12 +14,9 @@
 
 .topbar {
   grid-area: topbar;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--tc-space-4);
+  justify-self: end;
+  align-self: center;
   padding: 0 var(--tc-space-6);
-  border-bottom: 1px solid var(--tc-border-subtle);
 }
 
 .content {

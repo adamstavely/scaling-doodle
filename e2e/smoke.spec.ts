@@ -10,7 +10,9 @@ test.describe('smoke', () => {
     await expect(priorities).toBeVisible();
     expect(await priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
 
-    await page.getByText('PI view').first().click();
+    // The view switch lives in the avatar's account card.
+    await page.getByRole('button', { name: /^Account/ }).click();
+    await page.getByRole('menuitem', { name: /PI view/ }).or(page.getByRole('button', { name: /PI view/ })).first().click();
     await expect(page.getByText('Marcus Okonkwo · your topics')).toBeVisible();
     await expect
       .poll(() => priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length))
