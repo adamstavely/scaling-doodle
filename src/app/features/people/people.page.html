@@ -1,0 +1,20 @@
+<header class="page-head">
+  <h1>People</h1>
+  <p>Who's working on what, and who's stretched.</p>
+</header>
+
+@if (error()) {
+  <p role="alert" class="note">Couldn't load people. Is intellect-api running?</p>
+} @else if (ready()) {
+  <tc-capacity-bars
+    heading="Load against capacity"
+    [description]="overCount() ? overCount() + ' over capacity' : 'Everyone within capacity'"
+    unit="FTE"
+    [people]="capacity()"
+  ></tc-capacity-bars>
+
+  <tc-data-table heading="Roster" readonly [selectable]="false" [columns]="columns" [rows]="rows()" [tagTones]="tones"></tc-data-table>
+} @else {
+  <tc-skeleton height="360" radius="12"></tc-skeleton>
+  <tc-skeleton height="360" radius="12"></tc-skeleton>
+}
