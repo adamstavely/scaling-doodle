@@ -27,6 +27,24 @@ npm start
 
 The app runs at http://localhost:4200 and proxies `/api` to the API (`proxy.conf.mjs`). If the API runs somewhere other than localhost:3000, set `API_URL`, e.g. `API_URL=http://localhost:3100 npm start`.
 
+## Tests
+
+```bash
+npm test          # unit tests (Vitest)
+npm run e2e       # smoke tests (Playwright) against recorded API responses
+```
+
+The smoke tests mock `/api` with the JSON in `e2e/fixtures`, recorded from a freshly seeded intellect-api, one folder per viewer (`hv` is the Chief, `mo` a PI). Re-record them after API changes that affect the screens.
+
+## Docker
+
+```bash
+docker build --secret id=npm_token,env=NODE_AUTH_TOKEN -t intellect-web .
+docker run -p 8080:8080 -e API_UPSTREAM=http://intellect-api:3000 intellect-web
+```
+
+nginx serves the app on port 8080 and proxies `/api` to `API_UPSTREAM`. In EKS the ingress can route `/api` instead.
+
 ## API client
 
 The typed client in `src/app/api/generated` is generated from `api/openapi.json` and isn't committed. `npm start`, `npm test` and `npm run build` regenerate it. To pick up API changes, run `npm run api:sync`, which downloads the spec from intellect-api's `main` and regenerates.
