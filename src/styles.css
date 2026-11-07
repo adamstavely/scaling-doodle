@@ -49,11 +49,18 @@ body {
   min-height: 320px;
 }
 
-/* New Topic: the form with its live preview under it (rendered inside tc-dialog, so styled here). The preview is a
-   one-row tc-priority-list, which needs the dialog's full width to show the topic's name. */
+/* New Topic: the form with its live preview beside it, as in the mockup (rendered inside tc-dialog, so styled here).
+   Stacked when the dialog is narrow. */
 .new-topic {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: var(--tc-space-5);
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .new-topic {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Printing the brief prints just the brief. */
