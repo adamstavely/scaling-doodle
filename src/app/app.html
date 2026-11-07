@@ -14,7 +14,11 @@
     [user]="user()"
     [accountItems]="accountItems()"
     (tc-account-select)="onAccountSelect($event)"
-  ></tc-header-nav>
+  >
+    <!-- Empty until there's a notifications feed. -->
+    <tc-notifications heading="Notifications" [items]="[]"></tc-notifications>
+    <tc-app-picker label="Apps" [apps]="apps.config.value().apps" [current]="apps.config.value().current"></tc-app-picker>
+  </tc-header-nav>
 
   <main class="content">
     <router-outlet />
