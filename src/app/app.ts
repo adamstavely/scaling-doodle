@@ -33,6 +33,7 @@ function navIdFor(url: string): string {
   const path = url.split(/[?#]/)[0];
   if (path.startsWith('/topics')) return 'topics';
   if (path.startsWith('/gaps')) return 'gaps';
+  if (path.startsWith('/resourcing')) return 'resourcing';
   if (path.startsWith('/papers')) return 'papers';
   if (path.startsWith('/org')) return 'org';
   if (path.startsWith('/people')) return 'people';
@@ -60,6 +61,7 @@ export class App {
     { id: 'org', label: 'Centers & Teams', href: '/org', icon: icon('org') },
     { id: 'topics', label: 'Research Topics', href: '/topics', icon: icon('topics') },
     { id: 'gaps', label: 'Gaps & Coverage', href: '/gaps', icon: icon('gaps') },
+    { id: 'resourcing', label: 'Resourcing', href: '/resourcing', icon: icon('resourcing') },
     { id: 'papers', label: 'Papers & Impact', href: '/papers', icon: icon('papers') },
     { id: 'people', label: 'People', href: '/people', icon: icon('people') },
   ];

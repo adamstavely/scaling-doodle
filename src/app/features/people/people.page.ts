@@ -9,6 +9,7 @@ import { peopleControllerList } from '../../api/generated/fn/people/people-contr
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import type { OrgDto } from '../../api/generated/models/org-dto';
 import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
+import { capacityPeople } from '../../core/resourcing';
 import { read, scopedResource } from '../../core/scoped-resource';
 
 const ROLE: Record<PersonSummaryDto['role'], string> = {
@@ -76,21 +77,7 @@ export class PeoplePage {
   protected readonly overCount = computed(() => (read(this.#people) ?? []).filter((p) => p.overCapacity).length);
 
   /** Only people with allocations: the load chart has nothing to draw for the rest. */
-  protected readonly capacity = computed<CapacityPerson[]>(() =>
-    (read(this.#people) ?? [])
-      .filter((p) => p.allocations.length)
-      .map((p) => ({
-        id: p.id,
-        name: p.name,
-        role: p.title,
-        capacity: p.capacity,
-        allocations: p.allocations.map((a) => ({
-          id: a.topicId,
-          label: this.#topicNames().get(a.topicId) ?? a.topicId,
-          amount: a.fte,
-        })),
-      })),
-  );
+  protected readonly capacity = computed<CapacityPerson[]>(() => capacityPeople(read(this.#people) ?? [], this.#topicNames()));
 
   protected readonly rows = computed<DataRow[]>(() => {
     const teams = teamNames(read(this.#org));

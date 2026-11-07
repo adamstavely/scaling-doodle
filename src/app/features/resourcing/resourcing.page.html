@@ -1,0 +1,40 @@
+<header class="page-head">
+  <p class="eyebrow">{{ scopeLabel() }}</p>
+  <h1>Resourcing</h1>
+</header>
+
+@if (error()) {
+  <p role="alert" class="note">Couldn't load resourcing. Is intellect-api running?</p>
+} @else if (ready()) {
+  <tc-ops-overview heading="At a glance" [tiles]="tiles()"></tc-ops-overview>
+
+  <tc-investment-balance
+    heading="Investment vs priority"
+    description="Are dollars and people flowing to our top-priority work?"
+    item-label="topics"
+    people-unit="FTE"
+    currency="USD"
+    [tiers]="tiers()"
+  ></tc-investment-balance>
+
+  <div class="grid">
+    <tc-budget-burn
+      [heading]="isChief() ? 'Allocations by topic' : 'Your topics'"
+      description="Spend against budget, with the pace for this point in the fiscal year"
+      currency="USD"
+      people-unit="FTE"
+      [period]="yearDone()"
+      [items]="burn()"
+      (tc-open)="openTopic($event)"
+    ></tc-budget-burn>
+
+    <tc-capacity-bars
+      heading="People capacity"
+      [description]="overCount() ? overCount() + ' over capacity' : 'Everyone within capacity'"
+      unit="FTE"
+      [people]="capacity()"
+    ></tc-capacity-bars>
+  </div>
+} @else {
+  <tc-skeleton height="560" radius="12"></tc-skeleton>
+}
