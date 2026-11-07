@@ -6,13 +6,9 @@
 
 .page-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--tc-space-4);
-}
-.head-actions {
-  display: flex;
-  gap: var(--tc-space-2);
 }
 
 .page-head h1 {
@@ -20,13 +16,6 @@
   font-size: var(--tc-font-size-3xl);
   font-weight: var(--tc-font-weight-semibold);
   color: var(--tc-text-strong);
-}
-.eyebrow {
-  margin: 0 0 var(--tc-space-1);
-  font-size: var(--tc-font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--tc-text-muted);
 }
 .error {
   margin: 0;

@@ -5,7 +5,7 @@ test.describe('smoke', () => {
   test('dashboard shows the whole portfolio to the Chief and scopes to the PI', async ({ page, errors }) => {
     void errors;
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Portfolio Health' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Metrics Summary' })).toBeVisible();
     const priorities = page.locator('tc-priority-list[heading="Priorities"]');
     await expect(priorities).toBeVisible();
     expect(await priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
@@ -15,7 +15,6 @@ test.describe('smoke', () => {
     // The view switch lives in the avatar's account card.
     await page.getByRole('button', { name: /^Account/ }).click();
     await page.getByRole('menuitem', { name: /PI view/ }).or(page.getByRole('button', { name: /PI view/ })).first().click();
-    await expect(page.getByText('Marcus Okonkwo · your topics')).toBeVisible();
     await expect
       .poll(() => priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length))
       .toBe(2);

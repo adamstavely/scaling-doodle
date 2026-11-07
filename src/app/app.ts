@@ -59,7 +59,7 @@ export class App {
 
   protected readonly navItems: SideNavItem[] = [
     // The mockup's order.
-    { id: 'dashboard', label: 'Dashboard', href: '/', icon: icon('dashboard') },
+    { id: 'dashboard', label: 'Summary', href: '/', icon: icon('dashboard') },
     { id: 'org', label: 'Centers & Teams', href: '/org', icon: icon('org') },
     { id: 'topics', label: 'Research Topics', href: '/topics', icon: icon('topics') },
     { id: 'gaps', label: 'Gaps & Coverage', href: '/gaps', icon: icon('gaps') },
