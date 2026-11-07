@@ -7,7 +7,7 @@ import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tre
 import { peopleControllerList } from '../../api/generated/fn/people/people-controller-list';
 import { topicsControllerCreate } from '../../api/generated/fn/topics/topics-controller-create';
 import { Api } from '../../api/generated/api';
-import { scopedResource } from '../../core/scoped-resource';
+import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { createBody, EMPTY_TOPIC, NewTopicValues, newTopicSteps, teamOptions } from './new-topic';
 
@@ -37,19 +37,25 @@ export class NewTopicDialog {
   readonly #people = scopedResource((api) => api.invoke(peopleControllerList), this.open);
 
   readonly #teams = computed(() => {
-    const me = this.#session.me.value();
-    return me ? teamOptions(this.#org.value(), this.#people.value() ?? [], me) : [];
+    const me = read(this.#session.me);
+    return me ? teamOptions(read(this.#org), read(this.#people) ?? [], me) : [];
   });
 
   /** Rebuilt each time the dialog opens, so a new topic starts from a clean form. */
   protected readonly content = computed(() => {
     if (!this.open()) return undefined;
-    const me = this.#session.me.value();
+    if (this.#org.error() || this.#people.error() || this.#session.me.error()) {
+      return html`<p role="alert">Couldn't load the teams to choose from. Close this and try again.</p>`;
+    }
+    const me = read(this.#session.me);
     const teams = this.#teams();
     if (!me || !teams.length) return html`<tc-skeleton height="240" radius="12"></tc-skeleton>`;
-    // A PI has one team, so center and team come pre-picked.
+    // The scope step only asks for a center when there's more than one, and for a team when its center has more than
+    // one, so pre-pick whichever is the only choice (a PI's one team; a single center with several teams).
+    const centerIds = [...new Set(teams.map((t) => t.centerId))];
+    const centerId = centerIds.length === 1 ? centerIds[0] : '';
     const only = teams.length === 1 ? teams[0] : undefined;
-    const values: NewTopicValues = { ...EMPTY_TOPIC, centerId: only?.centerId ?? '', teamId: only?.id ?? '' };
+    const values: NewTopicValues = { ...EMPTY_TOPIC, centerId, teamId: only?.id ?? '' };
     return html`<tc-stepper-form
       submit-label="Create topic"
       submitting-label="Creating…"

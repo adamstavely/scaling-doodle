@@ -19,7 +19,7 @@ import { peopleControllerList } from '../../api/generated/fn/people/people-contr
 import { topicsControllerGet } from '../../api/generated/fn/topics/topics-controller-get';
 import { topicsControllerSpine } from '../../api/generated/fn/topics/topics-controller-spine';
 import type { WorkDto } from '../../api/generated/models/work-dto';
-import { scopedResource } from '../../core/scoped-resource';
+import { read, scopedResource } from '../../core/scoped-resource';
 import { collaborationParts } from '../../core/collaboration';
 import { gradeCounts } from '../../core/grades';
 import { localDate, PRIORITY_TIERS } from '../../core/format';
@@ -74,11 +74,11 @@ export class TopicPage {
   });
   readonly #people = scopedResource((api) => api.invoke(peopleControllerList));
 
-  protected readonly topic = computed(() => this.#topic.value());
+  protected readonly topic = computed(() => read(this.#topic));
   protected readonly ready = computed(() => this.#topic.hasValue() && this.#spine.hasValue() && this.#people.hasValue());
   protected readonly error = computed(() => this.#topic.error() ?? this.#spine.error() ?? this.#people.error());
 
-  readonly #names = computed(() => new Map((this.#people.value() ?? []).map((p) => [p.id, p.name])));
+  readonly #names = computed(() => new Map((read(this.#people) ?? []).map((p) => [p.id, p.name])));
 
   protected readonly status = computed(() => HEALTH[this.topic()?.health ?? 'healthy']);
 
@@ -111,7 +111,7 @@ export class TopicPage {
   });
 
   protected readonly burn = computed<BurnItem[]>(() =>
-    (this.#spine.value()?.work ?? []).map((w) => ({
+    (read(this.#spine)?.work ?? []).map((w) => ({
       id: w.id,
       label: w.title,
       owner: this.#names().get(w.leadId),
@@ -138,12 +138,12 @@ export class TopicPage {
 
   protected readonly stages = SPINE_STAGES;
   protected readonly nodes = computed(() => {
-    const spine = this.#spine.value();
+    const spine = read(this.#spine);
     return spine ? spineNodes(spine, this.#names()) : [];
   });
 
   protected readonly work = computed(() =>
-    (this.#spine.value()?.work ?? []).map((w) => ({
+    (read(this.#spine)?.work ?? []).map((w) => ({
       id: w.id,
       title: w.title,
       status: WORK_STATUS[w.status],

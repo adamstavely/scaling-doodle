@@ -14,6 +14,7 @@ import { Apps } from './core/apps';
 import { icon } from './core/icons';
 import { ThemeService } from './core/theme';
 import { Session, VIEW_AS, ViewAs } from './core/session';
+import { read } from './core/scoped-resource';
 
 const THEME_ITEM = 'theme';
 
@@ -77,7 +78,7 @@ export class App {
   ]);
 
   protected readonly user = computed(() => {
-    const me = this.session.me.value();
+    const me = read(this.session.me);
     return { name: me?.name ?? '', email: me?.title ?? '' };
   });
 

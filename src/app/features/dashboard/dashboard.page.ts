@@ -23,7 +23,7 @@ import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { periodOptions, todayIso } from '../../core/period';
 import { portfolioTiles } from '../../core/portfolio';
-import { scopedResource } from '../../core/scoped-resource';
+import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
 import { NewTopicDialog } from '../dialogs/new-topic-dialog';
@@ -71,37 +71,37 @@ export class DashboardPage {
   protected readonly isChief = computed(() => this.#session.viewAs() === 'chief');
 
   protected readonly scopeLabel = computed(() =>
-    this.isChief() ? 'Directorate · whole portfolio' : `${this.#session.me.value()?.name ?? ''} · your topics`,
+    this.isChief() ? 'Directorate · whole portfolio' : `${read(this.#session.me)?.name ?? ''} · your topics`,
   );
 
   protected readonly status = computed(() => {
-    const s = this.#summary.value();
+    const s = read(this.#summary);
     if (!s) return undefined;
     const { healthy, watch, atRisk } = s.healthMix;
     return `${atRisk} at risk · ${watch} watch · ${healthy} on track`;
   });
 
   protected readonly health = computed<OpsHealth | undefined>(() => {
-    const s = this.#summary.value();
+    const s = read(this.#summary);
     if (!s) return undefined;
     const atRiskShare = s.topics ? s.healthMix.atRisk / s.topics : 0;
     return atRiskShare >= 0.5 ? 'down' : atRiskShare > 0 ? 'degraded' : 'nominal';
   });
 
   /** This period's papers, done alone vs. with partner labs, over the caller's scope. */
-  protected readonly collaboration = computed(() => collaborationParts(this.#summary.value()?.collaborationInPeriod));
+  protected readonly collaboration = computed(() => collaborationParts(read(this.#summary)?.collaborationInPeriod));
   protected readonly collaborationNote = computed(() => {
     const when = this.periods.find((p) => p.value === this.period())?.label.toLowerCase() ?? 'this period';
     return `Papers published ${when === 'year to date' ? 'this year' : when === 'fiscal year' ? 'this fiscal year' : when}${this.isChief() ? ' across the portfolio' : ' on your topics'}`;
   });
 
   protected readonly tiles = computed<OpsTile[]>(() => {
-    const s = this.#summary.value();
+    const s = read(this.#summary);
     return s ? portfolioTiles(s, this.isChief()) : [];
   });
 
   protected readonly priorities = computed<PriorityItem[]>(() =>
-    (this.#topics.value() ?? []).map((t) => ({
+    (read(this.#topics) ?? []).map((t) => ({
       id: t.id,
       name: t.name,
       owner: t.lead?.name,
@@ -116,10 +116,10 @@ export class DashboardPage {
     })),
   );
 
-  protected readonly coverage = computed(() => this.#summary.value()?.gapsCovered ?? 0);
+  protected readonly coverage = computed(() => read(this.#summary)?.gapsCovered ?? 0);
 
   protected readonly healthSegments = computed<CoverageSegment[]>(() => {
-    const mix = this.#summary.value()?.healthMix;
+    const mix = read(this.#summary)?.healthMix;
     if (!mix) return [];
     return [
       { id: 'healthy', label: 'On track', count: mix.healthy, tone: 'success' },
@@ -129,8 +129,8 @@ export class DashboardPage {
   });
 
   protected readonly gaps = computed<ExposureGap[]>(() => {
-    const bins = new Map((this.#topics.value() ?? []).map((t) => [t.id, t.bin]));
-    return (this.#gaps.value() ?? []).map((g) => ({
+    const bins = new Map((read(this.#topics) ?? []).map((t) => [t.id, t.bin]));
+    return (read(this.#gaps) ?? []).map((g) => ({
       id: g.id,
       text: g.text,
       severity: g.severity,
@@ -142,7 +142,7 @@ export class DashboardPage {
   });
 
   protected readonly papers = computed<SearchResult[]>(() =>
-    (this.#papers.value() ?? []).map((p) => ({
+    (read(this.#papers) ?? []).map((p) => ({
       id: p.id,
       title: p.title,
       source: p.venue,
@@ -158,7 +158,7 @@ export class DashboardPage {
   }
 
   protected openGap(event: CustomEvent<GapOpen>): void {
-    const gap = this.#gaps.value()?.find((g) => g.id === event.detail.id);
+    const gap = read(this.#gaps)?.find((g) => g.id === event.detail.id);
     if (gap) void this.#router.navigate(['/topics', gap.topicId]);
   }
 

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, resource, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, resource, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { PublicationImpact } from '@adamstavely/trenchcoat/angular/publication-impact';
@@ -23,7 +23,7 @@ import { collaborationLabel } from '../../core/collaboration';
 import { firstCitationLabel, firstCitationTiles } from '../../core/first-citation';
 import { compactNumber, localDate } from '../../core/format';
 import { GRADES, GradeId, gradeInfo } from '../../core/grades';
-import { scopedResource } from '../../core/scoped-resource';
+import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 
 const UNGRADED = 'ungraded';
@@ -101,7 +101,7 @@ export class PapersPage {
   protected readonly listError = computed(() => this.#list.error());
   protected readonly detailError = computed(() => this.#detail.error());
   protected readonly listReady = computed(() => this.#list.hasValue());
-  protected readonly paper = computed(() => (this.#detail.hasValue() ? this.#detail.value() : undefined));
+  protected readonly paper = computed(() => (this.#detail.hasValue() ? read(this.#detail) : undefined));
   protected readonly impact = computed(() => {
     const p = this.paper();
     return p ? impactOf(p) : undefined;
@@ -109,12 +109,12 @@ export class PapersPage {
 
   /** Time to first citation across the papers in view. */
   protected readonly citationTiles = computed(() => {
-    const s = this.#firstCitation.value();
+    const s = read(this.#firstCitation);
     return s ? firstCitationTiles(s) : [];
   });
 
   protected readonly results = computed<SearchResult[]>(() =>
-    (this.#list.value() ?? []).map((p) => ({
+    (read(this.#list) ?? []).map((p) => ({
       id: p.id,
       title: p.title,
       source: p.venue,
@@ -142,8 +142,16 @@ export class PapersPage {
   constructor() {
     // `/papers` with no id opens the first paper, so the detail pane is never empty.
     effect(() => {
-      const first = this.#list.value()?.[0];
+      const first = read(this.#list)?.[0];
       if (!this.id() && first) void this.#router.navigate(['/papers', first.id], { replaceUrl: true });
+    });
+    // A grade save and its error belong to the paper they were made on.
+    effect(() => {
+      this.id();
+      untracked(() => {
+        this.saving.set(false);
+        this.saveError.set(null);
+      });
     });
   }
 
@@ -159,15 +167,20 @@ export class PapersPage {
     const grade = value === UNGRADED ? null : (value as GradeId);
     this.saving.set(true);
     this.saveError.set(null);
+    // The save can finish after the Chief has moved on to another paper: then it only refreshes the list, and the
+    // paper now on screen keeps its own detail, error and saving state.
+    const stillHere = () => this.id() === id;
     try {
       const updated = await this.#api.invoke(papersControllerGrade, { id, body: { grade } });
-      this.#detail.set(updated);
+      if (stillHere()) this.#detail.set(updated);
       this.#list.reload();
     } catch {
-      this.saveError.set("Couldn't save the grade. Try again.");
-      this.#detail.reload();
+      if (stillHere()) {
+        this.saveError.set("Couldn't save the grade. Try again.");
+        this.#detail.reload();
+      }
     } finally {
-      this.saving.set(false);
+      if (stillHere()) this.saving.set(false);
     }
   }
 }
