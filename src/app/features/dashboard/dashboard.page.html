@@ -50,7 +50,7 @@
         heading="Centers"
         description="Each center's topics rolled up · papers published last month and this month"
         name-label="Center"
-        open-unit="gaps"
+        [hide]="centerHiddenColumns"
         no-filters
         [items]="centers()"
         [figures]="paperColumns"

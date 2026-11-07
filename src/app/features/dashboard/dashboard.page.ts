@@ -4,7 +4,7 @@ import { Select } from '@adamstavely/trenchcoat/angular/select';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
 import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
-import type { PriorityFigureColumn, PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
+import type { PriorityColumn, PriorityFigureColumn, PriorityItem, PriorityOpen } from '@adamstavely/trenchcoat/priority-list';
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
 import type { RecentPapersDto } from '../../api/generated/models/recent-papers-dto';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
@@ -98,6 +98,9 @@ export class DashboardPage {
   protected readonly priorities = computed<PriorityItem[]>(() =>
     (read(this.#topics) ?? []).map((t) => ({ ...topicPriorityItem(t), figures: paperFigures(t.recentPapers) })),
   );
+
+  /** The Centers list shows momentum and papers only. */
+  protected readonly centerHiddenColumns: PriorityColumn[] = ['coverage', 'open', 'work'];
 
   /** The paper-count columns both lists share. */
   protected readonly paperColumns = PAPER_COLUMNS;
