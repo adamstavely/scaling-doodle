@@ -9,7 +9,7 @@ import { peopleControllerList } from '../../api/generated/fn/people/people-contr
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import type { OrgDto } from '../../api/generated/models/org-dto';
 import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
-import { scopedResource } from '../../core/scoped-resource';
+import { read, scopedResource } from '../../core/scoped-resource';
 
 const ROLE: Record<PersonSummaryDto['role'], string> = {
   chief: 'Chief',
@@ -71,13 +71,13 @@ export class PeoplePage {
   protected readonly columns = ROSTER_COLUMNS;
   protected readonly tones = ROSTER_TONES;
 
-  readonly #topicNames = computed(() => new Map((this.#topics.value() ?? []).map((t) => [t.id, t.name])));
+  readonly #topicNames = computed(() => new Map((read(this.#topics) ?? []).map((t) => [t.id, t.name])));
 
-  protected readonly overCount = computed(() => (this.#people.value() ?? []).filter((p) => p.overCapacity).length);
+  protected readonly overCount = computed(() => (read(this.#people) ?? []).filter((p) => p.overCapacity).length);
 
   /** Only people with allocations: the load chart has nothing to draw for the rest. */
   protected readonly capacity = computed<CapacityPerson[]>(() =>
-    (this.#people.value() ?? [])
+    (read(this.#people) ?? [])
       .filter((p) => p.allocations.length)
       .map((p) => ({
         id: p.id,
@@ -93,7 +93,7 @@ export class PeoplePage {
   );
 
   protected readonly rows = computed<DataRow[]>(() => {
-    const teams = teamNames(this.#org.value());
-    return (this.#people.value() ?? []).map((p) => rosterRow(p, teams));
+    const teams = teamNames(read(this.#org));
+    return (read(this.#people) ?? []).map((p) => rosterRow(p, teams));
   });
 }

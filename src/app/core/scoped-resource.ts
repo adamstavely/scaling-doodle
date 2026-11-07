@@ -16,3 +16,11 @@ export function scopedResource<R>(load: (api: Api) => Promise<R>, when?: () => b
     loader: () => load(api),
   });
 }
+
+/**
+ * A resource's value, or undefined while it loads or after it failed. `Resource.value()` throws once the resource is
+ * in an error state, so computeds read through this and pages show the error from `.error()` instead of crashing.
+ */
+export function read<T>(r: { hasValue(): boolean; value(): T }): T | undefined {
+  return r.hasValue() ? r.value() : undefined;
+}

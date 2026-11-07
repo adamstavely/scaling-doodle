@@ -9,7 +9,7 @@ import type { OrgRollupDto } from '../../api/generated/models/org-rollup-dto';
 import type { OrgTeamDto } from '../../api/generated/models/org-team-dto';
 import { jointShare } from '../../core/collaboration';
 import { percent, priorityHealth, PRIORITY_TIERS } from '../../core/format';
-import { scopedResource } from '../../core/scoped-resource';
+import { read, scopedResource } from '../../core/scoped-resource';
 
 function healthCounts(r: OrgRollupDto): OrgHealthCounts {
   return { 'on-track': r.healthMix.healthy, watch: r.healthMix.watch, 'at-risk': r.healthMix.atRisk };
@@ -103,8 +103,8 @@ export class OrgPage {
 
   protected readonly error = computed(() => this.#org.error());
   protected readonly ready = computed(() => this.#org.hasValue());
-  protected readonly centers = computed(() => (this.#org.value()?.centers ?? []).map(centerCard));
-  protected readonly otherTeams = computed(() => (this.#org.value()?.otherTeams ?? []).map(team));
+  protected readonly centers = computed(() => (read(this.#org)?.centers ?? []).map(centerCard));
+  protected readonly otherTeams = computed(() => (read(this.#org)?.otherTeams ?? []).map(team));
 
   protected openTopic(event: CustomEvent<OrgOpen>): void {
     void this.#router.navigate(['/topics', event.detail.item.id]);
