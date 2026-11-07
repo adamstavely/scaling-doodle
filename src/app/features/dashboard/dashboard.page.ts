@@ -2,7 +2,6 @@ import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { Button } from '@adamstavely/trenchcoat/angular/button';
 import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
-import { CoverageMatrix } from '@adamstavely/trenchcoat/angular/coverage-matrix';
 import { CoverageRing } from '@adamstavely/trenchcoat/angular/coverage-ring';
 import { GapExposure } from '@adamstavely/trenchcoat/angular/gap-exposure';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
@@ -23,7 +22,7 @@ import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tre
 import { papersControllerTop } from '../../api/generated/fn/papers/papers-controller-top';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
-import { CENTER_PRIORITY_LABELS, centerPriorities } from '../../core/center-priorities';
+import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
 import { compactNumber, localDate, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { periodOptions, todayIso } from '../../core/period';
@@ -66,7 +65,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [OpsOverview, PriorityList, CoverageMatrix, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, Button, SegmentedControl, NewTopicDialog, BriefDialog],
+  imports: [OpsOverview, PriorityList, CoverageRing, SegmentedBar, GapExposure, ResultsList, Skeleton, Button, SegmentedControl, NewTopicDialog, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -149,8 +148,9 @@ export class DashboardPage {
   protected readonly centers = computed<PriorityItem[]>(() => (read(this.#org)?.centers ?? []).map(centerRow));
 
   /** Each center against each priority tier, from the same topics the Priorities list shows. */
-  protected readonly centerPriorities = computed(() => centerPriorities(read(this.#org)?.centers ?? [], read(this.#topics) ?? []));
-  protected readonly centerPriorityLabels = CENTER_PRIORITY_LABELS;
+  protected readonly centerPriorities = computed<PriorityItem[]>(() =>
+    centerPriorityRows(read(this.#org)?.centers ?? [], read(this.#topics) ?? []),
+  );
 
   protected readonly coverage = computed(() => read(this.#summary)?.gapsCovered ?? 0);
 
@@ -185,6 +185,11 @@ export class DashboardPage {
 
   protected openCenter(event: CustomEvent<PriorityOpen>): void {
     void this.#router.navigate(['/org'], { fragment: event.detail.id });
+  }
+
+  /** A center-by-priority row opens its center; the row id is `<center>:<tier>`. */
+  protected openCenterTier(event: CustomEvent<PriorityOpen>): void {
+    void this.#router.navigate(['/org'], { fragment: event.detail.id.split(':')[0] });
   }
 
   protected openGap(event: CustomEvent<GapOpen>): void {

@@ -1,41 +1,58 @@
 import type { OrgCenterDto } from '../api/generated/models/org-center-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
-import { centerPriorities } from './center-priorities';
+import { centerPriorityRows } from './center-priorities';
 
 const center = (id: string, code: string | null, name: string) => ({ id, code, name }) as unknown as OrgCenterDto;
-const topic = (name: string, centerId: string, bin: number, health: string, healthScore: number) =>
-  ({ id: name, name, centerId, bin, health, healthScore }) as unknown as TopicSummaryDto;
+const topic = (
+  name: string,
+  centerId: string,
+  bin: number,
+  health: string,
+  more: { momentum?: number; trend?: number[]; openGaps?: number; coverage?: number; work?: number; papers?: [number, number] } = {},
+) =>
+  ({
+    id: name,
+    name,
+    centerId,
+    bin,
+    health,
+    momentum: more.momentum ?? 0,
+    trend: more.trend ?? [],
+    stats: { openGaps: more.openGaps ?? 0, coverage: more.coverage ?? 0, work: more.work ?? 0 },
+    recentPapers: { lastMonth: more.papers?.[0] ?? 0, thisMonth: more.papers?.[1] ?? 0 },
+  }) as unknown as TopicSummaryDto;
 
-describe('centerPriorities', () => {
+describe('centerPriorityRows', () => {
   const centers = [center('cec', 'CEC', 'Center for Energy & Climate'), center('cis', null, 'Center for Intelligent Systems')];
   const topics = [
-    topic('Grid storage', 'cec', 1, 'healthy', 80),
-    topic('Fusion', 'cec', 1, 'at-risk', 30),
-    topic('Carbon capture', 'cec', 2, 'watch', 55),
-    topic('Robotics', 'cis', 2, 'healthy', 75),
+    topic('Grid storage', 'cec', 1, 'healthy', { momentum: 6, trend: [70, 80], openGaps: 3, coverage: 1, work: 2, papers: [2, 1] }),
+    topic('Fusion', 'cec', 1, 'at-risk', { momentum: -2, trend: [10, 30, 40], openGaps: 1, coverage: 0, work: 1, papers: [1, 0] }),
+    topic('Robotics', 'cis', 2, 'healthy', { papers: [0, 3] }),
   ];
 
-  it('makes a row per center and a column per tier that has topics', () => {
-    const m = centerPriorities(centers, topics);
-    expect(m.checks).toEqual([
-      { id: 'cec', label: 'CEC', description: 'Center for Energy & Climate' },
-      { id: 'cis', label: 'Center for Intelligent Systems', description: undefined },
+  it('makes a row per center per tier it has topics in', () => {
+    expect(centerPriorityRows(centers, topics).map((r) => [r.id, r.priority, r.badge])).toEqual([
+      ['cec:1', 1, 'CEC'],
+      ['cis:2', 2, undefined],
     ]);
-    expect(m.parts.map((p) => p.id)).toEqual(['1', '2']);
   });
 
-  it("gives a cell its weakest topic's health and lists the topics, weakest first", () => {
-    const { coverage } = centerPriorities(centers, topics);
-    expect(coverage['cec']['1']).toEqual({
-      status: 'gap',
-      detail: '2 topics: 1 at risk, 1 on track.',
-      evidence: 'Fusion (at risk, 30) · Grid storage (on track, 80)',
+  it("sums papers and work, averages momentum and the trend, and takes the weakest topic's health", () => {
+    const [cec] = centerPriorityRows(centers, topics);
+    expect(cec).toMatchObject({
+      name: 'Center for Energy & Climate',
+      owner: '2 topics',
+      health: 'at-risk',
+      change: 0.02,
+      trend: [10, 50, 60],
+      coverage: 0.75,
+      open: 4,
+      work: 3,
+      figures: { lastMonth: 3, thisMonth: 1 },
     });
-    expect(coverage['cec']['2']).toMatchObject({ status: 'partial', detail: '1 topic: 1 watch.' });
-    expect(coverage['cis']['2']).toMatchObject({ status: 'covered' });
   });
 
-  it('leaves a tier the center has no topics in empty', () => {
-    expect(centerPriorities(centers, topics).coverage['cis']['1']).toBeUndefined();
+  it('counts a tier with no open gaps as fully covered', () => {
+    expect(centerPriorityRows(centers, topics)[1]).toMatchObject({ coverage: 1, open: 0, figures: { lastMonth: 0, thisMonth: 3 } });
   });
 });
