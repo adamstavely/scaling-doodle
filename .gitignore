@@ -56,3 +56,7 @@ Thumbs.db
 # Playwright
 /test-results
 /playwright-report
+
+# Sync-conflict copies (iCloud/Finder add " 2" to file names)
+* [0-9]
+* [0-9].*

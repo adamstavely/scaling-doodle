@@ -40,7 +40,7 @@ describe('createBody', () => {
     name: '  Ocean Alkalinity  ',
     centerId: 'sl-energy',
     teamId: 'team-climate',
-    question: ' Can it be verified? ',
+    questions: ' Can it be verified? \n\n How cheaply?',
     budget: '1.5',
     tags: ['climate'],
   };
@@ -53,14 +53,14 @@ describe('createBody', () => {
       bin: 2,
       teamId: 'team-climate',
       leadId: 'am',
-      questions: ['Can it be verified?'],
+      questions: ['Can it be verified?', 'How cheaply?'],
       budget: { allocated: 1.5 },
       sponsors: undefined,
     });
   });
 
   it('makes a PI the lead of their own topic and drops empty extras', () => {
-    const body = createBody({ ...values, question: '', budget: '0', tags: [] }, teams, { id: 'am', role: 'pi' });
+    const body = createBody({ ...values, questions: ' \n ', budget: '0', tags: [] }, teams, { id: 'am', role: 'pi' });
     expect(body).toMatchObject({ leadId: 'am', questions: undefined, budget: undefined, tags: undefined });
   });
 });
