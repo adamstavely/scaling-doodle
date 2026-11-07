@@ -18,7 +18,7 @@
   "private": true,
   "packageManager": "npm@11.21.2",
   "dependencies": {
-    "@adamstavely/trenchcoat": "0.2.1",
+    "@adamstavely/trenchcoat": "0.3.0",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",

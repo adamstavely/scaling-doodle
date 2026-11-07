@@ -1,6 +1,9 @@
 import { Component, computed, effect, inject, input, resource, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { PublicationImpact, ResultsList, SegmentedControl, Skeleton } from '@adamstavely/trenchcoat/angular';
+import { PublicationImpact } from '@adamstavely/trenchcoat/angular/publication-impact';
+import { ResultsList } from '@adamstavely/trenchcoat/angular/results-list';
+import { SegmentedControl } from '@adamstavely/trenchcoat/angular/segmented-control';
+import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type {
   PublicationFeedback,
   PublicationFeedbackKind,

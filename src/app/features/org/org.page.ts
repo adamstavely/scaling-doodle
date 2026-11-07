@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { OrgUnitCard, Skeleton } from '@adamstavely/trenchcoat/angular';
+import { OrgUnitCard } from '@adamstavely/trenchcoat/angular/org-unit-card';
+import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
 import type { OrgHealthCounts, OrgOpen, OrgStat, OrgTeam } from '@adamstavely/trenchcoat/org-unit-card';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
