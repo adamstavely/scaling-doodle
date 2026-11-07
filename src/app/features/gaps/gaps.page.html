@@ -1,0 +1,24 @@
+<header class="page-head">
+  <div>
+    <p class="eyebrow">{{ scopeLabel() }}</p>
+    <h1>Gaps &amp; Coverage</h1>
+  </div>
+  <tc-button label="Export gap review" variant="primary" [disabled]="!ready()" (click)="exportReview()"></tc-button>
+</header>
+
+@if (error()) {
+  <p role="alert" class="note">Couldn't load the gaps. Is intellect-api running?</p>
+} @else if (ready()) {
+  <tc-gap-exposure
+    heading="Open gaps"
+    description="What's missing across the portfolio, and whether anyone is working on it"
+    group-by="priority"
+    currency="USD"
+    [gaps]="gaps()"
+    [tiers]="tiers"
+    empty="No open gaps."
+    (tc-open)="openGap($event)"
+  ></tc-gap-exposure>
+} @else {
+  <tc-skeleton height="560" radius="12"></tc-skeleton>
+}
