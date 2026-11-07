@@ -8,8 +8,9 @@
   min-height: 100dvh;
 }
 
-/* Brand navy in both themes, on the side nav and the top bar. Both are pinned to the dark theme (data-tc-theme in
-   app.html) so their text, icons and hover fills are drawn for a dark background. */
+/* Brand navy in both themes, on the side nav and the top bar. The side nav is pinned to the dark theme (data-tc-theme
+   in app.html) so its text, icons and hover fills are drawn for a dark background; the top bar's tc-header-nav does the
+   same with `inverse`, which leaves its menus on the page's theme. */
 .shell {
   --app-chrome: #081d35;
 }
@@ -18,6 +19,10 @@
   grid-area: sidebar;
   background: var(--app-chrome);
   border-right-color: transparent;
+  /* A larger INTELLECT name and logo, with room under them before the first link. */
+  --tc-snav-brand-size: var(--tc-font-size-xl);
+  --tc-snav-logo-size: 32px;
+  --tc-snav-head-gap: var(--tc-space-6);
 }
 
 .topbar {
