@@ -63,13 +63,6 @@
         [description]="collaborationNote()"
         [data]="collaboration()"
       ></tc-segmented-bar>
-
-      <tc-results-list
-        heading="Impact pulse"
-        group="none"
-        [results]="papers()"
-        (tc-open)="openPaper($event)"
-      ></tc-results-list>
     </aside>
   </div>
 } @else if (!error()) {
