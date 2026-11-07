@@ -7,10 +7,19 @@ const summary = {
   gapsCovered: 0.363,
   workInFlight: 8,
   papersInPeriod: 2,
+  collaborationInPeriod: { unilateral: 1, joint: 1 },
   readsInPeriod: 101047,
   readTrend: [],
 };
-const rollup = { topics: 4, avgHealthScore: null, coverage: 0.333, openGaps: 6, budget: { allocated: 10.1, spent: 6.2 } };
+const rollup = {
+  topics: 4,
+  avgHealthScore: null,
+  coverage: 0.333,
+  openGaps: 6,
+  budget: { allocated: 10.1, spent: 6.2 },
+  papers: 4,
+  collaboration: { unilateral: 3, joint: 1 },
+};
 
 const brief = {
   executiveSummary: ['12 topics in scope.'],
@@ -35,6 +44,13 @@ describe('briefModel', () => {
     ]);
   });
 
+  it('splits the period papers into unilateral and joint', () => {
+    expect(m.collaboration).toEqual([
+      { label: 'Unilateral', value: 1 },
+      { label: 'Joint', value: 1 },
+    ]);
+  });
+
   it('formats center and investment rows', () => {
     expect(m.centers[0]).toEqual({
       id: 'sl-energy',
@@ -44,6 +60,7 @@ describe('briefModel', () => {
       coverage: '33%',
       gaps: 6,
       budget: '$6.2M of $10.1M',
+      joint: '1 of 4 (25%)',
     });
     expect(m.investment[0]).toEqual({
       id: 'bin-1',

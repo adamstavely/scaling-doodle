@@ -17,6 +17,7 @@ import { papersControllerGet } from '../../api/generated/fn/papers/papers-contro
 import { papersControllerGrade } from '../../api/generated/fn/papers/papers-controller-grade';
 import { papersControllerList } from '../../api/generated/fn/papers/papers-controller-list';
 import type { PaperDetailDto } from '../../api/generated/models/paper-detail-dto';
+import { collaborationLabel } from '../../core/collaboration';
 import { compactNumber, localDate } from '../../core/format';
 import { GRADES, GradeId, gradeInfo } from '../../core/grades';
 import { scopedResource } from '../../core/scoped-resource';
@@ -110,7 +111,7 @@ export class PapersPage {
       kind: gradeInfo(p.grade)?.label ?? 'Ungraded',
       href: `/papers/${p.id}`,
       date: localDate(p.published),
-      meta: [p.topic.name, `${compactNumber(p.totals.downloads)} downloads`, `${p.totals.citations} citations`],
+      meta: [p.topic.name, collaborationLabel(p.partners), `${compactNumber(p.totals.downloads)} downloads`, `${p.totals.citations} citations`],
     })),
   );
 

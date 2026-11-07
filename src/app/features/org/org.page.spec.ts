@@ -9,6 +9,8 @@ const rollup = {
   coverage: 0.333,
   fte: 1.2,
   budget: { allocated: 3.2, spent: 2.2 },
+  papers: 5,
+  collaboration: { unilateral: 3, joint: 2 },
 };
 const center = {
   id: 'sl-energy',
@@ -38,6 +40,13 @@ describe('centerCard', () => {
     expect(card.health).toEqual({ 'on-track': 1, watch: 0, 'at-risk': 1 });
     expect(card.stats.find((s) => s.id === 'coverage')).toMatchObject({ value: '33%', tone: 'danger' });
     expect(card.stats.find((s) => s.id === 'budget')).toMatchObject({ value: '$2.2M', sub: 'of $3.2M' });
+    expect(card.stats.find((s) => s.id === 'joint')).toEqual({
+      id: 'joint',
+      label: 'Joint research',
+      value: '40%',
+      sub: '2 joint · 3 unilateral',
+      meter: 0.4,
+    });
   });
 
   it('nests topics under teams with momentum as a fraction', () => {
@@ -47,5 +56,10 @@ describe('centerCard', () => {
   it('shows a dash when a unit has no average health', () => {
     const empty = centerCard({ ...center, rollup: { ...rollup, avgHealthScore: null } } as unknown as OrgCenterDto);
     expect(empty.stats.find((s) => s.id === 'health')).toEqual({ id: 'health', label: 'Avg health', value: '—' });
+  });
+
+  it('shows a dash for joint research when a unit has published nothing', () => {
+    const none = centerCard({ ...center, rollup: { ...rollup, papers: 0, collaboration: { unilateral: 0, joint: 0 } } } as unknown as OrgCenterDto);
+    expect(none.stats.find((s) => s.id === 'joint')).toMatchObject({ value: '—', sub: 'no papers yet' });
   });
 });

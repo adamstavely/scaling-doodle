@@ -8,6 +8,7 @@ import '@adamstavely/trenchcoat/digest';
 import '@adamstavely/trenchcoat/gap-exposure';
 import '@adamstavely/trenchcoat/ops-overview';
 import '@adamstavely/trenchcoat/results-list';
+import '@adamstavely/trenchcoat/segmented-bar';
 import '@adamstavely/trenchcoat/shimmer-loader';
 import { Api } from '../../api/generated/api';
 import { briefControllerBrief } from '../../api/generated/fn/brief/brief-controller-brief';

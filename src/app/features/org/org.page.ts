@@ -7,6 +7,7 @@ import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tre
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
 import type { OrgRollupDto } from '../../api/generated/models/org-rollup-dto';
 import type { OrgTeamDto } from '../../api/generated/models/org-team-dto';
+import { jointShare } from '../../core/collaboration';
 import { percent, priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { scopedResource } from '../../core/scoped-resource';
 
@@ -36,7 +37,21 @@ function stats(r: OrgRollupDto): OrgStat[] {
     { id: 'coverage', label: 'Coverage', value: percent(r.coverage), meter: r.coverage, tone: tone(r.coverage) },
     { id: 'fte', label: 'FTE', value: String(r.fte) },
     { id: 'budget', label: 'Budget', value: `$${r.budget.spent}M`, sub: `of $${r.budget.allocated}M`, meter: burn },
+    joint(r),
   ];
+}
+
+/** Joint papers as a share of everything the unit has published. */
+function joint(r: OrgRollupDto): OrgStat {
+  const share = jointShare(r.collaboration);
+  if (share === null) return { id: 'joint', label: 'Joint research', value: '—', sub: 'no papers yet' };
+  return {
+    id: 'joint',
+    label: 'Joint research',
+    value: percent(share),
+    sub: `${r.collaboration.joint} joint · ${r.collaboration.unilateral} unilateral`,
+    meter: share,
+  };
 }
 
 function team(t: OrgTeamDto): OrgTeam {
