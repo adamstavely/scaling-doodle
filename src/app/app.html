@@ -1,27 +1,30 @@
-<div class="shell">
-  <tc-side-nav
-    class="sidebar"
-    brand="INTELLECT"
-    brand-href="/"
-    [brandIcon]="brandIcon()"
-    collapsible
-    [items]="navItems"
-    [current]="currentNav()"
-    (tc-navigate)="onNavigate($event)"
-  ></tc-side-nav>
+<!-- Every Trench Coat element inside takes the Clean look; data-tc-look on <html> only sets the tokens. -->
+<tc-look-provider look="clean">
+  <div class="shell">
+    <tc-side-nav
+      class="sidebar"
+      brand="INTELLECT"
+      brand-href="/"
+      [brandIcon]="brandIcon()"
+      collapsible
+      [items]="navItems"
+      [current]="currentNav()"
+      (tc-navigate)="onNavigate($event)"
+    ></tc-side-nav>
 
-  <tc-header-nav
-    class="topbar"
-    [user]="user()"
-    [accountItems]="accountItems()"
-    (tc-account-select)="onAccountSelect($event)"
-  >
-    <!-- Empty until there's a notifications feed. -->
-    <tc-notifications heading="Notifications" [items]="[]"></tc-notifications>
-    <tc-app-picker label="Apps" [apps]="apps.config.value().apps" [current]="apps.config.value().current"></tc-app-picker>
-  </tc-header-nav>
+    <tc-header-nav
+      class="topbar"
+      [user]="user()"
+      [accountItems]="accountItems()"
+      (tc-account-select)="onAccountSelect($event)"
+    >
+      <!-- Empty until there's a notifications feed. -->
+      <tc-notifications heading="Notifications" [items]="[]"></tc-notifications>
+      <tc-app-picker label="Apps" [apps]="apps.config.value().apps" [current]="apps.config.value().current"></tc-app-picker>
+    </tc-header-nav>
 
-  <main class="content">
-    <router-outlet />
-  </main>
-</div>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</tc-look-provider>

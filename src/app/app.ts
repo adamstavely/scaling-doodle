@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AppPicker } from '@adamstavely/trenchcoat/angular/app-picker';
 import { HeaderNav } from '@adamstavely/trenchcoat/angular/header-nav';
+import { LookProvider } from '@adamstavely/trenchcoat/angular/look-provider';
 import { Notifications } from '@adamstavely/trenchcoat/angular/notifications';
 import { SideNav } from '@adamstavely/trenchcoat/angular/side-nav';
 import type { HeaderNavAccountSelect } from '@adamstavely/trenchcoat/header-nav';
@@ -36,7 +37,7 @@ function navIdFor(url: string): string {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HeaderNav, Notifications, AppPicker, SideNav],
+  imports: [RouterOutlet, LookProvider, HeaderNav, Notifications, AppPicker, SideNav],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
