@@ -48,6 +48,20 @@ test.describe('smoke', () => {
     expect(await page.locator('tc-budget-burn').evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
   });
 
+  test('search finds a topic from the top bar and opens it', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/');
+    const search = page.locator('app-search-box tc-command-menu');
+    await expect(search).toBeVisible();
+    await search.locator('input').fill('neu');
+    await expect(page.getByText('Neuromorphic Computing').first()).toBeVisible();
+    await expect
+      .poll(() => search.evaluate((e) => (e as unknown as { groups: { id: string }[] }).groups.map((g) => g.id)))
+      .toEqual(['topics', 'papers']);
+    await search.locator('input').press('Enter');
+    await expect(page).toHaveURL(/\/topics\/t-neuro$/);
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');

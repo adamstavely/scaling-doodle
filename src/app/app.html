@@ -16,6 +16,12 @@
     <!-- The navy bar spans the row; tc-header-nav is its right end. `inverse` draws its buttons for the dark bar while
          their menus keep the page's light or dark theme. -->
     <header class="topbar">
+      <!-- Loaded once the page is idle, so the command menu isn't part of every page's first download. -->
+      @defer (on idle) {
+        <app-search-box />
+      } @placeholder {
+        <span class="search-slot"></span>
+      }
       <tc-header-nav inverse [user]="user()" [accountItems]="accountItems()" (tc-account-select)="onAccountSelect($event)">
         <!-- Empty until there's a notifications feed. -->
         <tc-notifications heading="Notifications" [items]="[]"></tc-notifications>

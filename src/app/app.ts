@@ -13,6 +13,7 @@ import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-
 import { Apps } from './core/apps';
 import { icon } from './core/icons';
 import { ThemeService } from './core/theme';
+import { SearchBox } from './features/search/search-box';
 import { Session, VIEW_AS, ViewAs } from './core/session';
 import { read } from './core/scoped-resource';
 
@@ -42,7 +43,7 @@ function navIdFor(url: string): string {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LookProvider, HeaderNav, Notifications, AppPicker, SideNav],
+  imports: [RouterOutlet, LookProvider, HeaderNav, Notifications, AppPicker, SideNav, SearchBox],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

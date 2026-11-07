@@ -29,12 +29,17 @@
   grid-area: topbar;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: var(--tc-space-4);
   padding: 0 var(--tc-space-6);
   background: var(--app-chrome);
 }
 
 /* Pages use the full width beside the nav; side columns grow with it (see each page's grid). */
+.search-slot {
+  width: min(420px, 40vw);
+}
+
 .content {
   grid-area: content;
   min-width: 0;
