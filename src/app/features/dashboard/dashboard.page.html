@@ -64,16 +64,6 @@
     </div>
 
     <aside class="rail">
-      <tc-coverage-ring
-        heading="Gap coverage"
-        description="Share of open gaps with active work against them"
-        caption="covered"
-        unit="topics"
-        unit-one="topic"
-        [value]="coverage()"
-        [segments]="healthSegments()"
-      ></tc-coverage-ring>
-
       <tc-segmented-bar
         heading="Unilateral vs. joint research"
         [highlight]="'Joint'"
@@ -81,13 +71,6 @@
         [description]="collaborationNote()"
         [data]="collaboration()"
       ></tc-segmented-bar>
-
-      <tc-gap-exposure
-        heading="Gaps needing attention"
-        [gaps]="gaps()"
-        [tiers]="tiers"
-        (tc-open)="openGap($event)"
-      ></tc-gap-exposure>
 
       <tc-results-list
         heading="Impact pulse"
