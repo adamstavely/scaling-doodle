@@ -6,6 +6,9 @@
 @if (error()) {
   <p role="alert" class="note">Couldn't load the organization. Is intellect-api running?</p>
 } @else if (ready()) {
+  @if (summary().length) {
+    <tc-ops-overview heading="Organization at a glance" [tiles]="summary()"></tc-ops-overview>
+  }
   @for (c of centers(); track c.id) {
     <tc-org-unit-card
       [heading]="c.heading"

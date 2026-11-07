@@ -1,5 +1,7 @@
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
-import { centerCard } from './org.page';
+import type { OrgDto } from '../../api/generated/models/org-dto';
+import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
+import { centerCard, orgSummaryTiles } from './org.page';
 
 const rollup = {
   topics: 2,
@@ -61,5 +63,20 @@ describe('centerCard', () => {
   it('shows a dash for joint research when a unit has published nothing', () => {
     const none = centerCard({ ...center, rollup: { ...rollup, papers: 0, collaboration: { unilateral: 0, joint: 0 } } } as unknown as OrgCenterDto);
     expect(none.stats.find((s) => s.id === 'joint')).toMatchObject({ value: '—', sub: 'no papers yet' });
+  });
+});
+
+describe('orgSummaryTiles', () => {
+  it('totals topics, researchers and budget across centers and other teams', () => {
+    const org = {
+      centers: [{ rollup: { ...rollup, topics: 2, fte: 1.2, budget: { allocated: 3.2, spent: 2.2 } } }],
+      otherTeams: [{ rollup: { ...rollup, topics: 1, fte: 0.5, budget: { allocated: 1, spent: 0.4 } } }],
+    } as unknown as OrgDto;
+    const people = [{ allocations: [{ topicId: 't1', fte: 1 }] }, { allocations: [] }] as unknown as PersonSummaryDto[];
+    expect(orgSummaryTiles(org, people).map((t) => [t.id, t.value, t.sub])).toEqual([
+      ['topics', 3, 'tracked'],
+      ['researchers', 1, '1.7 FTE allocated'],
+      ['budget', '$4.2M', '$2.6M spent'],
+    ]);
   });
 });
