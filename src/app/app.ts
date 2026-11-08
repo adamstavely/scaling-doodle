@@ -62,9 +62,10 @@ export class App {
    * The side nav folds to its icon rail on narrow screens (and opens again on wide ones), so the page keeps its width;
    * the collapse button still toggles it in between.
    */
-  readonly #narrow = matchMedia(NARROW);
-  protected readonly navCollapsed = signal(this.#narrow.matches);
-  readonly #followWidth = this.#narrow.addEventListener('change', (e) => this.navCollapsed.set(e.matches));
+  // Not every environment has matchMedia (tests, server rendering): there the nav simply starts open
+  readonly #narrow = typeof matchMedia === 'function' ? matchMedia(NARROW) : undefined;
+  protected readonly navCollapsed = signal(this.#narrow?.matches ?? false);
+  readonly #followWidth = this.#narrow?.addEventListener('change', (e) => this.navCollapsed.set(e.matches));
 
   protected onNavCollapsed(event: CustomEvent<{ collapsed: boolean }>): void {
     this.navCollapsed.set(event.detail.collapsed);
