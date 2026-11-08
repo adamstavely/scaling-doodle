@@ -35,16 +35,16 @@
         (tc-open)="openCenterTier($event)"
       ></tc-priority-list>
 
-      <!-- Priorities: each topic's health score, P1–P2 and P3–P4, on one scale; at-risk topics stand out. -->
+      <!-- Priorities: each topic's papers in the period, P1–P2 and P3–P4, stacked by the authors' centers. -->
       <div class="priority-charts">
         @for (chart of priorityCharts(); track chart.id) {
           <tc-bar-chart
             [heading]="chart.heading"
-            description="Health score, most at risk first"
-            orientation="horizontal"
+            [description]="papersNote()"
+            layout="stacked"
+            series="center"
             [sort]="false"
-            [yDomain]="[0, 100]"
-            [highlight]="atRisk"
+            format="integer"
             [data]="chart.bars"
             (tc-mark-click)="openTopicBar($event)"
           ></tc-bar-chart>

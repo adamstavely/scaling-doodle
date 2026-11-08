@@ -62,14 +62,15 @@ describe('DashboardPage', () => {
     http.expectOne((r) => r.url === '/api/portfolio/summary' && r.params.has('period')).flush(summary);
     http.expectOne((r) => r.url === '/api/topics').flush([topic]);
     http.expectOne('/api/org').flush({ centers: [center], otherTeams: [] });
+    http.expectOne('/api/papers').flush([]);
     await fixture.whenStable();
 
     const page = fixture.componentInstance as unknown as {
-      priorityCharts(): { id: string; bars: { id: string; y: number; health: string }[] }[];
+      priorityCharts(): { id: string; bars: { id: string; y: number; center: string }[] }[];
       centers(): { id: string }[];
     };
     expect(page.priorityCharts().map((c) => c.id)).toEqual(['p1-p2', 'p3-p4']);
-    expect(page.priorityCharts()[0].bars).toEqual([expect.objectContaining({ id: 't-neuro', health: 'at-risk' })]);
+    expect(page.priorityCharts()[0].bars).toEqual([expect.objectContaining({ id: 't-neuro', y: 0 })]);
     expect(page.priorityCharts()[1].bars).toEqual([]);
     expect(page.centers().map((c) => c.id)).toEqual(['sl-intel']);
   });

@@ -8,7 +8,8 @@ test.describe('smoke', () => {
     await expect(page.getByRole('heading', { name: 'Metrics Summary' })).toBeVisible();
     const charts = page.locator('.priority-charts tc-bar-chart');
     await expect(charts).toHaveCount(2);
-    const bars = () => charts.evaluateAll((els) => els.map((e) => (e as unknown as { data: unknown[] }).data.length));
+    // A bar per topic (stacked by center): count the topics each chart draws
+    const bars = () => charts.evaluateAll((els) => els.map((e) => new Set((e as unknown as { data: { id: string }[] }).data.map((d) => d.id)).size));
     expect(await bars()).toEqual([6, 6]);
     const centers = page.locator('tc-priority-list[heading="Centers"]');
     expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['AFMC', 'ACMC', 'CCI', 'CMC', 'CIMC', 'CTMC', 'EAPMC', 'EEMC', 'NEMC', 'SCAMC', 'WCPMC']);

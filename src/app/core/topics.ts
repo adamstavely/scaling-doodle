@@ -1,4 +1,5 @@
 import type { PriorityItem } from '@adamstavely/trenchcoat/priority-list';
+import type { PaperListItemDto } from '../api/generated/models/paper-list-item-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
 import { priorityHealth } from './format';
 
@@ -19,21 +20,43 @@ export function topicPriorityItem(t: TopicSummaryDto): PriorityItem {
   };
 }
 
-/** A topic as a bar: its name, health score and health, for tc-bar-chart. */
-export type TopicBar = {
+/** One segment of a priority's bar: its papers by one contributing center, for tc-bar-chart's long table. */
+export type PaperBar = {
+  /** The topic's id, to open it */
   id: string;
+  /** The topic's name: the bar */
   x: string;
+  /** The center's code: the segment */
+  center: string;
   y: number;
-  health: TopicSummaryDto['health'];
 };
 
 /**
- * The Summary's two priority charts: P1–P2 in one, P3–P4 in the other, each topic's health score as a bar, in the order
- * given (most at risk first).
+ * The Summary's two priority charts: P1–P2 in one, P3–P4 in the other, a bar per topic counting its papers published
+ * from `from` to `to` (inclusive ISO dates), stacked by the centers their authors are in – a paper with authors in two
+ * centers counts toward both. Every chart lists every contributing center, in one order, so their colours match.
  */
-export function priorityCharts(topics: TopicSummaryDto[]): { id: string; heading: string; bars: TopicBar[] }[] {
-  const bars = (bins: number[]) =>
-    topics.filter((t) => bins.includes(t.bin)).map((t) => ({ id: t.id, x: t.name, y: t.healthScore, health: t.health }));
+export function priorityCharts(
+  topics: TopicSummaryDto[],
+  papers: PaperListItemDto[],
+  from: string,
+  to: string,
+): { id: string; heading: string; bars: PaperBar[] }[] {
+  const inPeriod = papers.filter((p) => p.published >= from && p.published <= to);
+  const centers = [...new Map(inPeriod.flatMap((p) => p.authorCenters).map((c) => [c.id, c.code ?? c.name])).values()].sort();
+  const bars = (bins: number[]): PaperBar[] =>
+    topics
+      .filter((t) => bins.includes(t.bin))
+      .flatMap((t) => {
+        const own = inPeriod.filter((p) => p.topicId === t.id);
+        // Every center on every bar, at 0 where it has none: the bars line up and the colours stay put
+        return (centers.length ? centers : ['']).map((center) => ({
+          id: t.id,
+          x: t.name,
+          center,
+          y: own.filter((p) => p.authorCenters.some((c) => (c.code ?? c.name) === center)).length,
+        }));
+      });
   return [
     { id: 'p1-p2', heading: 'P1–P2 · Flagship and core', bars: bars([1, 2]) },
     { id: 'p3-p4', heading: 'P3–P4 · Core and emerging', bars: bars([3, 4]) },
