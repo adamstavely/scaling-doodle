@@ -12,9 +12,8 @@ import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tre
 import { papersControllerList } from '../../api/generated/fn/papers/papers-controller-list';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
-import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
-import { priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { priorityHealth } from '../../core/format';
 import { DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { priorityCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
@@ -72,7 +71,6 @@ export class DashboardPage {
   });
   protected readonly periodChoices = this.periods.map((p) => ({ value: p.value, label: p.label }));
 
-  protected readonly tiers = PRIORITY_TIERS;
 
   readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
@@ -118,11 +116,6 @@ export class DashboardPage {
   /** One row per center in the caller's view, laid out like the priorities. */
   protected readonly centers = computed<PriorityItem[]>(() => (read(this.#org)?.centers ?? []).map(centerRow));
 
-  /** Each center against each priority tier, from the same topics the Priorities list shows. */
-  protected readonly centerPriorities = computed<PriorityItem[]>(() =>
-    centerPriorityRows(read(this.#org)?.centers ?? [], read(this.#topics) ?? []),
-  );
-
 
   protected openTopicBar(event: CustomEvent<{ event: unknown }>): void {
     const id = ((event.detail.event as { datum?: PaperBar | null }).datum)?.id;
@@ -131,11 +124,6 @@ export class DashboardPage {
 
   protected openCenter(event: CustomEvent<PriorityOpen>): void {
     void this.#router.navigate(['/org'], { fragment: event.detail.id });
-  }
-
-  /** A center-by-priority row opens its center; the row id is `<center>:<tier>`. */
-  protected openCenterTier(event: CustomEvent<PriorityOpen>): void {
-    void this.#router.navigate(['/org'], { fragment: event.detail.id.split(':')[0] });
   }
 
   protected onPeriodChange(event: CustomEvent<{ value: string }>): void {

@@ -42,16 +42,17 @@
   gap: var(--tc-space-4);
 }
 
-/* The two priority charts side by side when each gets 440px, so topic names show whole; stacked otherwise. */
-.priority-charts {
+/* The bottom row: the three priority charts and unilateral vs. joint, four across the page, stacked when narrow. */
+.bottom-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--tc-space-4);
   align-items: start;
 }
 
 @media (max-width: 1100px) {
-  .grid {
+  .grid,
+  .bottom-row {
     grid-template-columns: 1fr;
   }
 }

@@ -20,6 +20,9 @@ export function topicPriorityItem(t: TopicSummaryDto): PriorityItem {
   };
 }
 
+/** Topics per priority chart. */
+const CHART_SIZE = 4;
+
 /** One segment of a priority's bar: its papers by one contributing center, for tc-bar-chart's long table. */
 export type PaperBar = {
   /** The topic's id, to open it */
@@ -32,9 +35,10 @@ export type PaperBar = {
 };
 
 /**
- * The Summary's two priority charts: P1–P2 in one, P3–P4 in the other, a bar per topic counting its papers published
- * from `from` to `to` (inclusive ISO dates), stacked by the centers their authors are in – a paper with authors in two
- * centers counts toward both. Every chart lists every contributing center, in one order, so their colours match.
+ * The Summary's priority charts: the topics in priority order (P1 first, most at risk first within a tier), four to a
+ * chart, each headed by the tiers it covers. A bar per topic counts its papers published from `from` to `to`
+ * (inclusive ISO dates), stacked by the centers their authors are in – a paper with authors in two centers counts
+ * toward both. Every chart lists every contributing center, in one order, so their colours match.
  */
 export function priorityCharts(
   topics: TopicSummaryDto[],
@@ -44,21 +48,23 @@ export function priorityCharts(
 ): { id: string; heading: string; bars: PaperBar[] }[] {
   const inPeriod = papers.filter((p) => p.published >= from && p.published <= to);
   const centers = [...new Map(inPeriod.flatMap((p) => p.authorCenters).map((c) => [c.id, c.code ?? c.name])).values()].sort();
-  const bars = (bins: number[]): PaperBar[] =>
-    topics
-      .filter((t) => bins.includes(t.bin))
-      .flatMap((t) => {
-        const own = inPeriod.filter((p) => p.topicId === t.id);
-        // Every center on every bar, at 0 where it has none: the bars line up and the colours stay put
-        return (centers.length ? centers : ['']).map((center) => ({
-          id: t.id,
-          x: t.name,
-          center,
-          y: own.filter((p) => p.authorCenters.some((c) => (c.code ?? c.name) === center)).length,
-        }));
-      });
-  return [
-    { id: 'p1-p2', heading: 'P1–P2 · Flagship and core', bars: bars([1, 2]) },
-    { id: 'p3-p4', heading: 'P3–P4 · Core and emerging', bars: bars([3, 4]) },
-  ];
+  const bars = (group: TopicSummaryDto[]): PaperBar[] =>
+    group.flatMap((t) => {
+      const own = inPeriod.filter((p) => p.topicId === t.id);
+      // Every center on every bar, at 0 where it has none: the bars line up and the colours stay put
+      return (centers.length ? centers : ['']).map((center) => ({
+        id: t.id,
+        x: t.name,
+        center,
+        y: own.filter((p) => p.authorCenters.some((c) => (c.code ?? c.name) === center)).length,
+      }));
+    });
+  // Priority order; sort is stable, so within a tier the given (most at risk first) order holds
+  const ordered = [...topics].sort((a, b) => a.bin - b.bin);
+  const groups = Array.from({ length: Math.ceil(ordered.length / CHART_SIZE) }, (_, i) => ordered.slice(i * CHART_SIZE, (i + 1) * CHART_SIZE));
+  return groups.map((group, i) => {
+    const lo = group[0].bin;
+    const hi = group[group.length - 1].bin;
+    return { id: `priorities-${i + 1}`, heading: lo === hi ? `P${lo}` : `P${lo}–P${hi}`, bars: bars(group) };
+  });
 }
