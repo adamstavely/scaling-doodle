@@ -101,6 +101,37 @@ test.describe('smoke', () => {
     await expect(page.getByRole('heading', { name: 'Assessment' })).toBeVisible();
   });
 
+  test('a late answer to an earlier grade never overwrites a newer grade', async ({ page, errors }) => {
+    void errors;
+    const detail = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/papers_p4.json'), 'utf8'));
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    let saves = 0;
+    await page.route('**/api/papers/p4/grade', async (route) => {
+      const grade = (route.request().postDataJSON() as { grade: string }).grade;
+      // The first save answers late, after the second
+      if (++saves === 1) await held;
+      await route.fulfill({ json: { ...detail, grade } });
+    });
+    const grade = page.locator('.grade tc-segmented-control');
+    const pick = (label: string) => grade.getByText(label, { exact: true }).click();
+
+    await page.goto('/papers');
+    await expect(page).toHaveURL(/\/papers\/p4$/);
+    await expect(page.getByRole('heading', { name: 'Assessment' })).toBeVisible();
+    await pick('Excellent');
+    // Away to another paper and back, in the app
+    await page.locator('tc-results-list').getByText(/Seawater/).first().click();
+    await expect(page).toHaveURL(/\/papers\/p5$/);
+    await page.locator('tc-results-list').getByText(/Retargetable/).first().click();
+    await expect(page).toHaveURL(/\/papers\/p4$/);
+    await pick('Outstanding');
+    await expect.poll(() => grade.evaluate((e) => (e as unknown as { value: string }).value)).toBe('outstanding');
+    release();
+    await page.waitForTimeout(300);
+    expect(await grade.evaluate((e) => (e as unknown as { value: string }).value)).toBe('outstanding');
+  });
+
   test('org shows each center', async ({ page, errors }) => {
     void errors;
     await page.goto('/org');
