@@ -68,3 +68,9 @@ export function todayIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
+
+/** A date as the page headings show it: "2026-11-08" → "08 11 2026" (DD MM YYYY). */
+export function asOfDate(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d} ${m} ${y}`;
+}
