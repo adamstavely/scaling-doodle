@@ -49,6 +49,35 @@ test.describe('smoke', () => {
     expect(await list.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
   });
 
+  test('research topics can be searched and filtered by priority, type, region and subject, kept in the URL', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/topics');
+    const list = page.locator('tc-priority-list');
+    const names = () => list.evaluate((e) => (e as unknown as { items: { name: string }[] }).items.map((i) => i.name).sort());
+    await expect.poll(async () => (await names()).length).toBe(12);
+    const filters = page.locator('tc-facet-sidebar');
+    await filters.getByRole('searchbox', { name: 'Search topics' }).fill('sensing');
+    // Names, summaries and subjects: Wildfire Prediction is tagged sensing
+    await expect.poll(names).toEqual(['Edge AI for Sensing', 'Quantum Sensing', 'Wildfire Prediction Systems']);
+    await expect(page).toHaveURL(/q=sensing/);
+    await filters.getByRole('checkbox', { name: /^National/ }).click();
+    await expect.poll(names).toEqual(['Quantum Sensing']);
+    await expect(page).toHaveURL(/type=national/);
+    // The link brings the same list back
+    await page.reload();
+    await expect.poll(names).toEqual(['Quantum Sensing']);
+    await filters.getByRole('button', { name: 'Clear all' }).click();
+    await expect.poll(async () => (await names()).length).toBe(12);
+    await filters.getByRole('checkbox', { name: /^P1 · Flagship/ }).click();
+    // Eleven regions: five show, and the facet has its own search
+    await filters.getByRole('searchbox', { name: 'Search Region' }).fill('near');
+    await filters.getByRole('checkbox', { name: /^Near East Mission Center/ }).click();
+    await expect.poll(names).toEqual(['Carbon-Negative Materials']);
+    await filters.getByRole('checkbox', { name: /^P1 · Flagship/ }).click();
+    await filters.getByRole('checkbox', { name: /^climate/ }).click();
+    await expect.poll(names).toEqual(['Carbon-Negative Materials', 'Climate Resilience Modeling', 'Wildfire Prediction Systems']);
+  });
+
   test('gaps and coverage lists every gap still open, with what is invested', async ({ page, errors }) => {
     void errors;
     await page.goto('/gaps');
@@ -250,7 +279,7 @@ test.describe('smoke', () => {
     await expect(form.getByText('Where does it sit?')).toBeVisible();
     // Tab through the step; Space picks the first card of each choice group still empty.
     const chosen = new Set<string>();
-    for (let i = 0; i < 30 && chosen.size < 3; i++) {
+    for (let i = 0; i < 30 && chosen.size < 4; i++) {
       await page.keyboard.press('Tab');
       const group = await page.evaluate(() => {
         let el = document.activeElement;
@@ -266,7 +295,8 @@ test.describe('smoke', () => {
         chosen.add(group.label);
       }
     }
-    expect([...chosen].sort()).toEqual(['Center', 'Priority', 'Team']);
+    // Priority type starts on Internal, so it's passed through rather than picked
+    expect([...chosen].sort()).toEqual(['Center', 'Priority', 'Priority type', 'Team']);
     await form.getByRole('button', { name: 'Continue' }).click();
     await expect(form.getByText('How is it funded?')).toBeVisible();
   });

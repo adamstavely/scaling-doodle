@@ -65,6 +65,7 @@ describe('createBody', () => {
       summary: undefined,
       tags: ['climate'],
       bin: 2,
+      priorityType: 'internal',
       teamId: 'team-climate',
       leadId: 'am',
       questions: ['Can it be verified?', 'How cheaply?'],
@@ -77,6 +78,7 @@ describe('createBody', () => {
   it('makes a PI the lead of their own topic and drops empty extras', () => {
     const body = createBody({ ...values, questions: ' \n ', budget: '0', fte: 0, tags: [] }, teams, { id: 'am', role: 'pi' });
     expect(body).toMatchObject({ leadId: 'am', questions: undefined, budget: undefined, plannedFte: undefined, tags: undefined });
+    expect(createBody({ ...values, priorityType: 'national' }, teams, { id: 'am', role: 'pi' }).priorityType).toBe('national');
   });
 
   it('rounds planned FTE to one decimal', () => {

@@ -11,15 +11,26 @@
 @if (error()) {
   <p role="alert" class="note">Couldn't load the topics. Is intellect-api running?</p>
 } @else if (ready()) {
-  <tc-priority-list
-    momentum-label="Trend"
-    heading="Topics"
-    description="Grouped by priority, most at risk first"
-    grouped
-    [items]="items()"
-    [tiers]="tiers"
-    (tc-open)="openTopic($event)"
-  ></tc-priority-list>
+  <div class="layout">
+    <tc-facet-sidebar
+      search-label="Search topics"
+      [query]="filters().q"
+      [facets]="facets()"
+      [value]="facetValue()"
+      (tc-query-change)="onQuery($event)"
+      (tc-value-change)="onFilter($event)"
+    ></tc-facet-sidebar>
+    <tc-priority-list
+      momentum-label="Trend"
+      heading="Topics"
+      [description]="description()"
+      empty="No topics match. Change the search or clear a filter."
+      grouped
+      [items]="items()"
+      [tiers]="tiers"
+      (tc-open)="openTopic($event)"
+    ></tc-priority-list>
+  </div>
 } @else {
   <tc-skeleton height="560" radius="12"></tc-skeleton>
 }
