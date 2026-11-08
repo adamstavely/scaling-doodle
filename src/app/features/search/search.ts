@@ -10,28 +10,40 @@ const KINDS = [
 
 type Kind = (typeof KINDS)[number]['key'];
 
-/** Search results → tc-command-menu groups. Each command's id says where it leads: "topics:t-neuro", "gaps:t-neuro". */
+/**
+ * Search results → tc-command-menu groups. Every command's id is the hit's own, "kind:id" ("gaps:g2"), so no two
+ * share one – the menu's arrow keys move by id, and two gaps of one topic used to trap them. Where each leads is kept
+ * apart, in `searchTargets`.
+ */
 export function searchGroups(r: SearchResultsDto): CommandMenuGroup[] {
   return KINDS.map(({ key, label }) => ({
     id: key,
     label,
-    commands: r[key].map((hit) => ({
-      // A gap opens its topic; everything else opens itself.
-      id: `${key}:${key === 'gaps' ? hit.topicId : hit.id}`,
-      label: hit.label,
-      hint: hit.detail,
-    })),
+    commands: r[key].map((hit) => ({ id: `${key}:${hit.id}`, label: hit.label, hint: hit.detail })),
   })).filter((g) => g.commands.length);
 }
 
-/** Where a picked result goes. People have no page of their own yet, so they open the People roster. */
-export function searchTarget(commandId: string): string[] | undefined {
-  const [kind, id] = commandId.split(':') as [Kind, string];
-  if (!id) return undefined;
+/**
+ * Where each command leads, by its id. A gap opens its topic; topics and papers open themselves; people have no page
+ * of their own yet, so they open the People roster.
+ */
+export function searchTargets(r: SearchResultsDto): Map<string, string[]> {
+  const targets = new Map<string, string[]>();
+  for (const { key } of KINDS) {
+    for (const hit of r[key]) {
+      const to = target(key, hit.id, hit.topicId);
+      if (to) targets.set(`${key}:${hit.id}`, to);
+    }
+  }
+  return targets;
+}
+
+function target(kind: Kind, id: string, topicId: string | null | undefined): string[] | undefined {
   switch (kind) {
     case 'topics':
-    case 'gaps':
       return ['/topics', id];
+    case 'gaps':
+      return topicId ? ['/topics', topicId] : undefined;
     case 'papers':
       return ['/papers', id];
     case 'people':

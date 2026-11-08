@@ -5,7 +5,7 @@ import { Api } from '../../api/generated/api';
 import { searchControllerSearch } from '../../api/generated/fn/search/search-controller-search';
 import { read } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
-import { searchGroups, searchTarget } from './search';
+import { searchGroups, searchTargets } from './search';
 
 const DEBOUNCE_MS = 200;
 const MIN_CHARS = 2;
@@ -62,9 +62,14 @@ export class SearchBox {
     const r = read(this.results);
     return r && this.query().trim().length >= MIN_CHARS ? searchGroups(r) : [];
   });
+  /** Where each shown command leads. */
+  readonly #targets = computed(() => {
+    const r = read(this.results);
+    return r ? searchTargets(r) : new Map<string, string[]>();
+  });
 
   protected readonly run = (id: string): void => {
-    const target = searchTarget(id);
+    const target = this.#targets().get(id);
     if (target) void this.#router.navigate(target);
   };
 }
