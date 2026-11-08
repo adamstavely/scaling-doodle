@@ -61,9 +61,20 @@ export function priorityCharts(
 /** Topics in priority order; sort is stable, so within a tier the given (most at risk first) order holds. */
 const byPriority = (topics: TopicSummaryDto[]) => [...topics].sort((a, b) => a.bin - b.bin);
 
-/** The centers papers' authors are in, by code, sorted: one order for every chart, so a center keeps its colour. */
+/** The segment for papers whose authors are in no center – the API allows that – so they're counted, not lost. */
+export const UNASSIGNED = 'Unassigned';
+
+/** The segments a paper counts toward: its authors' centers by code, or Unassigned when it has none. */
+const paperCenters = (p: PaperListItemDto) => (p.authorCenters.length ? p.authorCenters.map((c) => c.code ?? c.name) : [UNASSIGNED]);
+
+/**
+ * The centers papers' authors are in, by code, sorted, with Unassigned last if any paper has no center: one order for
+ * every chart, so a center keeps its colour.
+ */
 function contributingCenters(papers: PaperListItemDto[]): string[] {
-  return [...new Map(papers.flatMap((p) => p.authorCenters).map((c) => [c.id, c.code ?? c.name])).values()].sort();
+  const all = new Set(papers.flatMap(paperCenters));
+  const named = [...all].filter((c) => c !== UNASSIGNED).sort();
+  return all.has(UNASSIGNED) ? [...named, UNASSIGNED] : named;
 }
 
 /**
@@ -78,7 +89,7 @@ function topicBars(topics: TopicSummaryDto[], papers: PaperListItemDto[], center
       id: t.id,
       x: t.name,
       center,
-      y: own.filter((p) => p.authorCenters.some((c) => (c.code ?? c.name) === center)).reduce((s, p) => s + value(p), 0),
+      y: own.filter((p) => paperCenters(p).includes(center)).reduce((s, p) => s + value(p), 0),
     }));
   });
 }

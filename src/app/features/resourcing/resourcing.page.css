@@ -33,3 +33,11 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* One burn card per budget year, stacked */
+.burns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tc-space-4);
+  min-width: 0;
+}

@@ -1,6 +1,7 @@
-import { Component, computed, inject, resource, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, resource, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommandMenu } from '@adamstavely/trenchcoat/angular/command-menu';
+import type { CommandMenuGroup } from '@adamstavely/trenchcoat/command-menu';
 import { Api } from '../../api/generated/api';
 import { searchControllerSearch } from '../../api/generated/fn/search/search-controller-search';
 import { read } from '../../core/scoped-resource';
@@ -9,6 +10,15 @@ import { searchGroups, searchTargets } from './search';
 
 const DEBOUNCE_MS = 200;
 const MIN_CHARS = 2;
+
+/** The command that runs a failed search again. */
+const RETRY = 'search:retry';
+/** What shows when the search itself failed, as opposed to finding nothing. */
+const SEARCH_FAILED: CommandMenuGroup = {
+  id: 'failed',
+  label: "Couldn't search – the server didn't answer",
+  commands: [{ id: RETRY, label: 'Try again' }],
+};
 
 /** The top bar's ⌘K search over topics, gaps, papers and people, scoped to the viewer like everything else. */
 @Component({
@@ -64,9 +74,15 @@ export class SearchBox {
     },
   });
 
+  /**
+   * The results – or, when the search failed, a group that says so with a Try again command, so a failure never reads
+   * as "Nothing matches".
+   */
   protected readonly groups = computed(() => {
+    if (this.query().trim().length < MIN_CHARS) return [];
+    if (this.results.error()) return [SEARCH_FAILED];
     const r = read(this.results);
-    return r && this.query().trim().length >= MIN_CHARS ? searchGroups(r) : [];
+    return r ? searchGroups(r) : [];
   });
   /** Where each shown command leads. */
   readonly #targets = computed(() => {
@@ -74,8 +90,28 @@ export class SearchBox {
     return r ? searchTargets(r) : new Map<string, string[]>();
   });
 
-  protected readonly run = (id: string): void => {
+  readonly #host = inject(ElementRef<HTMLElement>);
+
+  protected readonly run = (id: string): Promise<void> | void => {
+    if (id === RETRY) return this.#retry();
     const target = this.#targets().get(id);
     if (target) void this.#router.navigate(target);
   };
+
+  /**
+   * Runs the search again. The menu shows it pending, then "Couldn't run Try again" if it fails once more; when it
+   * works, focusing the field opens the results again.
+   */
+  async #retry(): Promise<void> {
+    this.results.reload();
+    await new Promise<void>((resolve, reject) => {
+      const check = () => {
+        if (this.results.isLoading()) return void setTimeout(check, 50);
+        if (this.results.error()) reject(this.results.error());
+        else resolve();
+      };
+      setTimeout(check, 0);
+    });
+    this.#host.nativeElement.querySelector('input')?.focus();
+  }
 }

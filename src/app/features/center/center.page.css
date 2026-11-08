@@ -48,8 +48,8 @@
 }
 
 /*
- * Topics over three quarters with unilateral vs. joint beside them; papers and teams a half each beneath.
- * Cards in a row stretch to its height.
+ * Topics over three quarters with unilateral vs. joint beside them; papers and teams a half each beneath. A section with
+ * nothing to show is left out, and the others keep their places. Cards in a row stretch to its height.
  */
 .layout {
   display: grid;

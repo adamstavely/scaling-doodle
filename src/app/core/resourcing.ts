@@ -10,6 +10,13 @@ const M = 1_000_000;
 const round1 = (n: number) => Math.round(n * 10) / 10;
 const money = (m: number) => `$${round1(m)}M`;
 
+/** Which fiscal years the budgets are for, in words: "FY26 commitments", "FY26 and FY27 commitments". */
+function budgetYears(topics: TopicSummaryDto[]): string {
+  const years = [...new Set(topics.map((t) => t.budget.fy).filter(Boolean))].sort();
+  if (!years.length) return 'this fiscal year';
+  return `${years.length === 1 ? years[0] : `${years.slice(0, -1).join(', ')} and ${years[years.length - 1]}`} commitments`;
+}
+
 /** Budget, spend, people and the staffing plan across the topics in view. */
 export function resourcingTiles(topics: TopicSummaryDto[], people: PersonSummaryDto[]): OpsTile[] {
   const allocated = topics.reduce((s, t) => s + t.budget.allocated, 0);
@@ -18,7 +25,7 @@ export function resourcingTiles(topics: TopicSummaryDto[], people: PersonSummary
   const planned = round1(topics.reduce((s, t) => s + (t.plannedFte ?? 0), 0));
   const researchers = people.filter((p) => p.allocations.length).length;
   return [
-    { id: 'budget', label: 'Budget allocated', value: money(allocated), sub: topics[0]?.budget.fy ? `${topics[0].budget.fy} commitments` : 'this fiscal year' },
+    { id: 'budget', label: 'Budget allocated', value: money(allocated), sub: budgetYears(topics) },
     { id: 'spent', label: 'Spent to date', value: money(spent), sub: allocated ? `${percent(spent / allocated)} of budget` : 'no budget' },
     { id: 'people', label: 'People', value: `${fte} FTE`, sub: `${researchers} allocated researchers` },
     {
@@ -59,6 +66,19 @@ export function burnItems(topics: TopicSummaryDto[]): BurnItem[] {
       people: t.stats.fte,
       priority: `P${t.bin}`,
     }));
+}
+
+/**
+ * The topics' budgets by fiscal year, oldest first, each with how far through its own year `today` is – so a year's
+ * spend is paced against that year, never another's.
+ */
+export function burnGroups(topics: TopicSummaryDto[], today: string): { fy: string; period: number; items: BurnItem[] }[] {
+  const years = [...new Set(topics.map((t) => t.budget.fy ?? ''))].sort();
+  return years.map((fy) => ({
+    fy,
+    period: fiscalYearProgress(today, fy || undefined),
+    items: burnItems(topics.filter((t) => (t.budget.fy ?? '') === fy)),
+  }));
 }
 
 /**

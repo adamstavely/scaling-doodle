@@ -18,15 +18,19 @@
   ></tc-investment-balance>
 
   <div class="grid">
-    <tc-budget-burn
-      [heading]="isChief() ? 'Allocations by topic' : 'Your topics'"
-      description="Spend against budget, with the pace for this point in the fiscal year"
-      currency="USD"
-      people-unit="FTE"
-      [period]="yearDone()"
-      [items]="burn()"
-      (tc-open)="openTopic($event)"
-    ></tc-budget-burn>
+    <div class="burns">
+      @for (g of burnGroups(); track g.fy) {
+        <tc-budget-burn
+          [heading]="(isChief() ? 'Allocations by topic' : 'Your topics') + (g.fy ? ' · ' + g.fy : '')"
+          [description]="'Spend against budget, with the pace for this point in ' + (g.fy || 'the fiscal year')"
+          currency="USD"
+          people-unit="FTE"
+          [period]="g.period"
+          [items]="g.items"
+          (tc-open)="openTopic($event)"
+        ></tc-budget-burn>
+      }
+    </div>
 
     <tc-capacity-bars
       heading="People capacity"

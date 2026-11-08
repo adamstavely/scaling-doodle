@@ -82,3 +82,26 @@ describe('priorityMetricCharts', () => {
     expect(r.bars.every((b) => b.y === 0)).toBe(true);
   });
 });
+
+describe('papers whose authors are in no center', () => {
+  const topics = [topic('a', 1)];
+  const orphan = { ...paper('a', '2026-10-10'), periodTotals: { views: 400, citations: 3 } } as unknown as PaperListItemDto;
+
+  it('count under Unassigned in the priority charts', () => {
+    const [chart] = priorityCharts(topics, [orphan], '2026-10-01', '2026-12-31');
+    expect(chart.bars).toEqual([{ id: 'a', x: 'A', center: 'Unassigned', y: 1 }]);
+  });
+
+  it('keep their readership and citations, after the named centers', () => {
+    const named = { ...paper('a', '2026-10-01', 'CCI'), periodTotals: { views: 100, citations: 1 } } as unknown as PaperListItemDto;
+    const [readership, citations] = priorityMetricCharts(topics, [named, orphan]);
+    expect(readership.bars.map((b) => [b.center, b.y])).toEqual([
+      ['CCI', 100],
+      ['Unassigned', 400],
+    ]);
+    expect(citations.bars.map((b) => [b.center, b.y])).toEqual([
+      ['CCI', 1],
+      ['Unassigned', 3],
+    ]);
+  });
+});

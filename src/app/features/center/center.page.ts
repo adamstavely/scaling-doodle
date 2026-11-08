@@ -92,6 +92,8 @@ export class CenterPage {
     const d = this.#data();
     return collaborationParts(d ? centerCollaboration(d) : undefined);
   });
+  /** Whether the center has any teams, topics or papers in the period to show. */
+  protected readonly hasAnything = computed(() => !!this.center()?.teams.length || this.topics().length > 0 || this.papers().length > 0);
   protected readonly teamsCard = computed(() => {
     const c = this.center();
     return c ? centerCard(c) : undefined;
