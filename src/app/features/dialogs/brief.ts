@@ -71,7 +71,7 @@ export function briefModel(b: BriefDto) {
     kind: p.topic.name,
     href: `/papers/${p.id}`,
     date: localDate(p.published),
-    meta: [`${compactNumber(p.periodTotals.downloads)} downloads in period`, `${p.periodTotals.citations} citations`],
+    meta: [`${compactNumber(p.periodTotals?.downloads ?? 0)} downloads in period`, `${p.periodTotals?.citations ?? 0} citations`],
   }));
   return {
     summary: b.executiveSummary,

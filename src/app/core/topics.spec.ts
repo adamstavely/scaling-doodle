@@ -1,6 +1,6 @@
 import type { PaperListItemDto } from '../api/generated/models/paper-list-item-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
-import { priorityCharts } from './topics';
+import { priorityCharts, priorityMetricCharts } from './topics';
 
 const topic = (id: string, bin: number) => ({ id, name: id.toUpperCase(), bin }) as unknown as TopicSummaryDto;
 const paper = (topicId: string, published: string, ...codes: string[]) =>
@@ -52,5 +52,33 @@ describe('priorityCharts', () => {
       { id: 'a', x: 'A', center: '', y: 0 },
       { id: 'c', x: 'C', center: '', y: 0 },
     ]);
+  });
+});
+
+describe('priorityMetricCharts', () => {
+  const topics = [topic('b', 2), topic('a', 1)];
+  const withTotals = (topicId: string, views: number, citations: number, ...codes: string[]) =>
+    ({ ...paper(topicId, '2020-01-01', ...codes), periodTotals: { views, citations } }) as unknown as PaperListItemDto;
+  const [readership, citations] = priorityMetricCharts(topics, [withTotals('a', 100, 3, 'CCI'), withTotals('a', 50, 1, 'CCI', 'NEMC'), withTotals('b', 20, 0, 'NEMC')]);
+
+  it('makes a readership chart and a citations chart over every topic, in priority order', () => {
+    expect([readership.id, citations.id]).toEqual(['readership', 'citations']);
+    expect([...new Set(readership.bars.map((b) => b.x))]).toEqual(['A', 'B']);
+  });
+
+  it('sums each topic’s period views and citations by author center, whenever the paper was published', () => {
+    expect(readership.bars.filter((b) => b.x === 'A').map((b) => [b.center, b.y])).toEqual([
+      ['CCI', 150],
+      ['NEMC', 50],
+    ]);
+    expect(citations.bars.filter((b) => b.x === 'A').map((b) => [b.center, b.y])).toEqual([
+      ['CCI', 4],
+      ['NEMC', 1],
+    ]);
+  });
+
+  it('counts papers without period totals as 0', () => {
+    const [r] = priorityMetricCharts(topics, [paper('a', '2026-10-01', 'CCI')]);
+    expect(r.bars.every((b) => b.y === 0)).toBe(true);
   });
 });

@@ -47,24 +47,52 @@ export function priorityCharts(
   to: string,
 ): { id: string; heading: string; bars: PaperBar[] }[] {
   const inPeriod = papers.filter((p) => p.published >= from && p.published <= to);
-  const centers = [...new Map(inPeriod.flatMap((p) => p.authorCenters).map((c) => [c.id, c.code ?? c.name])).values()].sort();
-  const bars = (group: TopicSummaryDto[]): PaperBar[] =>
-    group.flatMap((t) => {
-      const own = inPeriod.filter((p) => p.topicId === t.id);
-      // Every center on every bar, at 0 where it has none: the bars line up and the colours stay put
-      return (centers.length ? centers : ['']).map((center) => ({
-        id: t.id,
-        x: t.name,
-        center,
-        y: own.filter((p) => p.authorCenters.some((c) => (c.code ?? c.name) === center)).length,
-      }));
-    });
-  // Priority order; sort is stable, so within a tier the given (most at risk first) order holds
-  const ordered = [...topics].sort((a, b) => a.bin - b.bin);
+  const centers = contributingCenters(inPeriod);
+  const bars = (group: TopicSummaryDto[]) => topicBars(group, inPeriod, centers, () => 1);
+  const ordered = byPriority(topics);
   const groups = Array.from({ length: Math.ceil(ordered.length / CHART_SIZE) }, (_, i) => ordered.slice(i * CHART_SIZE, (i + 1) * CHART_SIZE));
   return groups.map((group, i) => {
     const lo = group[0].bin;
     const hi = group[group.length - 1].bin;
     return { id: `priorities-${i + 1}`, heading: lo === hi ? `P${lo}` : `P${lo}–P${hi}`, bars: bars(group) };
   });
+}
+
+/** Topics in priority order; sort is stable, so within a tier the given (most at risk first) order holds. */
+const byPriority = (topics: TopicSummaryDto[]) => [...topics].sort((a, b) => a.bin - b.bin);
+
+/** The centers papers' authors are in, by code, sorted: one order for every chart, so a center keeps its colour. */
+function contributingCenters(papers: PaperListItemDto[]): string[] {
+  return [...new Map(papers.flatMap((p) => p.authorCenters).map((c) => [c.id, c.code ?? c.name])).values()].sort();
+}
+
+/**
+ * A bar per topic, a segment per center: the sum of `value` over the topic's papers with an author in that center – a
+ * paper with authors in two centers counts toward both. Every center is on every bar, at 0 where it has none, so the
+ * bars line up and the colours stay put.
+ */
+function topicBars(topics: TopicSummaryDto[], papers: PaperListItemDto[], centers: string[], value: (p: PaperListItemDto) => number): PaperBar[] {
+  return topics.flatMap((t) => {
+    const own = papers.filter((p) => p.topicId === t.id);
+    return (centers.length ? centers : ['']).map((center) => ({
+      id: t.id,
+      x: t.name,
+      center,
+      y: own.filter((p) => p.authorCenters.some((c) => (c.code ?? c.name) === center)).reduce((s, p) => s + value(p), 0),
+    }));
+  });
+}
+
+/**
+ * Readership and citations per priority: every topic in priority order, each bar its papers' views (or citations)
+ * within the period – any paper's, whenever it was published – stacked by the authors' centers. Papers need
+ * `periodTotals` (asked for with `period`); without them they count 0.
+ */
+export function priorityMetricCharts(topics: TopicSummaryDto[], papers: PaperListItemDto[]): { id: string; heading: string; unit: string; bars: PaperBar[] }[] {
+  const centers = contributingCenters(papers);
+  const ordered = byPriority(topics);
+  return [
+    { id: 'readership', heading: 'Readership by priority', unit: 'views', bars: topicBars(ordered, papers, centers, (p) => p.periodTotals?.views ?? 0) },
+    { id: 'citations', heading: 'Citations by priority', unit: 'citations', bars: topicBars(ordered, papers, centers, (p) => p.periodTotals?.citations ?? 0) },
+  ];
 }
