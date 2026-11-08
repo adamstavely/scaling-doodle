@@ -34,6 +34,12 @@ const MIN_CHARS = 2;
       display: block;
       width: min(420px, 40vw);
     }
+    /* On a narrow screen the search has its own row across the top bar */
+    @media (max-width: 640px) {
+      :host {
+        width: 100%;
+      }
+    }
   `,
 })
 export class SearchBox {

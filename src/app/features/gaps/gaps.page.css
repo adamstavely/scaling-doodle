@@ -6,6 +6,7 @@
 
 .page-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--tc-space-4);
