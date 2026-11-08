@@ -149,6 +149,7 @@ export class PapersPage {
     effect(() => {
       this.id();
       untracked(() => {
+        this.#gradeRequest++;
         this.saving.set(false);
         this.saveError.set(null);
       });
@@ -160,6 +161,9 @@ export class PapersPage {
     void this.#router.navigate(['/papers', event.detail.id]);
   }
 
+  /** The latest grade save; answers from earlier ones are dropped. */
+  #gradeRequest = 0;
+
   protected async onGradeChange(event: CustomEvent<SegmentValueChange>): Promise<void> {
     const id = this.id();
     if (!id || !this.isChief()) return;
@@ -167,9 +171,11 @@ export class PapersPage {
     const grade = value === UNGRADED ? null : (value as GradeId);
     this.saving.set(true);
     this.saveError.set(null);
-    // The save can finish after the Chief has moved on to another paper: then it only refreshes the list, and the
-    // paper now on screen keeps its own detail, error and saving state.
-    const stillHere = () => this.id() === id;
+    // Each save is numbered, and only the latest one's answer reaches the screen. A save can finish after the Chief has
+    // moved on (or away and back, then saved again): an earlier answer then only refreshes the list, and never
+    // overwrites the newer grade, error or saving state.
+    const request = ++this.#gradeRequest;
+    const stillHere = () => this.id() === id && request === this.#gradeRequest;
     try {
       const updated = await this.#api.invoke(papersControllerGrade, { id, body: { grade } });
       if (stillHere()) this.#detail.set(updated);
