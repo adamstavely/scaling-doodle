@@ -22,8 +22,25 @@
 
 @if (ready()) {
   <div class="grid">
-    <!-- Open for now: what goes here is still to be decided. -->
-    <div class="main"></div>
+    <div class="main">
+      <!-- Donovan, INTELLECT's AI, explains the page – by fixed rules for now; a model can write it later. -->
+      @if (explainer(); as s) {
+        <tc-ai-summary
+          heading="Donovan"
+          subject="Metrics Summary"
+          status="done"
+          [model]="'Donovan · rules, no model yet'"
+          [generatedAt]="generatedAt()"
+          [tldr]="s.tldr"
+          [summary]="s.summary"
+          [points]="s.points"
+          [questions]="s.questions"
+          [sources]="s.sources"
+          (tc-cite-open)="openSource($event)"
+          (tc-retry)="regenerate()"
+        ></tc-ai-summary>
+      }
+    </div>
 
     <aside class="rail">
       <tc-priority-list

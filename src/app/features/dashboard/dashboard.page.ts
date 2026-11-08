@@ -1,6 +1,7 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Select } from '@adamstavely/trenchcoat/angular/select';
+import { AiSummary } from '@adamstavely/trenchcoat/angular/ai-summary';
 import { BarChart } from '@adamstavely/trenchcoat/angular/bar-chart';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
 import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
@@ -15,6 +16,7 @@ import { topicsControllerList } from '../../api/generated/fn/topics/topics-contr
 import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth } from '../../core/format';
 import { DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
+import { pageSummary } from '../../core/page-summary';
 import { priorityCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
@@ -51,7 +53,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [PriorityList, BarChart, SegmentedBar, Skeleton, Select, BriefDialog],
+  imports: [AiSummary, PriorityList, BarChart, SegmentedBar, Skeleton, Select, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -105,6 +107,19 @@ export class DashboardPage {
     const period = read(this.#summary)?.period;
     return period ? priorityCharts(read(this.#topics) ?? [], read(this.#papers) ?? [], period.from, period.to) : [];
   });
+  /** The page explained in words, from the same numbers; regenerated whenever they change. */
+  readonly #regenerated = signal(0);
+  protected readonly explainer = computed(() => {
+    this.#regenerated();
+    const period = read(this.#summary)?.period;
+    if (!period) return undefined;
+    const papers = (read(this.#papers) ?? []).filter((p) => p.published >= period.from && p.published <= period.to);
+    return pageSummary({ centers: read(this.#org)?.centers ?? [], topics: read(this.#topics) ?? [], papers, period: this.periodWords() });
+  });
+  protected readonly generatedAt = computed(() => (this.explainer(), Date.now()));
+  protected regenerate(): void {
+    this.#regenerated.update((n) => n + 1);
+  }
   protected readonly papersNote = computed(() => `Papers published ${this.periodWords()}, by the authors' center`);
 
   /** The Centers list shows momentum and papers only. */
@@ -120,6 +135,14 @@ export class DashboardPage {
   protected openTopicBar(event: CustomEvent<{ event: unknown }>): void {
     const id = ((event.detail.event as { datum?: PaperBar | null }).datum)?.id;
     if (id) void this.#router.navigate(['/topics', id]);
+  }
+
+  /** A cited center or topic opens where the page links it. */
+  protected openSource(event: CustomEvent<{ sourceId: string }>): void {
+    event.preventDefault();
+    const [kind, id] = event.detail.sourceId.split(':');
+    if (kind === 'topic') void this.#router.navigate(['/topics', id]);
+    else if (kind === 'center') void this.#router.navigate(['/org'], { fragment: id });
   }
 
   protected openCenter(event: CustomEvent<PriorityOpen>): void {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Donovan">
+  <!-- Donovan, INTELLECT's AI: two rounded strokes in an A – the long one sunset orange to violet, the short one blue. -->
+  <defs>
+    <linearGradient id="donovan-long" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#eba45c" />
+      <stop offset="0.55" stop-color="#d4867a" />
+      <stop offset="1" stop-color="#a45ab4" />
+    </linearGradient>
+    <linearGradient id="donovan-short" x1="0.6" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#2d4f8f" />
+      <stop offset="1" stop-color="#4ba7d7" />
+    </linearGradient>
+  </defs>
+  <line x1="51" y1="15" x2="74" y2="81" stroke="url(#donovan-long)" stroke-width="17" stroke-linecap="round" />
+  <line x1="48" y1="49" x2="31" y2="81" stroke="url(#donovan-short)" stroke-width="17" stroke-linecap="round" />
+</svg>
