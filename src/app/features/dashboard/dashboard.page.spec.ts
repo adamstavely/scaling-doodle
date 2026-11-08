@@ -79,7 +79,6 @@ describe('DashboardPage', () => {
       id: 'sl-intel',
       name: 'Center for Intelligent Systems',
       badge: 'CIS',
-      owner: 'Marcus Okonkwo',
       health: 'on-track',
       trend: [70, 72, 75],
       change: 0.05,
