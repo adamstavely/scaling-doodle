@@ -1,7 +1,7 @@
 /* The navy top bar runs the full width, with the logo and name at its left; the side nav starts under it. Both stay in
    place while the page scrolls. */
 .shell {
-  --app-bar-h: 72px;
+  --app-bar-h: 64px;
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: var(--app-bar-h) 1fr;
@@ -39,24 +39,26 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  display: flex;
+  /* Brand, search, header nav: the outer columns share the room equally, so the search sits in the bar's centre */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--tc-space-6);
-  padding: 0 var(--tc-space-6) 0 var(--tc-space-4);
+  padding: 0 var(--tc-space-6);
   background: var(--app-chrome);
 }
 
 /* INTELLECT and its logo, large. */
 .brand {
-  flex: none;
-  --tc-hb-name-size: 48px;
-  --tc-hb-logo-size: 44px;
+  justify-self: start;
+  --tc-hb-name-size: 40px;
+  --tc-hb-logo-size: 36px;
   --tc-hb-gap: var(--tc-space-3);
 }
 
 /* The header nav keeps to the bar's right end. */
 .topbar tc-header-nav {
-  margin-inline-start: auto;
+  justify-self: end;
 }
 
 /* Pages use the full width beside the nav; side columns grow with it (see each page's grid). */
