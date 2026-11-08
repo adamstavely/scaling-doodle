@@ -1,4 +1,4 @@
-import { asOfLabel, daysToQuarterEnd, fiscalQuarter, periodOptions, periodShort } from './period';
+import { asOfLabel, daysToQuarterEnd, DEFAULT_PERIOD_INDEX, fiscalQuarter, periodOptions, periodShort } from './period';
 
 describe('periods', () => {
   it('places dates in the US federal fiscal year', () => {
@@ -6,6 +6,10 @@ describe('periods', () => {
     expect(fiscalQuarter('2026-09-30')).toEqual({ fy: 2026, q: 4 });
     expect(fiscalQuarter('2026-01-02')).toEqual({ fy: 2026, q: 2 });
     expect(fiscalQuarter('2026-04-15')).toEqual({ fy: 2026, q: 3 });
+  });
+
+  it('opens on this month', () => {
+    expect(periodOptions('2026-11-07')[DEFAULT_PERIOD_INDEX]).toMatchObject({ value: '2026-11', label: 'This month' });
   });
 
   it('offers this and last month, this and last quarter (across a fiscal year), YTD and the fiscal year', () => {

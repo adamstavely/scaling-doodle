@@ -23,7 +23,7 @@
           </p>
         }
       </div>
-      <tc-select label="Reporting period" align="end" [options]="periodChoices" [value]="period()" (tc-value-change)="onPeriodChange($event)"></tc-select>
+      <tc-select label="Time frame" label-visible label-placement="start" align="end" [options]="periodChoices" [value]="period()" (tc-value-change)="onPeriodChange($event)"></tc-select>
     </header>
 
     <tc-ops-overview heading="At a glance" [tiles]="tiles()"></tc-ops-overview>

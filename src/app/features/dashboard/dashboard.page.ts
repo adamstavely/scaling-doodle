@@ -75,7 +75,7 @@ export class DashboardPage {
 
   /** `?brief=<period>` opens the Directorate Brief, so it can be linked to. */
   readonly brief = input<string | undefined>();
-  /** `?period=` picks the reporting period; unset is this quarter. */
+  /** `?period=` picks the reporting period; unset is this month. */
   readonly periodParam = input<string | undefined>(undefined, { alias: 'period' });
 
   protected readonly periods = periodOptions(todayIso());

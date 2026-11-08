@@ -39,7 +39,7 @@ export class CenterPage {
 
   /** The center's id, from the route. */
   readonly id = input.required<string>();
-  /** `?period=` picks the reporting period; unset is this quarter. */
+  /** `?period=` picks the reporting period; unset is this month. */
   readonly periodParam = input<string | undefined>(undefined, { alias: 'period' });
 
   protected readonly periods = periodOptions(todayIso());
