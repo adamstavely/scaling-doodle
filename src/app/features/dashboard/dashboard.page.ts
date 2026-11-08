@@ -9,13 +9,13 @@ import type { PriorityColumn, PriorityFigureColumn, PriorityItem, PriorityOpen }
 import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
 import type { RecentPapersDto } from '../../api/generated/models/recent-papers-dto';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
+import { papersControllerList } from '../../api/generated/fn/papers/papers-controller-list';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
-import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
-import { priorityHealth, PRIORITY_TIERS } from '../../core/format';
+import { priorityHealth } from '../../core/format';
 import { DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
-import { priorityCharts, type TopicBar } from '../../core/topics';
+import { priorityCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
@@ -71,34 +71,41 @@ export class DashboardPage {
   });
   protected readonly periodChoices = this.periods.map((p) => ({ value: p.value, label: p.label }));
 
-  protected readonly tiers = PRIORITY_TIERS;
 
   readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
+  readonly #papers = scopedResource((api) => api.invoke(papersControllerList, {}));
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
 
   protected readonly error = computed(
-    () => this.#summary.error() ?? this.#topics.error() ?? this.#org.error(),
+    () => this.#summary.error() ?? this.#topics.error() ?? this.#org.error() ?? this.#papers.error(),
   );
 
   /** Elements show "Nothing to show" for empty data, so hold them back until the first load lands. */
   protected readonly ready = computed(
     () =>
-      this.#summary.hasValue() && this.#topics.hasValue() && this.#org.hasValue(),
+      this.#summary.hasValue() && this.#topics.hasValue() && this.#org.hasValue() && this.#papers.hasValue(),
   );
 
   protected readonly isChief = computed(() => this.#session.viewAs() === 'chief');
 
   /** This period's papers, done alone vs. with partner labs, over the caller's scope. */
   protected readonly collaboration = computed(() => collaborationParts(read(this.#summary)?.collaborationInPeriod));
-  protected readonly collaborationNote = computed(() => {
+  /** The period in words, for the cards' descriptions: "this quarter", "this year". */
+  protected readonly periodWords = computed(() => {
     const when = this.periods.find((p) => p.value === this.period())?.label.toLowerCase() ?? 'this period';
-    return `Papers published ${when === 'year to date' ? 'this year' : when === 'fiscal year' ? 'this fiscal year' : when}${this.isChief() ? ' across the portfolio' : ' on your topics'}`;
+    return when === 'year to date' ? 'this year' : when === 'fiscal year' ? 'this fiscal year' : when;
   });
+  protected readonly collaborationNote = computed(
+    () => `Papers published ${this.periodWords()}${this.isChief() ? ' across the portfolio' : ' on your topics'}`,
+  );
 
-  protected readonly priorityCharts = computed(() => priorityCharts(read(this.#topics) ?? []));
-  /** The at-risk topics' bars are the emphasised ones. */
-  protected readonly atRisk = (bar: Record<string, unknown>) => (bar as TopicBar).health === 'at-risk';
+  /** Each priority's papers in the period, stacked by the authors' centers. */
+  protected readonly priorityCharts = computed(() => {
+    const period = read(this.#summary)?.period;
+    return period ? priorityCharts(read(this.#topics) ?? [], read(this.#papers) ?? [], period.from, period.to) : [];
+  });
+  protected readonly papersNote = computed(() => `Papers published ${this.periodWords()}, by the authors' center`);
 
   /** The Centers list shows momentum and papers only. */
   protected readonly centerHiddenColumns: PriorityColumn[] = ['coverage', 'open', 'work'];
@@ -109,24 +116,14 @@ export class DashboardPage {
   /** One row per center in the caller's view, laid out like the priorities. */
   protected readonly centers = computed<PriorityItem[]>(() => (read(this.#org)?.centers ?? []).map(centerRow));
 
-  /** Each center against each priority tier, from the same topics the Priorities list shows. */
-  protected readonly centerPriorities = computed<PriorityItem[]>(() =>
-    centerPriorityRows(read(this.#org)?.centers ?? [], read(this.#topics) ?? []),
-  );
-
 
   protected openTopicBar(event: CustomEvent<{ event: unknown }>): void {
-    const id = ((event.detail.event as { datum?: TopicBar | null }).datum)?.id;
+    const id = ((event.detail.event as { datum?: PaperBar | null }).datum)?.id;
     if (id) void this.#router.navigate(['/topics', id]);
   }
 
   protected openCenter(event: CustomEvent<PriorityOpen>): void {
     void this.#router.navigate(['/org'], { fragment: event.detail.id });
-  }
-
-  /** A center-by-priority row opens its center; the row id is `<center>:<tier>`. */
-  protected openCenterTier(event: CustomEvent<PriorityOpen>): void {
-    void this.#router.navigate(['/org'], { fragment: event.detail.id.split(':')[0] });
   }
 
   protected onPeriodChange(event: CustomEvent<{ value: string }>): void {

@@ -22,35 +22,8 @@
 
 @if (ready()) {
   <div class="grid">
-    <div class="main">
-      <tc-priority-list
-        heading="Centers by priority"
-        description="Each center's topics in each priority tier · papers published last month and this month"
-        name-label="Center"
-        open-unit="gaps"
-        no-filters
-        [items]="centerPriorities()"
-        [tiers]="tiers"
-        [figures]="paperColumns"
-        (tc-open)="openCenterTier($event)"
-      ></tc-priority-list>
-
-      <!-- Priorities: each topic's health score, P1–P2 and P3–P4, on one scale; at-risk topics stand out. -->
-      <div class="priority-charts">
-        @for (chart of priorityCharts(); track chart.id) {
-          <tc-bar-chart
-            [heading]="chart.heading"
-            description="Health score, most at risk first"
-            orientation="horizontal"
-            [sort]="false"
-            [yDomain]="[0, 100]"
-            [highlight]="atRisk"
-            [data]="chart.bars"
-            (tc-mark-click)="openTopicBar($event)"
-          ></tc-bar-chart>
-        }
-      </div>
-    </div>
+    <!-- Open for now: what goes here is still to be decided. -->
+    <div class="main"></div>
 
     <aside class="rail">
       <tc-priority-list
@@ -63,15 +36,31 @@
         [figures]="paperColumns"
         (tc-open)="openCenter($event)"
       ></tc-priority-list>
-
-      <tc-segmented-bar
-        heading="Unilateral vs. joint research"
-        [highlight]="'Joint'"
-        sort="false"
-        [description]="collaborationNote()"
-        [data]="collaboration()"
-      ></tc-segmented-bar>
     </aside>
+  </div>
+
+  <!-- The bottom row: the priority charts – four topics each, in priority order, each bar a topic's papers in the period
+       stacked by the authors' centers – then unilateral vs. joint research. -->
+  <div class="bottom-row">
+    @for (chart of priorityCharts(); track chart.id) {
+      <tc-bar-chart
+        [heading]="chart.heading"
+        [description]="papersNote()"
+        layout="stacked"
+        [series]="'center'"
+        [sort]="false"
+        [format]="'integer'"
+        [data]="chart.bars"
+        (tc-mark-click)="openTopicBar($event)"
+      ></tc-bar-chart>
+    }
+    <tc-segmented-bar
+      heading="Unilateral vs. joint research"
+      [highlight]="'Joint'"
+      sort="false"
+      [description]="collaborationNote()"
+      [data]="collaboration()"
+    ></tc-segmented-bar>
   </div>
 } @else if (!error()) {
   <div class="loading" aria-busy="true" aria-label="Loading the portfolio">
