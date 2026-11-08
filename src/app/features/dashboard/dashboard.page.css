@@ -106,9 +106,14 @@
   min-width: 0;
 }
 /* Cards fill their cells, so cards side by side end on one line */
-.donovan > *,
 .centers > * {
   height: 100%;
+}
+/* Donovan's card is at least its cell's height and grows with its text, which the cell scrolls – a fixed height let
+   the text run past the card's edge */
+.donovan > * {
+  display: block;
+  min-height: 100%;
 }
 
 @media (max-width: 1100px) {
