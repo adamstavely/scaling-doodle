@@ -70,7 +70,7 @@
 
   <tc-budget-burn
     heading="Budget by work item"
-    [description]="'FY26 · $' + t.budget.spent + 'M of $' + t.budget.allocated + 'M spent on the topic'"
+    [description]="t.budget.fy + ' · $' + t.budget.spent + 'M of $' + t.budget.allocated + 'M spent on the topic'"
     [items]="burn()"
   ></tc-budget-burn>
 } @else {

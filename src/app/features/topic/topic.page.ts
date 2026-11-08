@@ -16,6 +16,7 @@ import type { ProfileMeta, ProfilePill } from '@adamstavely/trenchcoat/profile-h
 import type { WorkStatus } from '@adamstavely/trenchcoat/work-item';
 import { Api } from '../../api/generated/api';
 import { peopleControllerList } from '../../api/generated/fn/people/people-controller-list';
+import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
 import { topicsControllerGet } from '../../api/generated/fn/topics/topics-controller-get';
 import { topicsControllerSpine } from '../../api/generated/fn/topics/topics-controller-spine';
 import type { WorkDto } from '../../api/generated/models/work-dto';
@@ -39,6 +40,26 @@ const WORK_STATUS: Record<WorkDto['status'], WorkStatus> = {
   review: 'review',
   complete: 'done',
 };
+
+/**
+ * One person's capacity row on a topic: their capacity (1 when unknown), this topic's allocation and, apart, the rest of
+ * their allocations.
+ */
+export function topicCapacity(
+  topicId: string,
+  topicName: string,
+  person: { id: string; name: string },
+  fte: number,
+  record: Pick<PersonSummaryDto, 'capacity' | 'allocations'> | undefined,
+): CapacityPerson {
+  const elsewhere = Math.round((record?.allocations ?? []).filter((a) => a.topicId !== topicId).reduce((s, a) => s + a.fte, 0) * 100) / 100;
+  return {
+    id: person.id,
+    name: person.name,
+    capacity: record?.capacity ?? 1,
+    allocations: [{ id: topicId, label: topicName, amount: fte }, ...(elsewhere ? [{ id: 'elsewhere', label: 'Other topics', amount: elsewhere }] : [])],
+  };
+}
 
 @Component({
   selector: 'app-topic-page',
@@ -132,15 +153,15 @@ export class TopicPage {
     })),
   );
 
+  /**
+   * Each person on the topic against their own capacity (not everyone is full time), with what they give this topic and
+   * everything else they're allocated to – so someone over-committed across topics shows as over here too.
+   */
   protected readonly capacity = computed<CapacityPerson[]>(() => {
     const t = this.topic();
     if (!t) return [];
-    return t.people.map((p) => ({
-      id: p.person.id,
-      name: p.person.name,
-      capacity: 1,
-      allocations: [{ id: t.id, label: t.name, amount: p.fte }],
-    }));
+    const people = new Map((read(this.#people) ?? []).map((p) => [p.id, p]));
+    return t.people.map((p) => topicCapacity(t.id, t.name, p.person, p.fte, people.get(p.person.id)));
   });
 
   protected readonly grades = computed(() => gradeCounts(this.topic()?.stats.grades ?? {}));
