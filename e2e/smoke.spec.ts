@@ -306,6 +306,8 @@ test.describe('smoke', () => {
     await page.goto('/');
     const donovan = page.locator('tc-ai-summary');
     const ask = donovan.getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
+    // The AI disclaimer sits under the ask box and describes it
+    await expect(ask).toHaveAccessibleDescription(/Donovan is AI and can make mistakes/);
     await ask.fill('What is at risk?');
     await ask.press('Enter');
     // Everything but Donovan leaves the page
@@ -350,17 +352,20 @@ test.describe('smoke', () => {
     await page.goto('/');
     const cell = page.locator('.donovan');
     await expect(cell.locator('.ui-aism__ask')).toBeVisible();
-    const { scrolls, underFoot, askToFoot } = await cell.evaluate((d) => {
+    const { scrolls, underFoot, askToDisclaimer, disclaimerToFoot } = await cell.evaluate((d) => {
       const box = (sel: string) => d.querySelector(sel)!.getBoundingClientRect();
       return {
         scrolls: d.scrollHeight > d.clientHeight + 1,
         underFoot: box('.ui-aism__card').bottom - box('.ui-aism__foot').bottom,
-        askToFoot: box('.ui-aism__foot').top - box('.ui-aism__ask').bottom,
+        // The AI disclaimer sits between the ask box and the footer
+        askToDisclaimer: box('.ui-aism__disclaimer').top - box('.ui-aism__ask').bottom,
+        disclaimerToFoot: box('.ui-aism__foot').top - box('.ui-aism__disclaimer').bottom,
       };
     });
     expect(scrolls).toBe(false);
     expect(Math.abs(underFoot)).toBeLessThanOrEqual(1);
-    expect(Math.abs(askToFoot)).toBeLessThanOrEqual(1);
+    expect(Math.abs(askToDisclaimer)).toBeLessThanOrEqual(1);
+    expect(Math.abs(disclaimerToFoot)).toBeLessThanOrEqual(1);
   });
 
   test('a long chat with Donovan scrolls between its header and the ask box, not the page', async ({ page, errors }) => {
