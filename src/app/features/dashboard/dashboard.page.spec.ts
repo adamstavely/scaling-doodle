@@ -53,7 +53,7 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('maps the API onto the priorities', async () => {
+  it('maps the API onto the priority charts and centers', async () => {
     const fixture = TestBed.createComponent(DashboardPage);
     fixture.detectChanges();
     await Promise.resolve();
@@ -65,12 +65,12 @@ describe('DashboardPage', () => {
     await fixture.whenStable();
 
     const page = fixture.componentInstance as unknown as {
-      priorities(): { id: string; health: string; change: number }[];
+      priorityCharts(): { id: string; bars: { id: string; y: number; health: string }[] }[];
       centers(): { id: string }[];
     };
-    expect(page.priorities()).toEqual([
-      expect.objectContaining({ id: 't-neuro', health: 'at-risk', change: -0.03, figures: { lastMonth: 2, thisMonth: 1 } }),
-    ]);
+    expect(page.priorityCharts().map((c) => c.id)).toEqual(['p1-p2', 'p3-p4']);
+    expect(page.priorityCharts()[0].bars).toEqual([expect.objectContaining({ id: 't-neuro', health: 'at-risk' })]);
+    expect(page.priorityCharts()[1].bars).toEqual([]);
     expect(page.centers().map((c) => c.id)).toEqual(['sl-intel']);
   });
 
