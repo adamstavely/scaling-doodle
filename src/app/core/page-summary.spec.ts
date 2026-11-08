@@ -44,7 +44,7 @@ describe('pageSummary', () => {
       'CCI and NEMC contributed the most papers this year (1 each); Neuromorphic Computing and Carbon-Negative Materials published the most of any topic (1 each).',
     );
     expect(s.sources.find((x) => x.id === 'topic:t-neuro')).toMatchObject({ label: 'Neuromorphic Computing', href: '/topics/t-neuro' });
-    expect(s.sources.find((x) => x.id === 'center:nemc')).toMatchObject({ href: '/org#nemc' });
+    expect(s.sources.find((x) => x.id === 'center:nemc')).toMatchObject({ href: '/centers/nemc' });
   });
 
   it('asks what the numbers leave open', () => {

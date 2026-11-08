@@ -38,7 +38,7 @@ function navIdFor(url: string): string {
   if (path.startsWith('/resourcing')) return 'resourcing';
   if (path.startsWith('/papers')) return 'papers';
   if (path.startsWith('/partners')) return 'partners';
-  if (path.startsWith('/org')) return 'org';
+  if (path.startsWith('/org') || path.startsWith('/centers')) return 'org';
   if (path.startsWith('/people')) return 'people';
   return 'dashboard';
 }

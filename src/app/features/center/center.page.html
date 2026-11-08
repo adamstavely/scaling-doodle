@@ -1,0 +1,85 @@
+@if (error()) {
+  <p role="alert" class="note">Couldn't load the center. Is intellect-api running?</p>
+} @else if (ready()) {
+  @if (center(); as c) {
+    <header class="page-head">
+      <div>
+        <p class="eyebrow">{{ c.code ?? 'Mission center' }}</p>
+        <div class="title">
+          <h1>{{ c.name }}</h1>
+          <span class="as-of">As of: {{ asOf }}</span>
+        </div>
+        @if (c.lead || c.focus) {
+          <p class="about">
+            @if (c.lead) {
+              <span>Led by {{ c.lead.name }}</span>
+            }
+            @if (c.lead && c.focus) {
+              <span aria-hidden="true"> · </span>
+            }
+            @if (c.focus) {
+              <span>{{ c.focus }}</span>
+            }
+          </p>
+        }
+      </div>
+      <tc-select label="Reporting period" align="end" [options]="periodChoices" [value]="period()" (tc-value-change)="onPeriodChange($event)"></tc-select>
+    </header>
+
+    <tc-ops-overview heading="At a glance" [tiles]="tiles()"></tc-ops-overview>
+
+    @if (topics().length) {
+      <div class="layout">
+        <tc-priority-list
+          class="topics"
+          heading="Topics"
+          description="This center's topics by priority · papers published last month and this month"
+          momentum-label="Trend"
+          grouped
+          [items]="topics()"
+          [tiers]="tiers"
+          [figures]="paperColumns"
+          (tc-open)="openTopic($event)"
+        ></tc-priority-list>
+
+        <tc-segmented-bar
+          class="collaboration"
+          heading="Unilateral vs. joint research"
+          [highlight]="'Joint'"
+          sort="false"
+          [description]="'Papers its authors published ' + periodWords()"
+          [data]="collaboration()"
+        ></tc-segmented-bar>
+
+        <tc-results-list
+          class="papers"
+          heading="Papers"
+          group="none"
+          [results]="papers()"
+          (tc-open)="openPaper($event)"
+        ></tc-results-list>
+
+        @if (teamsCard(); as t) {
+          <tc-org-unit-card
+            class="teams"
+            [id]="t.id"
+            heading="Teams"
+            [code]="t.code"
+            [lead]="t.lead"
+            [stats]="t.stats"
+            [health]="t.health"
+            [teams]="t.teams"
+            (tc-open)="openTeamTopic($event)"
+          ></tc-org-unit-card>
+        }
+      </div>
+    } @else {
+      <p class="note">{{ c.name }} has no teams or topics yet.</p>
+    }
+  } @else {
+    <p class="note">That center isn't in your view.</p>
+  }
+} @else {
+  <tc-skeleton height="96" radius="12"></tc-skeleton>
+  <tc-skeleton height="480" radius="12"></tc-skeleton>
+}
