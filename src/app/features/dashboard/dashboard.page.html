@@ -42,9 +42,9 @@
             [heading]="chart.heading"
             [description]="papersNote()"
             layout="stacked"
-            series="center"
+            [series]="'center'"
             [sort]="false"
-            format="integer"
+            [format]="'integer'"
             [data]="chart.bars"
             (tc-mark-click)="openTopicBar($event)"
           ></tc-bar-chart>
