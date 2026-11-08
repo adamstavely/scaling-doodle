@@ -35,6 +35,7 @@ const center = {
   lead: { id: 'mo', name: 'Marcus Okonkwo', initials: 'MO' },
   rollup: {
     health: 'healthy',
+    topics: 2,
     trend: [70, 72, 75],
     momentum: 5,
     coverage: 0.5,
