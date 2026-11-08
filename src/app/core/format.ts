@@ -25,3 +25,6 @@ export function localDate(iso: string): number {
 }
 
 export const PRIORITY_TIERS: Record<number, string> = { 1: 'P1 · Flagship', 2: 'P2 · Core', 3: 'P3 · Core', 4: 'P4 · Emerging' };
+
+/** Who a priority answers to: the lab itself, a national requirement, or an outside sponsor. */
+export const PRIORITY_TYPES: Record<'internal' | 'national' | 'external', string> = { internal: 'Internal', national: 'National', external: 'External' };

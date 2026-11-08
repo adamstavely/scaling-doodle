@@ -4,13 +4,14 @@ import type { CreateTopicDto } from '../../api/generated/models/create-topic-dto
 import type { OrgDto } from '../../api/generated/models/org-dto';
 import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
 import type { PriorityItem } from '@adamstavely/trenchcoat/priority-list';
-import { PRIORITY_TIERS } from '../../core/format';
+import { PRIORITY_TIERS, PRIORITY_TYPES } from '../../core/format';
 
 export type NewTopicValues = {
   name: string;
   summary: string;
   tags: string[];
   bin: string;
+  priorityType: CreateTopicDto['priorityType'] & string;
   centerId: string;
   teamId: string;
   questions: string;
@@ -25,6 +26,7 @@ export const EMPTY_TOPIC: NewTopicValues = {
   summary: '',
   tags: [],
   bin: '2',
+  priorityType: 'internal',
   centerId: '',
   teamId: '',
   questions: '',
@@ -93,6 +95,7 @@ export function createBody(v: NewTopicValues, teams: TeamOption[], me: { id: str
     summary: v.summary.trim() || undefined,
     tags: v.tags.length ? v.tags : undefined,
     bin: Number(v.bin),
+    priorityType: v.priorityType,
     teamId: v.teamId,
     leadId: me.role === 'chief' ? (team?.leadId ?? me.id) : me.id,
     questions: questions.length ? questions : undefined,
@@ -159,6 +162,14 @@ export function newTopicSteps(teams: TeamOption[]): StepperFormStep<NewTopicValu
               .value=${values.bin}
               .options=${[1, 2, 3, 4].map((b) => ({ value: String(b), title: `P${b}`, aside: PRIORITY_TIERS[b].split(' · ')[1] }))}
               @tc-value-change=${(e: CustomEvent<{ value: string }>) => setValues({ bin: e.detail.value })}
+            ></tc-stepper-choices>
+          </tc-stepper-field>
+          <tc-stepper-field name="priorityType" label="Priority type">
+            <tc-stepper-choices
+              label="Priority type"
+              .value=${values.priorityType}
+              .options=${Object.entries(PRIORITY_TYPES).map(([value, title]) => ({ value, title }))}
+              @tc-value-change=${(e: CustomEvent<{ value: string }>) => setValues({ priorityType: e.detail.value as NewTopicValues['priorityType'] })}
             ></tc-stepper-choices>
           </tc-stepper-field>
           ${centers.length > 1
@@ -234,6 +245,7 @@ export function newTopicSteps(teams: TeamOption[]): StepperFormStep<NewTopicValu
           .rows=${[
             { label: 'Name', value: values.name, step: 'define' },
             { label: 'Priority', value: PRIORITY_TIERS[Number(values.bin)], step: 'scope' },
+            { label: 'Priority type', value: PRIORITY_TYPES[values.priorityType], step: 'scope' },
             { label: 'Team', value: team ? `${team.name} (lead: ${team.leadName ?? 'you'})` : '—', step: 'scope' },
             { label: 'Opening questions', value: String(values.questions.split('\n').filter((q) => q.trim()).length), step: 'scope' },
             { label: 'Budget', value: `$${values.budget}M`, step: 'resourcing' },
