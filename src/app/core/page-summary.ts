@@ -1,4 +1,4 @@
-import type { AiSummaryPoint, AiSummarySource } from '@adamstavely/trenchcoat/ai-summary';
+import type { AiSummaryLength, AiSummaryPoint, AiSummarySource } from '@adamstavely/trenchcoat/ai-summary';
 import type { OrgCenterDto } from '../api/generated/models/org-center-dto';
 import type { PaperListItemDto } from '../api/generated/models/paper-list-item-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
@@ -25,11 +25,15 @@ const list = (names: string[]) =>
   names.length <= 2 ? names.join(' and ') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 const centerName = (c: OrgCenterDto) => c.code ?? c.name;
 
+/** The short summary's key points: few enough that it fits beside the KPI cards, the ask box in view, from 1440px. */
+const SHORT_POINTS = 2;
+
 /**
  * The Metrics Summary explained in words, from the numbers the page shows – written by fixed rules, not a model. Its
- * points cite the centers and topics they're drawn from.
+ * points cite the centers and topics they're drawn from. Short is the gist and the first few points; Detailed adds how
+ * to read the page, every point and the open questions.
  */
-export function pageSummary({ centers, topics, papers, period }: PageSummaryInput): PageSummary {
+export function pageSummary({ centers, topics, papers, period }: PageSummaryInput, length: AiSummaryLength = 'short'): PageSummary {
   const sources: AiSummarySource[] = [];
   const cite = (id: string, label: string, href: string) => {
     if (!sources.some((s) => s.id === id)) sources.push({ id, label, href, kind: 'other' });
@@ -113,5 +117,8 @@ export function pageSummary({ centers, topics, papers, period }: PageSummaryInpu
   const unworked = atRisk.filter((t) => t.stats.work === 0);
   if (unworked.length) questions.push(`${list(unworked.map((t) => t.name))} ${unworked.length === 1 ? 'is' : 'are'} at risk with no work in flight. Who picks ${unworked.length === 1 ? 'it' : 'them'} up?`);
 
-  return { tldr, summary, points, questions, sources };
+  if (length === 'detailed') return { tldr, summary, points, questions, sources };
+  const shown = points.slice(0, SHORT_POINTS);
+  const cited = new Set(shown.flatMap((p) => p.sources ?? []));
+  return { tldr, summary: '', points: shown, questions: [], sources: sources.filter((x) => cited.has(x.id)) };
 }

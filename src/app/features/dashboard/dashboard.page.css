@@ -110,9 +110,8 @@
   height: 100%;
 }
 /* Donovan's card is at least its cell's height and grows with its text, which the cell scrolls – a fixed height let
-   the text run past the card's edge */
-.donovan > * {
-  display: block;
+   the text run past the card's edge. Taller than its text, the card keeps its ask box and footer at the bottom */
+.donovan > tc-ai-summary {
   min-height: 100%;
 }
 

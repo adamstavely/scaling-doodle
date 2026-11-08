@@ -13,10 +13,19 @@ describe('pageSummary', () => {
   const centers = [center('cci', 'CCI', 'Center for Cyber Intelligence', 4, -2), center('nemc', 'NEMC', 'Near East Mission Center', 4, -5), center('afmc', 'AFMC', 'Africa Mission Center', 0)];
   const topics = [topic('t-neuro', 'Neuromorphic Computing', 'at-risk', 0), topic('t-carbon', 'Carbon-Negative Materials', 'at-risk'), topic('t-grid', 'Grid Storage', 'healthy')];
   const papers = [paper('t-neuro', ['cci']), paper('t-neuro', ['cci', 'nemc'], ['Sandia']), paper('t-carbon', ['nemc'])];
-  const s = pageSummary({ centers, topics, papers, period: 'this year' });
+  const s = pageSummary({ centers, topics, papers, period: 'this year' }, 'detailed');
 
   it('gives the gist in one line', () => {
     expect(s.tldr).toBe('3 topics across 2 centers, 2 at risk; 3 papers published this year, 1 with partner labs.');
+  });
+
+  it('keeps Short to the gist and two points, citing only what they cite', () => {
+    const short = pageSummary({ centers, topics, papers, period: 'this year' });
+    expect(short.tldr).toBe(s.tldr);
+    expect(short.summary).toBe('');
+    expect(short.questions).toEqual([]);
+    expect(short.points.map((p) => p.id)).toEqual(['at-risk', 'coverage']);
+    expect(short.sources.map((x) => x.id).sort()).toEqual(['center:cci', 'center:nemc', 'topic:t-carbon', 'topic:t-neuro']);
   });
 
   it('explains what each part of the page shows', () => {
@@ -35,11 +44,11 @@ describe('pageSummary', () => {
     expect(point('trend').text).toBe("Near East Mission Center's health fell the most: 5 points over three months.");
     // A joint CCI–NEMC paper counts for both, so they tie
     expect(point('papers').text).toBe('CCI and NEMC contributed the most papers this year (2 each); Neuromorphic Computing published the most of any topic (2).');
-    const single = pageSummary({ centers, topics, papers: [paper('t-neuro', ['cci']), paper('t-neuro', ['cci'])], period: 'this year' });
+    const single = pageSummary({ centers, topics, papers: [paper('t-neuro', ['cci']), paper('t-neuro', ['cci'])], period: 'this year' }, 'detailed');
     expect(single.points.find((p) => p.id === 'papers')!.text).toBe(
       'Center for Cyber Intelligence contributed the most papers this year (2); Neuromorphic Computing published the most of any topic (2).',
     );
-    const tied = pageSummary({ centers, topics, papers: [paper('t-neuro', ['cci']), paper('t-carbon', ['nemc'])], period: 'this year' });
+    const tied = pageSummary({ centers, topics, papers: [paper('t-neuro', ['cci']), paper('t-carbon', ['nemc'])], period: 'this year' }, 'detailed');
     expect(tied.points.find((p) => p.id === 'papers')!.text).toBe(
       'CCI and NEMC contributed the most papers this year (1 each); Neuromorphic Computing and Carbon-Negative Materials published the most of any topic (1 each).',
     );
@@ -55,7 +64,7 @@ describe('pageSummary', () => {
   });
 
   it('says so when nothing was published', () => {
-    const quiet = pageSummary({ centers, topics, papers: [], period: 'this quarter' });
+    const quiet = pageSummary({ centers, topics, papers: [], period: 'this quarter' }, 'detailed');
     expect(quiet.tldr).toBe('3 topics across 2 centers, 2 at risk; 0 papers published this quarter.');
     expect(quiet.points.map((p) => p.id)).not.toContain('papers');
     expect(quiet.questions[0]).toBe('No papers were published this quarter. Is that expected, or are papers still to be recorded?');

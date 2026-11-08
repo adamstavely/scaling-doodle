@@ -47,6 +47,8 @@
           badge="Rule-based"
           ask="Ask Donovan a follow-up…"
           [messages]="messages()"
+          [length]="length()"
+          (tc-length-change)="onLength($event)"
           (tc-cite-open)="openSource($event)"
           (tc-retry)="regenerate()"
           (tc-ask)="onAsk($event)"

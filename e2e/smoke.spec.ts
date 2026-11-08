@@ -290,6 +290,25 @@ test.describe('smoke', () => {
     await expect(dialog).toBeHidden();
   });
 
+  test("Donovan's short summary fits its cell at 1440px, the ask box and footer at the card's bottom", async ({ page, errors }) => {
+    void errors;
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    const cell = page.locator('.donovan');
+    await expect(cell.locator('.ui-aism__ask')).toBeVisible();
+    const { scrolls, underFoot, askToFoot } = await cell.evaluate((d) => {
+      const box = (sel: string) => d.querySelector(sel)!.getBoundingClientRect();
+      return {
+        scrolls: d.scrollHeight > d.clientHeight + 1,
+        underFoot: box('.ui-aism__card').bottom - box('.ui-aism__foot').bottom,
+        askToFoot: box('.ui-aism__foot').top - box('.ui-aism__ask').bottom,
+      };
+    });
+    expect(scrolls).toBe(false);
+    expect(Math.abs(underFoot)).toBeLessThanOrEqual(1);
+    expect(Math.abs(askToFoot)).toBeLessThanOrEqual(1);
+  });
+
   test('every page reflows at 320px: nothing scrolls sideways (WCAG 1.4.10)', async ({ page, errors }) => {
     void errors;
     await page.setViewportSize({ width: 320, height: 800 });
