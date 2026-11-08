@@ -217,6 +217,36 @@ test.describe('smoke', () => {
     await expect(name).toHaveValue('Quantum Networking');
   });
 
+  test('New Topic can be finished with the keyboard: every choice group takes focus with nothing chosen', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/topics?new=topic');
+    const form = page.locator('tc-dialog tc-stepper-form');
+    await form.getByRole('textbox').first().fill('Quantum Networking');
+    await form.getByRole('button', { name: 'Continue' }).click();
+    await expect(form.getByText('Where does it sit?')).toBeVisible();
+    // Tab through the step; Space picks the first card of each choice group still empty.
+    const chosen = new Set<string>();
+    for (let i = 0; i < 30 && chosen.size < 3; i++) {
+      await page.keyboard.press('Tab');
+      const group = await page.evaluate(() => {
+        let el = document.activeElement;
+        while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
+        // The focused card sits in the group's light DOM or its shadow root
+        const host = (el?.closest('tc-stepper-choices') ?? (el?.getRootNode() as ShadowRoot | undefined)?.host) as
+          | (Element & { label: string; value: string })
+          | undefined;
+        return host?.tagName === 'TC-STEPPER-CHOICES' ? { label: host.label, value: host.value } : null;
+      });
+      if (group && !chosen.has(group.label)) {
+        if (!group.value) await page.keyboard.press('Space');
+        chosen.add(group.label);
+      }
+    }
+    expect([...chosen].sort()).toEqual(['Center', 'Priority', 'Team']);
+    await form.getByRole('button', { name: 'Continue' }).click();
+    await expect(form.getByText('How is it funded?')).toBeVisible();
+  });
+
   test('every page reflows at 320px: nothing scrolls sideways (WCAG 1.4.10)', async ({ page, errors }) => {
     void errors;
     await page.setViewportSize({ width: 320, height: 800 });
