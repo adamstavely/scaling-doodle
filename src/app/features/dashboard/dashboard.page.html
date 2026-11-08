@@ -79,8 +79,8 @@
       ></tc-priority-list>
     </aside>
 
-    <!-- The priority charts: four topics each, in priority order, each bar a topic's papers in the period stacked by
-         the authors' centers. -->
+    <!-- The second row: the priority charts – four topics each, in priority order, each bar a topic's papers in the
+         period stacked by the authors' centers – then unilateral vs. joint research. -->
     <div class="priorities">
       @for (chart of priorityCharts(); track chart.id) {
         <tc-bar-chart
@@ -94,6 +94,13 @@
           (tc-mark-click)="openTopicBar($event)"
         ></tc-bar-chart>
       }
+      <tc-segmented-bar
+        heading="Unilateral vs. joint research"
+        [highlight]="'Joint'"
+        sort="false"
+        [description]="collaborationNote()"
+        [data]="collaboration()"
+      ></tc-segmented-bar>
     </div>
 
     <!-- Readership and citations within the period, every priority, stacked by the authors' centers. -->
@@ -113,15 +120,6 @@
       }
     </div>
 
-    <aside class="side">
-      <tc-segmented-bar
-        heading="Unilateral vs. joint research"
-        [highlight]="'Joint'"
-        sort="false"
-        [description]="collaborationNote()"
-        [data]="collaboration()"
-      ></tc-segmented-bar>
-    </aside>
   </div>
 } @else if (!error()) {
   <div class="loading" aria-busy="true" aria-label="Loading the portfolio">
