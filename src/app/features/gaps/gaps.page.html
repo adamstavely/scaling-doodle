@@ -9,6 +9,9 @@
 @if (error()) {
   <p role="alert" class="note">Couldn't load the gaps. Is intellect-api running?</p>
 } @else if (ready()) {
+  @if (truncated()) {
+    <p role="status" class="note">Showing the first 10,000 gaps of a status; the export has the same. Narrow by topic to see the rest.</p>
+  }
   <tc-gap-exposure
     heading="Open gaps"
     description="What's missing across the portfolio, and whether anyone is working on it"

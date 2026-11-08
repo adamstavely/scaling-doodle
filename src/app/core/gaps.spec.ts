@@ -30,6 +30,19 @@ describe('gaps', () => {
     expect(exposureGap({ ...gap, invested: { budget: 0, fte: 0 } }).budget).toBeUndefined();
   });
 
+  it('keeps text a spreadsheet would run as a formula from running', () => {
+    const risky = { ...gap, text: '=1+1', topic: { ...gap.topic, name: '@SUM(A1:A9)' }, owner: { ...gap.owner, name: '+cmd|calc' } } as GapListItemDto;
+    const [, row] = gapReviewCsv([risky]).trim().split('\n');
+    expect(row.split(',').slice(1, 3)).toEqual(["'=1+1", "'@SUM(A1:A9)"]);
+    expect(row).toContain("'+cmd|calc");
+    for (const start of ['-2+3', '\tx', '\rx']) {
+      const [, r] = gapReviewCsv([{ ...gap, text: start } as GapListItemDto]).trim().split('\n');
+      expect(r.split(',')[1].replace(/^"/, '')).toMatch(/^'/);
+    }
+    // Our own numbers stay numbers
+    expect(gapReviewCsv([{ ...gap, invested: { budget: 0.9, fte: 1.2 } } as GapListItemDto])).toContain(',0.9,1.2');
+  });
+
   it('writes the review as CSV, quoting text with commas or quotes', () => {
     const [head, row] = gapReviewCsv([gap]).trim().split('\n');
     expect(head).toBe('Severity,Gap,Topic,Priority,Status,Owner,Active work,Invested ($M),Invested (FTE)');
