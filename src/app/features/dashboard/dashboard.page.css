@@ -41,40 +41,71 @@
   gap: var(--tc-space-4);
 }
 
-.grid {
+/*
+ * The page's grid: a main column and a rail, one set of edges for every row.
+ *   donovan     centers      Mission Centers runs beside Donovan and the priority charts
+ *   priorities  centers
+ *   metrics     side         unilateral vs. joint (and notes) beside readership and citations
+ * Cards sharing a row stretch to its height, and the rail's last card takes what's left, so nothing leaves a gap.
+ * The rail is at least 460px so Mission Centers keeps its trend and paper columns.
+ */
+.layout {
   display: grid;
-  /* The rail widens with the screen, within bounds: at least 460px so Mission Centers keeps its trend and paper columns. */
-  grid-template-columns: minmax(0, 1fr) clamp(460px, 32%, 600px);
+  grid-template-columns: minmax(0, 1fr) clamp(460px, 30%, 560px);
+  grid-template-areas:
+    'donovan centers'
+    'priorities centers'
+    'metrics side';
   gap: var(--tc-space-4);
-  align-items: start;
+  align-items: stretch;
 }
-.main,
-.rail {
+.donovan {
+  grid-area: donovan;
+}
+.centers {
+  grid-area: centers;
+}
+.priorities {
+  grid-area: priorities;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--tc-space-4);
+}
+.metrics {
+  grid-area: metrics;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--tc-space-4);
+}
+.side {
+  grid-area: side;
   display: flex;
   flex-direction: column;
   gap: var(--tc-space-4);
 }
-
-/* The bottom row: the three priority charts and unilateral vs. joint, four across the page, stacked when narrow. */
-.bottom-row {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--tc-space-4);
-  align-items: start;
+/* Each cell's cards fill it, so cards side by side end on one line */
+.donovan,
+.centers,
+.priorities,
+.metrics,
+.side {
+  min-width: 0;
 }
-
-/* Readership and citations: two charts side by side, twelve bars each. */
-.metrics-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--tc-space-4);
-  align-items: start;
+.donovan > *,
+.centers > *,
+.priorities > *,
+.metrics > *,
+.side > :last-child {
+  height: 100%;
 }
 
 @media (max-width: 1100px) {
-  .grid,
-  .bottom-row,
-  .metrics-row {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'donovan' 'centers' 'priorities' 'metrics' 'side';
+  }
+  .priorities,
+  .metrics {
     grid-template-columns: 1fr;
   }
 }

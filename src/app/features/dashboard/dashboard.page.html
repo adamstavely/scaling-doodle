@@ -24,9 +24,11 @@
 }
 
 @if (ready()) {
-  <div class="grid">
-    <div class="main">
-      <!-- Donovan, INTELLECT's AI, explains the page – by fixed rules for now; a model can write it later. -->
+  <!-- One grid for the page, so card edges line up: Donovan and the charts down the main column, Mission Centers,
+       unilateral vs. joint and the notes down the rail. Cards sharing a row stretch to its height. -->
+  <div class="layout">
+    <!-- Donovan, INTELLECT's AI, explains the page – by fixed rules for now; a model can write it later. -->
+    <section class="donovan">
       @if (explainer(); as s) {
         <tc-ai-summary
           heading="Donovan"
@@ -43,9 +45,9 @@
           (tc-retry)="regenerate()"
         ></tc-ai-summary>
       }
-    </div>
+    </section>
 
-    <aside class="rail">
+    <aside class="centers">
       <tc-priority-list
         momentum-label="Trend"
         heading="Mission Centers"
@@ -58,53 +60,56 @@
         (tc-open)="openCenter($event)"
       ></tc-priority-list>
     </aside>
-  </div>
 
-  <!-- The bottom row: the priority charts – four topics each, in priority order, each bar a topic's papers in the period
-       stacked by the authors' centers – then unilateral vs. joint research. -->
-  <div class="bottom-row">
-    @for (chart of priorityCharts(); track chart.id) {
-      <tc-bar-chart
-        [heading]="chart.heading"
-        [description]="papersNote()"
-        layout="stacked"
-        [series]="'center'"
-        [sort]="false"
-        [format]="'integer'"
-        [data]="chart.bars"
-        (tc-mark-click)="openTopicBar($event)"
-      ></tc-bar-chart>
-    }
-    <tc-segmented-bar
-      heading="Unilateral vs. joint research"
-      [highlight]="'Joint'"
-      sort="false"
-      [description]="collaborationNote()"
-      [data]="collaboration()"
-    ></tc-segmented-bar>
-  </div>
+    <!-- The priority charts: four topics each, in priority order, each bar a topic's papers in the period stacked by
+         the authors' centers. -->
+    <div class="priorities">
+      @for (chart of priorityCharts(); track chart.id) {
+        <tc-bar-chart
+          [heading]="chart.heading"
+          [description]="papersNote()"
+          layout="stacked"
+          [series]="'center'"
+          [sort]="false"
+          [format]="'integer'"
+          [data]="chart.bars"
+          (tc-mark-click)="openTopicBar($event)"
+        ></tc-bar-chart>
+      }
+    </div>
 
-  <!-- Readership and citations within the period, every priority, stacked by the authors' centers. -->
-  <div class="metrics-row">
-    @for (chart of metricCharts(); track chart.id) {
-      <tc-bar-chart
-        [heading]="chart.heading"
-        [description]="metricNote()"
-        layout="stacked"
-        [series]="'center'"
-        [sort]="false"
-        [format]="'compact'"
-        [unit]="' ' + chart.unit"
-        [data]="chart.bars"
-        (tc-mark-click)="openTopicBar($event)"
-      ></tc-bar-chart>
-    }
+    <!-- Readership and citations within the period, every priority, stacked by the authors' centers. -->
+    <div class="metrics">
+      @for (chart of metricCharts(); track chart.id) {
+        <tc-bar-chart
+          [heading]="chart.heading"
+          [description]="metricNote()"
+          layout="stacked"
+          [series]="'center'"
+          [sort]="false"
+          [format]="'compact'"
+          [unit]="' ' + chart.unit"
+          [data]="chart.bars"
+          (tc-mark-click)="openTopicBar($event)"
+        ></tc-bar-chart>
+      }
+    </div>
+
+    <aside class="side">
+      <tc-segmented-bar
+        heading="Unilateral vs. joint research"
+        [highlight]="'Joint'"
+        sort="false"
+        [description]="collaborationNote()"
+        [data]="collaboration()"
+      ></tc-segmented-bar>
+    </aside>
   </div>
 } @else if (!error()) {
   <div class="loading" aria-busy="true" aria-label="Loading the portfolio">
-    <div class="grid">
-      <tc-skeleton height="480" radius="12"></tc-skeleton>
-      <tc-skeleton height="480" radius="12"></tc-skeleton>
+    <div class="layout">
+      <tc-skeleton class="donovan" height="480" radius="12"></tc-skeleton>
+      <tc-skeleton class="centers" height="480" radius="12"></tc-skeleton>
     </div>
   </div>
 }
