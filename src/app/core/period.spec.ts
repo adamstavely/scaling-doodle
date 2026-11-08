@@ -29,8 +29,9 @@ describe('periods', () => {
     expect(daysToQuarterEnd('2027-02-01')).toBe(58);
   });
 
-  it('writes the as-of date day, month, year', () => {
-    expect(asOfDate('2026-11-08')).toBe('08 11 2026');
+  it('writes the as-of date as day, month by name, year', () => {
+    expect(asOfDate('2026-11-08')).toBe('08 November 2026');
+    expect(asOfDate('2027-01-31')).toBe('31 January 2027');
   });
 
   it('shortens any period', () => {
