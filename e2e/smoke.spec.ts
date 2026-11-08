@@ -333,6 +333,35 @@ test.describe('smoke', () => {
     expect(Math.abs(askToFoot)).toBeLessThanOrEqual(1);
   });
 
+  test('a long chat with Donovan scrolls between its header and the ask box, not the page', async ({ page, errors }) => {
+    void errors;
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    const donovan = page.locator('tc-ai-summary');
+    const ask = donovan.getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
+    for (const q of ['What is at risk?', 'Which center fell the most?', 'Who has no topics?', 'What is at risk now?', 'And the papers?']) {
+      await ask.fill(q);
+      await ask.press('Enter');
+      await expect(donovan.locator('[aria-busy="true"]')).toHaveCount(0);
+      await expect(ask).toBeEnabled();
+    }
+    const m = await page.evaluate(() => {
+      const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
+      const body = document.querySelector<HTMLElement>('.ui-aism__body')!;
+      return {
+        pageScrolls: document.documentElement.scrollHeight > innerHeight + 1,
+        bodyScrolls: body.scrollHeight > body.clientHeight + 1,
+        footBottom: box('.ui-aism__foot').bottom,
+        bodyBottom: box('.ui-aism__body').bottom,
+        askTop: box('.ui-aism__ask').top,
+      };
+    });
+    expect(m.pageScrolls).toBe(false);
+    expect(m.bodyScrolls).toBe(true);
+    expect(m.footBottom).toBeLessThanOrEqual(900);
+    expect(m.bodyBottom).toBeLessThanOrEqual(m.askTop + 1);
+  });
+
   test('every page reflows at 320px: nothing scrolls sideways (WCAG 1.4.10)', async ({ page, errors }) => {
     void errors;
     await page.setViewportSize({ width: 320, height: 800 });
