@@ -45,9 +45,12 @@ export class NewTopicDialog {
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree), this.open);
   readonly #people = scopedResource((api) => api.invoke(peopleControllerList), this.open);
 
+  /** Everything the form needs has arrived – the form opens only then, so a late answer never resets a draft. */
+  readonly #loaded = computed(() => !!read(this.#session.me) && this.#org.hasValue() && this.#people.hasValue());
+
   readonly #teams = computed(() => {
     const me = read(this.#session.me);
-    return me ? teamOptions(read(this.#org), read(this.#people) ?? [], me) : [];
+    return me && this.#loaded() ? teamOptions(read(this.#org), read(this.#people) ?? [], me) : [];
   });
   readonly #steps = computed(() => newTopicSteps(this.#teams()));
 
@@ -56,7 +59,7 @@ export class NewTopicDialog {
    * draft below so redrawing the preview never hands the form new values (which would reset it).
    */
   readonly #initial = computed<NewTopicValues | undefined>(() => {
-    if (!this.open()) return undefined;
+    if (!this.open() || !this.#loaded()) return undefined;
     const teams = this.#teams();
     if (!teams.length) return undefined;
     // The scope step only asks for a center when there's more than one, and for a team when its center has more than
@@ -95,9 +98,11 @@ export class NewTopicDialog {
       return html`<p role="alert">Couldn't load the teams to choose from. Close this and try again.</p>`;
     }
     const me = read(this.#session.me);
+    if (!me || !this.#loaded()) return html`<tc-skeleton height="240" radius="12"></tc-skeleton>`;
     const teams = this.#teams();
     const initial = this.#initial();
-    if (!me || !initial) return html`<tc-skeleton height="240" radius="12"></tc-skeleton>`;
+    // Loaded, but no team to create a topic in: say so rather than loading forever
+    if (!initial) return html`<p role="status">You're not on a team that can hold topics yet, so there's nowhere to create one. Ask the Directorate to add you to a team.</p>`;
     return html`<div class="new-topic">
       <tc-stepper-form
         submit-label="Create topic"

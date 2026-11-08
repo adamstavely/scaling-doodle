@@ -45,22 +45,23 @@ export type TeamOption = {
   leadName: string | null;
 };
 
-/** Teams the viewer may create topics in. A PI only leads topics in their own team. */
+/** The center choice for teams that belong to no center. */
+export const NO_CENTER = 'none';
+
+/**
+ * Teams the viewer may create topics in, including teams outside any center (under "No center"). A PI only leads
+ * topics in their own team.
+ */
 export function teamOptions(org: OrgDto | undefined, people: PersonSummaryDto[], me: { id: string; role: string; team: string | null }): TeamOption[] {
   const pis = people.filter((p) => p.role === 'pi');
-  const all = (org?.centers ?? []).flatMap((c) =>
-    c.teams.map((t) => {
-      const lead = t.lead ?? pis.find((p) => p.team === t.id);
-      return {
-        id: t.id,
-        name: t.name,
-        centerId: c.id,
-        center: c.code ?? c.name,
-        leadId: lead?.id ?? null,
-        leadName: lead?.name ?? null,
-      };
-    }),
-  );
+  const option = (t: OrgDto['otherTeams'][number], centerId: string, center: string): TeamOption => {
+    const lead = t.lead ?? pis.find((p) => p.team === t.id);
+    return { id: t.id, name: t.name, centerId, center, leadId: lead?.id ?? null, leadName: lead?.name ?? null };
+  };
+  const all = [
+    ...(org?.centers ?? []).flatMap((c) => c.teams.map((t) => option(t, c.id, c.code ?? c.name))),
+    ...(org?.otherTeams ?? []).map((t) => option(t, NO_CENTER, 'No center')),
+  ];
   return me.role === 'chief' ? all : all.filter((t) => t.id === me.team);
 }
 

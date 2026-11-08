@@ -1,6 +1,6 @@
 import type { OrgDto } from '../../api/generated/models/org-dto';
 import type { PersonSummaryDto } from '../../api/generated/models/person-summary-dto';
-import { createBody, EMPTY_TOPIC, previewItem, teamOptions } from './new-topic';
+import { createBody, EMPTY_TOPIC, NO_CENTER, previewItem, teamOptions } from './new-topic';
 
 const org = {
   centers: [
@@ -30,6 +30,20 @@ describe('teamOptions', () => {
   it("gives a PI only their own team", () => {
     const teams = teamOptions(org, people, { id: 'am', role: 'pi', team: 'team-climate' });
     expect(teams.map((t) => t.id)).toEqual(['team-climate']);
+  });
+
+  it('includes teams outside any center, under No center', () => {
+    const withOther = { ...org, otherTeams: [{ id: 'team-lone', name: 'Lone Team', lead: { id: 'dw', name: 'Daniel Whitfield' } }] } as unknown as OrgDto;
+    expect(teamOptions(withOther, people, { id: 'hv', role: 'chief', team: null }).pop()).toEqual({
+      id: 'team-lone',
+      name: 'Lone Team',
+      centerId: NO_CENTER,
+      center: 'No center',
+      leadId: 'dw',
+      leadName: 'Daniel Whitfield',
+    });
+    // A PI on such a team gets it – before, they got nothing and the dialog loaded forever
+    expect(teamOptions(withOther, people, { id: 'dw', role: 'pi', team: 'team-lone' }).map((t) => t.id)).toEqual(['team-lone']);
   });
 });
 
