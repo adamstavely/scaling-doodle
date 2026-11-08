@@ -199,6 +199,18 @@ test.describe('smoke', () => {
     await expect(name).toHaveValue('Quantum Networking');
   });
 
+  test('every page reflows at 320px: nothing scrolls sideways (WCAG 1.4.10)', async ({ page, errors }) => {
+    void errors;
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const path of ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/people']) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      await expect(page.locator('main tc-skeleton')).toHaveCount(0);
+      const width = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(width, path).toBeLessThanOrEqual(320);
+    }
+  });
+
   test('people lists the roster', async ({ page, errors }) => {
     void errors;
     await page.goto('/people');

@@ -6,9 +6,13 @@
 
 .page-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--tc-space-4);
+}
+.page-head > div {
+  min-width: 0;
 }
 .eyebrow {
   margin: 0 0 var(--tc-space-1);

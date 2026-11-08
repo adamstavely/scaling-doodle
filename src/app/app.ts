@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -43,6 +43,9 @@ function navIdFor(url: string): string {
   return 'dashboard';
 }
 
+/** Phones and narrow windows: the shell reflows (see app.css). */
+const NARROW = '(max-width: 640px)';
+
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, LookProvider, HeaderBrand, HeaderNav, Notifications, AppPicker, SideNav, SearchBox],
@@ -54,6 +57,18 @@ export class App {
   protected readonly apps = inject(Apps);
   readonly #theme = inject(ThemeService);
   readonly #router = inject(Router);
+
+  /**
+   * The side nav folds to its icon rail on narrow screens (and opens again on wide ones), so the page keeps its width;
+   * the collapse button still toggles it in between.
+   */
+  readonly #narrow = matchMedia(NARROW);
+  protected readonly navCollapsed = signal(this.#narrow.matches);
+  readonly #followWidth = this.#narrow.addEventListener('change', (e) => this.navCollapsed.set(e.matches));
+
+  protected onNavCollapsed(event: CustomEvent<{ collapsed: boolean }>): void {
+    this.navCollapsed.set(event.detail.collapsed);
+  }
 
   /** tc-side-nav keeps the logo in the collapsed rail too. */
   protected readonly brandIcon = brandLogo();

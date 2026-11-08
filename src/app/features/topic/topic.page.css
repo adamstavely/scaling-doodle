@@ -45,7 +45,8 @@
 }
 .work-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  /* Never wider than the page, so a phone gets one column instead of overflowing */
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: var(--tc-space-4);
 }
 

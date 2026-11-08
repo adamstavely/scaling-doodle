@@ -71,3 +71,44 @@
   min-width: 0;
   padding: var(--tc-space-6);
 }
+
+/*
+ * Narrow screens (to 320px, WCAG 1.4.10): the top bar takes two rows – the brand and the header nav, then the search
+ * across the bar – the side nav folds to its rail (app.ts) and stops being sticky, and the page's padding tightens, so
+ * nothing needs scrolling sideways.
+ */
+@media (max-width: 640px) {
+  .shell {
+    grid-template-rows: auto 1fr;
+  }
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'brand nav'
+      'search search';
+    gap: var(--tc-space-2) var(--tc-space-3);
+    padding: var(--tc-space-2) var(--tc-space-3);
+  }
+  .brand {
+    grid-area: brand;
+    --tc-hb-name-size: var(--tc-font-size-2xl);
+    --tc-hb-logo-size: 28px;
+    --tc-hb-gap: var(--tc-space-2);
+  }
+  .topbar tc-header-nav {
+    grid-area: nav;
+  }
+  .topbar app-search-box,
+  .search-slot {
+    grid-area: search;
+    width: 100%;
+  }
+  .sidebar {
+    position: static;
+    align-self: stretch;
+    height: auto;
+  }
+  .content {
+    padding: var(--tc-space-3);
+  }
+}

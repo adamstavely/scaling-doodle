@@ -5,6 +5,8 @@
       class="sidebar"
       data-tc-theme="dark"
       collapsible
+      [collapsed]="navCollapsed()"
+      (tc-collapsed-change)="onNavCollapsed($event)"
       [items]="navItems"
       [current]="currentNav()"
       (tc-navigate)="onNavigate($event)"
