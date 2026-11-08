@@ -11,6 +11,19 @@
   gap: var(--tc-space-4);
 }
 
+/* The heading with the as-of date beside it, a size smaller, on one baseline */
+.title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--tc-space-3);
+}
+.as-of {
+  font-size: var(--tc-font-size-2xl);
+  color: var(--tc-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .page-head h1 {
   margin: 0;
   font-size: var(--tc-font-size-3xl);

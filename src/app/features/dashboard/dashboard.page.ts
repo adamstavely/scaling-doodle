@@ -15,7 +15,7 @@ import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/por
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth } from '../../core/format';
-import { DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
+import { asOfDate, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { pageSummary } from '../../core/page-summary';
 import { priorityCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
@@ -67,6 +67,8 @@ export class DashboardPage {
   readonly periodParam = input<string | undefined>(undefined, { alias: 'period' });
 
   protected readonly periods = periodOptions(todayIso());
+  /** Today, DD MM YYYY, beside the heading: the page's numbers are as of now. */
+  protected readonly asOf = asOfDate(todayIso());
   protected readonly period = computed(() => {
     const p = this.periodParam();
     return this.periods.some((o) => o.value === p) ? p! : this.periods[DEFAULT_PERIOD_INDEX].value;

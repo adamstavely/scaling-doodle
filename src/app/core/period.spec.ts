@@ -1,4 +1,4 @@
-import { daysToQuarterEnd, fiscalQuarter, periodOptions, periodShort } from './period';
+import { asOfDate, daysToQuarterEnd, fiscalQuarter, periodOptions, periodShort } from './period';
 
 describe('periods', () => {
   it('places dates in the US federal fiscal year', () => {
@@ -27,6 +27,10 @@ describe('periods', () => {
     expect(daysToQuarterEnd('2026-11-07')).toBe(54);
     expect(daysToQuarterEnd('2026-12-31')).toBe(0);
     expect(daysToQuarterEnd('2027-02-01')).toBe(58);
+  });
+
+  it('writes the as-of date day, month, year', () => {
+    expect(asOfDate('2026-11-08')).toBe('08 11 2026');
   });
 
   it('shortens any period', () => {
