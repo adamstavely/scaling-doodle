@@ -18,6 +18,13 @@
   --tc-action-primary-fg: light-dark(#ffffff, var(--tc-text-on-inverse));
 }
 
+/* Donovan's send button in a dark blue that reads as blue beside the navy; dark mode keeps the primary action */
+:root {
+  --tc-aism-send-bg: light-dark(#1a4a8a, var(--tc-action-primary-bg));
+  --tc-aism-send-bg-hover: light-dark(#163f75, var(--tc-action-primary-bg-hover));
+  --tc-aism-send-bg-active: light-dark(#12355f, var(--tc-action-primary-bg-active));
+}
+
 /* The top bar is sticky, so anything scrolled into view – a focused row, a fragment – stops below it rather than
    behind it (WCAG 2.4.11): 64px plus a little air; on narrow screens the bar takes two rows (80px). */
 html {

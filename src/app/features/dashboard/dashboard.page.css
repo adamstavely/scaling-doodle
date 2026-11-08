@@ -61,9 +61,8 @@
   grid-row: 1;
   grid-column: 1;
   /* A quarter of the page is narrow for Donovan's summary, so it doesn't set the row's height: Mission Centers does,
-     and Donovan fills it, scrolling within when it runs longer. */
+     and Donovan fills it, its summary scrolling between the header and the ask box when it runs longer. */
   contain: size;
-  overflow-y: auto;
   border-radius: var(--tc-card-radius);
 }
 .kpis {
@@ -109,10 +108,10 @@
 .centers > * {
   height: 100%;
 }
-/* Donovan's card is at least its cell's height and grows with its text, which the cell scrolls – a fixed height let
-   the text run past the card's edge. Taller than its text, the card keeps its ask box and footer at the bottom */
+/* Donovan's card is its cell's height: shorter text leaves the ask box and footer at the bottom, longer text scrolls
+   between the header and the ask box, which stay put */
 .donovan > tc-ai-summary {
-  min-height: 100%;
+  height: 100%;
 }
 
 @media (max-width: 1100px) {
@@ -128,7 +127,9 @@
   /* Stacked, Donovan has the page's width and sets its own height: no containment, nothing to scroll */
   .donovan {
     contain: none;
-    overflow: visible;
+  }
+  .layout:not(.chatting) > .donovan > tc-ai-summary {
+    height: auto;
   }
 }
 
@@ -150,13 +151,17 @@
 .layout.chatting > .donovan {
   grid-column: 1 / -1;
   contain: none;
-  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: var(--tc-space-3);
 }
 .layout.chatting > .donovan > * {
   min-height: 0;
+}
+/* The card fits the window below the page heading and Back – the top bar, the heading, Back and the page's padding
+   take about 220px – so the conversation scrolls between Donovan's header and the ask box, not the page */
+.layout.chatting > .donovan > tc-ai-summary {
+  height: max(360px, calc(100dvh - 220px));
 }
 .end-chat {
   align-self: flex-start;

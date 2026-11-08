@@ -32,8 +32,8 @@ import { BriefDialog } from '../dialogs/brief-dialog';
 
 /** Papers last month and this month, in full: the codes leave Mission Centers room for wider columns. */
 const PAPER_COLUMNS: PriorityFigureColumn[] = [
-  { id: 'lastMonth', label: 'Last month', width: 88 },
-  { id: 'thisMonth', label: 'This month', width: 88 },
+  { id: 'lastMonth', label: 'Last month', width: 88, align: 'center' },
+  { id: 'thisMonth', label: 'This month', width: 88, align: 'center' },
 ];
 
 function paperFigures(r: RecentPapersDto | undefined): Record<string, number> {
