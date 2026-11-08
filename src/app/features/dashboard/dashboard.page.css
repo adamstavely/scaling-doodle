@@ -42,59 +42,73 @@
 }
 
 /*
- * The page's grid: a main column and a rail, one set of edges for every row.
- *   donovan     centers      Mission Centers runs beside Donovan and the priority charts
- *   priorities  centers
- *   metrics     side         unilateral vs. joint (and notes) beside readership and citations
- * Cards sharing a row stretch to its height, and the rail's last card takes what's left, so nothing leaves a gap.
- * The rail is at least 460px so Mission Centers keeps its trend and paper columns.
+ * The page's grid: three columns, the same three in every row, so every card edge lines up down the page.
+ *   Donovan     │ Papers, People │ Mission Centers
+ *   P1–P2       │ P2–P3          │ P3–P4
+ *   Readership  │ Citations      │ Unilateral vs. joint (and notes)
+ * Donovan's column is a quarter of the page; the rail is at least 460px so Mission Centers keeps its trend and paper
+ * columns; the middle takes the rest. Cards in a row stretch to its height.
  */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(460px, 30%, 560px);
-  grid-template-areas:
-    'donovan centers'
-    'priorities centers'
-    'metrics side';
+  grid-template-columns: 25% minmax(0, 1fr) clamp(460px, 30%, 560px);
   gap: var(--tc-space-4);
   align-items: stretch;
 }
 .donovan {
-  grid-area: donovan;
+  grid-row: 1;
+  grid-column: 1;
+  /* A quarter of the page is narrow for Donovan's summary, so it doesn't set the row's height: Mission Centers does,
+     and Donovan fills it, scrolling within when it runs longer. */
+  contain: size;
+  overflow-y: auto;
+  border-radius: var(--tc-card-radius);
 }
-.centers {
-  grid-area: centers;
-}
-.priorities {
-  grid-area: priorities;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--tc-space-4);
-}
-.metrics {
-  grid-area: metrics;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--tc-space-4);
-}
-.side {
-  grid-area: side;
+.kpis {
+  grid-row: 1;
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   gap: var(--tc-space-4);
 }
-/* Each cell's cards fill it, so cards side by side end on one line */
-.donovan,
-.centers,
+/* The two cards share the row's height */
+.kpis > * {
+  flex: 1;
+  min-height: 0;
+}
+.centers {
+  grid-row: 1;
+  grid-column: 3;
+}
+/* The chart rows' cards are the grid's own cells: each chart takes the next column of its row */
 .priorities,
-.metrics,
+.metrics {
+  display: contents;
+}
+.priorities > * {
+  grid-row: 2;
+}
+.metrics > * {
+  grid-row: 3;
+}
 .side {
+  grid-row: 3;
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tc-space-4);
+}
+.donovan,
+.kpis,
+.centers,
+.side,
+.priorities > *,
+.metrics > * {
   min-width: 0;
 }
+/* Cards fill their cells, so cards side by side end on one line */
 .donovan > *,
 .centers > *,
-.priorities > *,
-.metrics > *,
 .side > :last-child {
   height: 100%;
 }
@@ -102,10 +116,11 @@
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;
-    grid-template-areas: 'donovan' 'centers' 'priorities' 'metrics' 'side';
   }
-  .priorities,
-  .metrics {
-    grid-template-columns: 1fr;
+  .layout > *,
+  .priorities > *,
+  .metrics > * {
+    grid-row: auto;
+    grid-column: 1;
   }
 }

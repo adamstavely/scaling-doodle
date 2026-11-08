@@ -47,6 +47,24 @@
       }
     </section>
 
+    <!-- Papers and people: the total now, its change over a year, and two years behind it. -->
+    <div class="kpis">
+      @for (card of historyCards(); track card.heading) {
+        <tc-kpi-chart
+          fill
+          [heading]="card.heading"
+          [value]="card.value"
+          [delta]="card.delta"
+          [deltaFormat]="yearChange"
+          [format]="wholeNumber"
+          [labels]="card.labels"
+          [tooltipLabels]="card.tooltipLabels"
+          [series]="card.series"
+          [footer]="card.footer"
+        ></tc-kpi-chart>
+      }
+    </div>
+
     <aside class="centers">
       <tc-priority-list
         momentum-label="Trend"
