@@ -75,11 +75,10 @@ describe('DashboardPage', () => {
     expect(page.centers().map((c) => c.id)).toEqual(['sl-intel']);
   });
 
-  it('turns a center into a priority row with its code as the badge', () => {
-    expect(centerRow(center)).toEqual({
+  it('turns a center into a priority row named by its code, so the row keeps its trend line', () => {
+    expect(centerRow({ ...center, logo: null })).toEqual({
       id: 'sl-intel',
-      name: 'Center for Intelligent Systems',
-      badge: 'CIS',
+      name: 'CIS',
       health: 'on-track',
       trend: [70, 72, 75],
       change: 0.05,
@@ -88,5 +87,9 @@ describe('DashboardPage', () => {
       work: 6,
       figures: { lastMonth: 3, thisMonth: 0 },
     });
+  });
+
+  it("shows a center's logo in the badge column, its code the screen-reader text", () => {
+    expect(centerRow({ ...center, logo: '/logos/cis.svg' })).toEqual(expect.objectContaining({ name: 'CIS', badge: 'CIS', badgeImage: '/logos/cis.svg' }));
   });
 });

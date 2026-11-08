@@ -132,3 +132,36 @@
     overflow: visible;
   }
 }
+
+/* Unilateral vs. joint and the notes share the row's last cell, one above the other */
+.rail-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tc-space-4);
+}
+.rail-stack > tc-segmented-bar {
+  flex: 1;
+}
+
+/* Chatting with Donovan: everything else leaves and Donovan's card takes the page, the summary at the top and the
+   conversation under it. The browser morphs between the two layouts (a view transition) where it can. */
+.layout.chatting > :not(.donovan) {
+  display: none;
+}
+.layout.chatting > .donovan {
+  grid-column: 1 / -1;
+  contain: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tc-space-3);
+}
+.layout.chatting > .donovan > * {
+  min-height: 0;
+}
+.end-chat {
+  align-self: flex-start;
+}
+.donovan {
+  view-transition-name: donovan;
+}

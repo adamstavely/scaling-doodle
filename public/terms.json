@@ -1,0 +1,27 @@
+{
+  "heading": "Terms and Conditions",
+  "version": "0.1 (placeholder)",
+  "effectiveDate": "8 November 2026",
+  "sections": [
+    {
+      "id": "placeholder",
+      "heading": "Placeholder text",
+      "body": "These are placeholder terms. Replace this file (public/terms.json) with the real Terms and Conditions before INTELLECT is used outside the team."
+    },
+    {
+      "id": "use",
+      "heading": "Use of INTELLECT",
+      "body": "PLACEHOLDER. Describe who may use INTELLECT, for what purposes, and what they may not do with it."
+    },
+    {
+      "id": "data",
+      "heading": "Data and privacy",
+      "body": "PLACEHOLDER. Describe what data INTELLECT holds about research topics, papers and people, who can see it, and how long it is kept."
+    },
+    {
+      "id": "donovan",
+      "heading": "Donovan",
+      "body": "PLACEHOLDER. Donovan's summaries and answers are written by fixed rules from the numbers on the page. Check them against the figures before relying on them."
+    }
+  ]
+}
