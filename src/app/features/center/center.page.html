@@ -28,20 +28,25 @@
 
     <tc-ops-overview heading="At a glance" [tiles]="tiles()"></tc-ops-overview>
 
-    @if (topics().length) {
+    <!-- Each section shows when it has something of its own: a center can have teams before it has topics, and its
+         authors can publish under other centers' topics. -->
+    @if (hasAnything()) {
       <div class="layout">
-        <tc-priority-list
-          class="topics"
-          heading="Topics"
-          description="This center's topics by priority · papers published last month and this month"
-          momentum-label="Trend"
-          grouped
-          [items]="topics()"
-          [tiers]="tiers"
-          [figures]="paperColumns"
-          (tc-open)="openTopic($event)"
-        ></tc-priority-list>
+        @if (topics().length) {
+          <tc-priority-list
+            class="topics"
+            heading="Topics"
+            description="This center's topics by priority · papers published last month and this month"
+            momentum-label="Trend"
+            grouped
+            [items]="topics()"
+            [tiers]="tiers"
+            [figures]="paperColumns"
+            (tc-open)="openTopic($event)"
+          ></tc-priority-list>
+        }
 
+        <!-- Papers and their split show for any center with something to show, empty or not -->
         <tc-segmented-bar
           class="collaboration"
           heading="Unilateral vs. joint research"
@@ -50,7 +55,6 @@
           [description]="'Papers its authors published ' + periodWords()"
           [data]="collaboration()"
         ></tc-segmented-bar>
-
         <tc-results-list
           class="papers"
           heading="Papers"
@@ -59,22 +63,24 @@
           (tc-open)="openPaper($event)"
         ></tc-results-list>
 
-        @if (teamsCard(); as t) {
-          <tc-org-unit-card
-            class="teams"
-            [id]="t.id"
-            heading="Teams"
-            [code]="t.code"
-            [lead]="t.lead"
-            [stats]="t.stats"
-            [health]="t.health"
-            [teams]="t.teams"
-            (tc-open)="openTeamTopic($event)"
-          ></tc-org-unit-card>
+        @if (c.teams.length) {
+          @if (teamsCard(); as t) {
+            <tc-org-unit-card
+              class="teams"
+              [id]="t.id"
+              heading="Teams"
+              [code]="t.code"
+              [lead]="t.lead"
+              [stats]="t.stats"
+              [health]="t.health"
+              [teams]="t.teams"
+              (tc-open)="openTeamTopic($event)"
+            ></tc-org-unit-card>
+          }
         }
       </div>
     } @else {
-      <p class="note">{{ c.name }} has no teams or topics yet.</p>
+      <p class="note">{{ c.name }} has no teams, topics or papers yet.</p>
     }
   } @else {
     <p class="note">That center isn't in your view.</p>

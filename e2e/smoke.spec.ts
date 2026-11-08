@@ -101,6 +101,24 @@ test.describe('smoke', () => {
     expect(seen).toEqual(['Learning rule unproven high', 'Endurance unproven high']);
   });
 
+  test('a failed search says so and can be retried', async ({ page }) => {
+    // The failing request's 500 is expected here, so this test doesn't fail on console errors
+    let fail = true;
+    await page.route('**/api/search?q=neu*', (route) =>
+      fail
+        ? route.fulfill({ status: 500, json: { statusCode: 500 } })
+        : route.fulfill({ json: { topics: [{ id: 't-neuro', label: 'Neuromorphic Computing', detail: 'at-risk', topicId: null, score: 1 }], gaps: [], papers: [], people: [] } }),
+    );
+    await page.goto('/');
+    const search = page.locator('app-search-box tc-command-menu');
+    await search.locator('input').fill('neu');
+    await expect(page.getByText("Couldn't search")).toBeVisible();
+    await expect(page.getByText('Nothing matches')).toHaveCount(0);
+    fail = false;
+    await search.locator('input').press('Enter');
+    await expect(page.getByText('Neuromorphic Computing').first()).toBeVisible();
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');
@@ -209,6 +227,37 @@ test.describe('smoke', () => {
       const width = await page.evaluate(() => document.documentElement.scrollWidth);
       expect(width, path).toBeLessThanOrEqual(320);
     }
+  });
+
+  test('keyboard focus is never hidden under the sticky top bar (WCAG 2.4.11)', async ({ page, errors }) => {
+    void errors;
+    await page.setViewportSize({ width: 1440, height: 600 });
+    await page.goto('/topics');
+    const rows = page.locator('tc-priority-list [data-row]');
+    await expect(rows.first()).toBeVisible();
+    // From the last row, back up through every row as a keyboard user would
+    await rows.last().focus();
+    const bar = await page.locator('.topbar').evaluate((e) => e.getBoundingClientRect().bottom);
+    for (let i = 0; i < (await rows.count()) - 1; i++) {
+      await page.keyboard.press('ArrowUp');
+      const top = await page.evaluate(() => document.activeElement!.getBoundingClientRect().top);
+      expect(top).toBeGreaterThanOrEqual(bar);
+    }
+  });
+
+  test('a center with teams but no topics shows its teams', async ({ page, errors }) => {
+    void errors;
+    const org = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/org.json'), 'utf8'));
+    const afmc = org.centers.find((c: { id: string }) => c.id === 'c-afmc');
+    const cci = org.centers.find((c: { id: string }) => c.id === 'c-cci');
+    // Give Africa two of CCI's teams, without their topics
+    afmc.teams = cci.teams.map((t: { topics: unknown[] }) => ({ ...t, topics: [] }));
+    await page.route('**/api/org', (route) => route.fulfill({ json: org }));
+    await page.goto('/centers/c-afmc');
+    await expect(page.getByRole('heading', { name: 'Africa Mission Center' })).toBeVisible();
+    await expect(page.locator('tc-org-unit-card.teams')).toBeVisible();
+    await expect(page.locator('tc-priority-list[heading="Topics"]')).toHaveCount(0);
+    await expect(page.getByText('has no teams, topics or papers yet')).toHaveCount(0);
   });
 
   test('people lists the roster', async ({ page, errors }) => {

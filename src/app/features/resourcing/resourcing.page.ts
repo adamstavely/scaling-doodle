@@ -9,7 +9,7 @@ import type { BurnOpen } from '@adamstavely/trenchcoat/budget-burn';
 import { peopleControllerList } from '../../api/generated/fn/people/people-controller-list';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import { todayIso } from '../../core/period';
-import { burnItems, capacityPeople, fiscalYearProgress, investmentTiers, resourcingTiles } from '../../core/resourcing';
+import { burnGroups, capacityPeople, investmentTiers, resourcingTiles } from '../../core/resourcing';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 
@@ -36,9 +36,8 @@ export class ResourcingPage {
 
   protected readonly tiles = computed(() => resourcingTiles(read(this.#topics) ?? [], read(this.#people) ?? []));
   protected readonly tiers = computed(() => investmentTiers(read(this.#topics) ?? []));
-  protected readonly burn = computed(() => burnItems(read(this.#topics) ?? []));
-  /** Pace is judged against the budgets' fiscal year, not necessarily the one we're in. */
-  protected readonly yearDone = computed(() => fiscalYearProgress(todayIso(), read(this.#topics)?.[0]?.budget.fy));
+  /** A burn card per budget year, each paced against its own year. */
+  protected readonly burnGroups = computed(() => burnGroups(read(this.#topics) ?? [], todayIso()));
   protected readonly capacity = computed(() => {
     const names = new Map((read(this.#topics) ?? []).map((t) => [t.id, t.name]));
     return capacityPeople(read(this.#people) ?? [], names);

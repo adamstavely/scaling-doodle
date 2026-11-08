@@ -1,6 +1,6 @@
 import type { PersonSummaryDto } from '../api/generated/models/person-summary-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
-import { burnItems, capacityPeople, fiscalYearProgress, investmentTiers, resourcingTiles } from './resourcing';
+import { burnGroups, burnItems, capacityPeople, fiscalYearProgress, investmentTiers, resourcingTiles } from './resourcing';
 
 const topic = (id: string, bin: number, allocated: number, spent: number, fte: number, plannedFte: number) =>
   ({ id, name: id.toUpperCase(), bin, budget: { allocated, spent, fy: 'FY26' }, stats: { fte }, plannedFte, lead: { name: 'Lead' } }) as unknown as TopicSummaryDto;
@@ -38,6 +38,20 @@ describe('resourcing', () => {
     // Against the budgets' own year: FY26 is over by November 2026, FY28 hasn't started.
     expect(fiscalYearProgress('2026-11-07', 'FY26')).toBe(1);
     expect(fiscalYearProgress('2026-11-07', 'FY28')).toBe(0);
+  });
+
+  it('paces each budget year against its own year, not the first topic’s', () => {
+    // FY26 ended in September; FY27 is a month and a bit in
+    const mixed = [topic('a', 1, 2, 2, 1, 1), { ...topic('b', 1, 1, 0.1, 1, 1), budget: { allocated: 1, spent: 0.1, fy: 'FY27' } } as TopicSummaryDto];
+    const groups = burnGroups(mixed, '2026-11-08');
+    expect(groups.map((g) => [g.fy, g.items.map((i) => i.id)])).toEqual([
+      ['FY26', ['a']],
+      ['FY27', ['b']],
+    ]);
+    expect(groups[0].period).toBe(1);
+    expect(groups[1].period).toBeGreaterThan(0.1);
+    expect(groups[1].period).toBeLessThan(0.2);
+    expect(resourcingTiles(mixed, [])[0].sub).toBe('FY26 and FY27 commitments');
   });
 
   it('draws only people with allocations', () => {

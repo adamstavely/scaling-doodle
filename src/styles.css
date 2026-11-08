@@ -18,6 +18,17 @@
   --tc-action-primary-fg: light-dark(#ffffff, var(--tc-text-on-inverse));
 }
 
+/* The top bar is sticky, so anything scrolled into view – a focused row, a fragment – stops below it rather than
+   behind it (WCAG 2.4.11): 64px plus a little air; on narrow screens the bar takes two rows (80px). */
+html {
+  scroll-padding-top: calc(64px + var(--tc-space-3));
+}
+@media (max-width: 640px) {
+  html {
+    scroll-padding-top: calc(80px + var(--tc-space-3));
+  }
+}
+
 html,
 body {
   margin: 0;
