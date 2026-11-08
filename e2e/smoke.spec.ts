@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test } from './api';
 
 // Trench Coat elements take their data as properties, so the tests read those off the element.
@@ -22,6 +24,20 @@ test.describe('smoke', () => {
     await page.getByRole('button', { name: /^Account/ }).click();
     await page.getByRole('menuitem', { name: /PI view/ }).or(page.getByRole('button', { name: /PI view/ })).first().click();
     await expect.poll(async () => (await bars()).reduce((a, b) => a + b, 0)).toBe(2);
+  });
+
+  test('a thirteenth topic wraps the priority row instead of hiding a card', async ({ page, errors }) => {
+    void errors;
+    // One more topic than the seed's twelve: four charts plus unilateral vs. joint
+    const topics = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/topics_sort_risk.json'), 'utf8')) as { id: string; name: string }[];
+    await page.route('**/api/topics?sort=risk', (route) =>
+      route.fulfill({ json: [...topics, { ...topics[topics.length - 1], id: 't-extra', name: 'Extra Topic' }] }),
+    );
+    await page.goto('/');
+    const boxes = page.locator('.priorities > *');
+    await expect(boxes).toHaveCount(5);
+    const widths = await boxes.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+    expect(Math.min(...widths)).toBeGreaterThan(150);
   });
 
   test('research topics lists every topic in view, grouped by priority', async ({ page, errors }) => {
