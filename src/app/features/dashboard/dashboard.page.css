@@ -43,8 +43,8 @@
 
 .grid {
   display: grid;
-  /* The rail widens with the screen, within bounds, so wide monitors aren't one long list beside a narrow strip. */
-  grid-template-columns: minmax(0, 1fr) clamp(380px, 28%, 560px);
+  /* The rail widens with the screen, within bounds: at least 460px so Mission Centers keeps its trend and paper columns. */
+  grid-template-columns: minmax(0, 1fr) clamp(460px, 32%, 600px);
   gap: var(--tc-space-4);
   align-items: start;
 }

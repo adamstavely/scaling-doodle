@@ -39,7 +39,6 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
     id: c.id,
     name: c.name,
     badge: c.code ?? undefined,
-    owner: c.lead?.name,
     // A center with no topics has no health of its own; show it as on track rather than alarm.
     health: priorityHealth(r.health ?? 'healthy'),
     trend: r.trend,
@@ -130,8 +129,8 @@ export class DashboardPage {
   }
   protected readonly papersNote = computed(() => `Papers published ${this.periodWords()}, by the authors' center`);
 
-  /** The Mission Centers list shows momentum and papers only. */
-  protected readonly centerHiddenColumns: PriorityColumn[] = ['coverage', 'open', 'work'];
+  /** The Mission Centers list shows each center's name, trend and papers only: no coverage, gaps, work or health word. */
+  protected readonly centerHiddenColumns: PriorityColumn[] = ['coverage', 'open', 'work', 'health'];
 
   /** The paper-count columns both lists share. */
   protected readonly paperColumns = PAPER_COLUMNS;
