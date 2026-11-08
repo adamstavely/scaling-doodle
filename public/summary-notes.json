@@ -1,0 +1,19 @@
+{
+  "heading": "Notes",
+  "notes": [
+    {
+      "id": "period",
+      "text": "Papers are counted by publication date within the selected time frame. A paper whose authors sit in two mission centers counts toward each, so center totals can add up to more than the papers published."
+    },
+    {
+      "id": "recent",
+      "text": "\"Last mo.\" and \"This mo.\" on Mission Centers always show last calendar month and this month so far, whatever time frame is selected."
+    },
+    {
+      "id": "joint",
+      "text": "A paper is joint if at least one partner lab co-wrote it; otherwise it is unilateral.",
+      "href": "/partners",
+      "linkLabel": "Partner Labs"
+    }
+  ]
+}

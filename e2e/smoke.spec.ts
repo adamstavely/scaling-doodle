@@ -18,7 +18,7 @@ test.describe('smoke', () => {
     await expect(metrics).toHaveCount(2);
     expect(await metrics.evaluateAll((els) => els.map((e) => new Set((e as unknown as { data: { id: string }[] }).data.map((d) => d.id)).size))).toEqual([12, 12]);
     const centers = page.locator('tc-priority-list[heading="Mission Centers"]');
-    expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['AFMC', 'ACMC', 'CCI', 'CMC', 'CIMC', 'CTMC', 'EAPMC', 'EEMC', 'NEMC', 'SCAMC', 'WCPMC']);
+    expect(await centers.evaluate((e) => (e as unknown as { items: { name: string }[] }).items.map((i) => i.name))).toEqual(['AFMC', 'ACMC', 'CCI', 'CMC', 'CIMC', 'CTMC', 'EAPMC', 'EEMC', 'NEMC', 'SCAMC', 'WCPMC']);
 
     // The view switch lives in the avatar's account card.
     await page.getByRole('button', { name: /^Account/ }).click();
@@ -245,6 +245,49 @@ test.describe('smoke', () => {
     expect([...chosen].sort()).toEqual(['Center', 'Priority', 'Team']);
     await form.getByRole('button', { name: 'Continue' }).click();
     await expect(form.getByText('How is it funded?')).toBeVisible();
+  });
+
+  test('a follow-up to Donovan turns the Summary into a chat, and Back returns the page', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/');
+    const donovan = page.locator('tc-ai-summary');
+    const ask = donovan.getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
+    await ask.fill('What is at risk?');
+    await ask.press('Enter');
+    // Everything but Donovan leaves the page
+    await expect(page.locator('tc-priority-list[heading="Mission Centers"]')).toBeHidden();
+    await expect(page.locator('tc-bar-chart').first()).toBeHidden();
+    await expect(donovan.getByText('What is at risk?')).toBeVisible();
+    await expect(donovan.locator('[aria-busy="true"]')).toHaveCount(0);
+    expect(await donovan.evaluate((e) => (e as unknown as { messages: { status?: string }[] }).messages.map((m) => m.status))).toEqual(['done', 'done']);
+    await page.getByRole('button', { name: 'Back to the page' }).click();
+    await expect(page.locator('tc-priority-list[heading="Mission Centers"]')).toBeVisible();
+  });
+
+  test("the Summary's notes sit under unilateral vs. joint, and their link opens in the app", async ({ page, errors }) => {
+    void errors;
+    await page.goto('/');
+    const notes = page.locator('tc-footnotes');
+    await expect(notes.getByText('A paper is joint if')).toBeVisible();
+    const bar = await page.locator('tc-segmented-bar').boundingBox();
+    const box = await notes.boundingBox();
+    expect(box!.y).toBeGreaterThan(bar!.y + bar!.height - 1);
+    expect(Math.abs(box!.x - bar!.x)).toBeLessThan(1);
+    await notes.getByRole('link', { name: 'Partner Labs' }).click();
+    await expect(page).toHaveURL(/\/partners$/);
+  });
+
+  test('Terms and Conditions opens from the account card, read-only', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/');
+    await page.getByRole('button', { name: /^Account:/ }).click();
+    await page.getByText('Terms and Conditions', { exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Terms and Conditions' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('These are placeholder terms.')).toBeVisible();
+    await expect(dialog.getByRole('button', { name: /Decline|Not now/ })).toHaveCount(0);
+    await dialog.getByRole('button', { name: 'Close', exact: true }).last().click();
+    await expect(dialog).toBeHidden();
   });
 
   test('every page reflows at 320px: nothing scrolls sideways (WCAG 1.4.10)', async ({ page, errors }) => {

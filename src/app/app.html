@@ -32,5 +32,23 @@
     <main class="content">
       <router-outlet />
     </main>
+
+    <!-- Read-only: nothing to agree to yet, so Close in place of Accept and no Decline. Loaded the first time it's
+         opened, so it costs the first page nothing. -->
+    @defer (when termsOpen()) {
+      @if (terms.hasValue()) {
+        <tc-terms-dialog
+          [open]="termsOpen()"
+          [heading]="terms.value().heading"
+          [version]="terms.value().version"
+          [effectiveDate]="terms.value().effectiveDate"
+          [sections]="terms.value().sections"
+          [canDecline]="false"
+          accept-label="Close"
+          (tc-accept)="termsOpen.set(false)"
+          (tc-open-change)="termsOpen.set($event.detail.open)"
+        ></tc-terms-dialog>
+      }
+    }
   </div>
 </tc-look-provider>

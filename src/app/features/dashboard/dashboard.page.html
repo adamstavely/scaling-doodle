@@ -4,7 +4,9 @@
     <span class="as-of">{{ asOf() }}</span>
   </div>
   <tc-select
-    label="Reporting period"
+    label="Time frame"
+    label-visible
+    label-placement="start"
     align="end"
     [options]="periodChoices"
     [value]="period()"
@@ -26,7 +28,7 @@
 @if (ready()) {
   <!-- One grid for the page, so card edges line up: Donovan and the charts down the main column, Mission Centers,
        unilateral vs. joint and the notes down the rail. Cards sharing a row stretch to its height. -->
-  <div class="layout">
+  <div class="layout" [class.chatting]="chatting()">
     <!-- Donovan, INTELLECT's AI, explains the page – by fixed rules for now; a model can write it later. -->
     <section class="donovan">
       @if (explainer(); as s) {
@@ -41,14 +43,22 @@
           [points]="s.points"
           [questions]="s.questions"
           [sources]="s.sources"
+          [icon]="donovanIcon"
+          badge="Rule-based"
+          ask="Ask Donovan a follow-up…"
+          [messages]="messages()"
           (tc-cite-open)="openSource($event)"
           (tc-retry)="regenerate()"
+          (tc-ask)="onAsk($event)"
         ></tc-ai-summary>
+        @if (chatting()) {
+          <tc-button class="end-chat" label="Back to the page" variant="secondary" (click)="endChat()"></tc-button>
+        }
       }
     </section>
 
     <!-- Papers and people: the total now, its change over a year, and two years behind it. -->
-    <div class="kpis">
+    <div class="kpis" [attr.inert]="chatting() ? '' : null">
       @for (card of historyCards(); track card.heading) {
         <tc-kpi-chart
           fill
@@ -65,8 +75,9 @@
       }
     </div>
 
-    <aside class="centers">
+    <aside class="centers" [attr.inert]="chatting() ? '' : null">
       <tc-priority-list
+        keep-trend-line
         momentum-label="Trend"
         heading="Mission Centers"
         description="Each center's topics rolled up · papers published last month and this month"
@@ -81,7 +92,7 @@
 
     <!-- The second row: the priority charts – four topics each, in priority order, each bar a topic's papers in the
          period stacked by the authors' centers – then unilateral vs. joint research. -->
-    <div class="priorities">
+    <div class="priorities" [attr.inert]="chatting() ? '' : null">
       @for (chart of priorityCharts(); track chart.id) {
         <tc-bar-chart
           [heading]="chart.heading"
@@ -94,17 +105,23 @@
           (tc-mark-click)="openTopicBar($event)"
         ></tc-bar-chart>
       }
-      <tc-segmented-bar
-        heading="Unilateral vs. joint research"
-        [highlight]="'Joint'"
-        sort="false"
-        [description]="collaborationNote()"
-        [data]="collaboration()"
-      ></tc-segmented-bar>
+      <!-- Unilateral vs. joint, with the page's caveats under it -->
+      <div class="rail-stack">
+        <tc-segmented-bar
+          heading="Unilateral vs. joint research"
+          [highlight]="'Joint'"
+          sort="false"
+          [description]="collaborationNote()"
+          [data]="collaboration()"
+        ></tc-segmented-bar>
+        @if (notes(); as n) {
+          <tc-footnotes [heading]="n.heading" [notes]="n.notes" (tc-navigate)="openNote($event)"></tc-footnotes>
+        }
+      </div>
     </div>
 
     <!-- Readership and citations within the period, every priority, stacked by the authors' centers. -->
-    <div class="metrics">
+    <div class="metrics" [attr.inert]="chatting() ? '' : null">
       @for (chart of metricCharts(); track chart.id) {
         <tc-bar-chart
           [heading]="chart.heading"

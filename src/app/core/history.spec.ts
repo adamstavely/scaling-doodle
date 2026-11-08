@@ -26,6 +26,20 @@ describe('historyCard', () => {
     expect(card.series).toEqual([{ label: 'Papers', values: series.actual }]);
   });
 
+  it('continues the line into the forecast, dashed, with its range', () => {
+    const withForecast = { ...series, forecast: [{ value: 6, low: 5, high: 7 }, { value: 7, low: 5, high: 9 }] } as HistorySeriesDto;
+    const c = historyCard('Papers', withForecast, months, ['2026-12', '2027-01']);
+    expect(c.labels.slice(-3)).toEqual(['Nov', 'Dec', 'Jan']);
+    expect(c.series[0].values.slice(-3)).toEqual([5, 6, 7]);
+    expect(c.series[0].forecastFrom).toBe(14);
+    expect(c.series[0].band?.low.slice(-2)).toEqual([5, 5]);
+    expect(c.series[0].band?.high.slice(-2)).toEqual([7, 9]);
+    expect(c.footer).toBe('Oct 2025 – Nov 2026 · forecast to Jan 2027');
+    // The value and the year's change are today's, not the forecast's
+    expect(c.value).toBe('5');
+    expect(c.delta).toBe(4);
+  });
+
   it('has no change with under a year of history', () => {
     expect(historyCard('People', { current: 2, actual: [1, 2], forecast: [] } as HistorySeriesDto, months.slice(0, 2)).delta).toBeUndefined();
   });

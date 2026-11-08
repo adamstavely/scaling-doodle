@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, resource, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
@@ -8,9 +8,11 @@ import { HeaderNav } from '@adamstavely/trenchcoat/angular/header-nav';
 import { LookProvider } from '@adamstavely/trenchcoat/angular/look-provider';
 import { Notifications } from '@adamstavely/trenchcoat/angular/notifications';
 import { SideNav } from '@adamstavely/trenchcoat/angular/side-nav';
+import { TermsDialog } from '@adamstavely/trenchcoat/angular/terms-dialog';
 import type { HeaderNavAccountSelect } from '@adamstavely/trenchcoat/header-nav';
 import { profileMenuIcon, type ProfileMenuItem } from '@adamstavely/trenchcoat/profile-menu';
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
+import type { TermsSection } from '@adamstavely/trenchcoat/terms-dialog';
 import { Apps } from './core/apps';
 import { icon } from './core/icons';
 import { ThemeService } from './core/theme';
@@ -19,6 +21,15 @@ import { Session, VIEW_AS, ViewAs } from './core/session';
 import { read } from './core/scoped-resource';
 
 const THEME_ITEM = 'theme';
+const TERMS_ITEM = 'terms';
+
+/** The Terms and Conditions, from public/terms.json so they can change without a release. */
+interface Terms {
+  heading: string;
+  version: string;
+  effectiveDate: string;
+  sections: TermsSection[];
+}
 
 /** The logo drawn for a navy background, which the side nav always is (see app.css). */
 function brandLogo(): HTMLImageElement {
@@ -48,7 +59,7 @@ const NARROW = '(max-width: 640px)';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LookProvider, HeaderBrand, HeaderNav, Notifications, AppPicker, SideNav, SearchBox],
+  imports: [RouterOutlet, LookProvider, HeaderBrand, HeaderNav, Notifications, AppPicker, SideNav, SearchBox, TermsDialog],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -103,7 +114,15 @@ export class App {
     })),
     // A switch: the card stays open while it's flipped.
     { id: THEME_ITEM, label: 'Dark mode', icon: profileMenuIcon('moon'), checked: this.#theme.theme() === 'dark' },
+    { id: TERMS_ITEM, label: 'Terms and Conditions', icon: profileMenuIcon('terms') },
   ]);
+
+  /** The Terms and Conditions dialog: read-only, opened from the account card. Loaded the first time it opens. */
+  protected readonly termsOpen = signal(false);
+  protected readonly terms = resource({
+    params: () => (this.termsOpen() ? true : undefined),
+    loader: async () => (await fetch('/terms.json')).json() as Promise<Terms>,
+  });
 
   protected readonly user = computed(() => {
     const me = read(this.session.me);
@@ -126,6 +145,7 @@ export class App {
   protected onAccountSelect(event: CustomEvent<HeaderNavAccountSelect>): void {
     const id = event.detail.id;
     if (id === THEME_ITEM) this.#theme.set(event.detail.checked ? 'dark' : 'light');
+    else if (id === TERMS_ITEM) this.termsOpen.set(true);
     else if (id in VIEW_AS) this.session.setViewAs(id as ViewAs);
   }
 }

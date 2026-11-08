@@ -1,7 +1,11 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, resource, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Select } from '@adamstavely/trenchcoat/angular/select';
 import { AiSummary } from '@adamstavely/trenchcoat/angular/ai-summary';
+import { Button } from '@adamstavely/trenchcoat/angular/button';
+import { Footnotes } from '@adamstavely/trenchcoat/angular/footnotes';
+import type { AiSummaryMessage, AiSummarySource } from '@adamstavely/trenchcoat/ai-summary';
+import type { FootnoteNote } from '@adamstavely/trenchcoat/footnotes';
 import { BarChart } from '@adamstavely/trenchcoat/angular/bar-chart';
 import { KpiChart } from '@adamstavely/trenchcoat/angular/kpi-chart';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
@@ -19,7 +23,8 @@ import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth } from '../../core/format';
 import { asOfLabel, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { historyCard, yearChange } from '../../core/history';
-import { pageSummary } from '../../core/page-summary';
+import { answerFollowUp } from '../../core/donovan';
+import { pageSummary, type PageSummaryInput } from '../../core/page-summary';
 import { priorityCharts, priorityMetricCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
@@ -35,13 +40,17 @@ function paperFigures(r: RecentPapersDto | undefined): Record<string, number> {
   return { lastMonth: r?.lastMonth ?? 0, thisMonth: r?.thisMonth ?? 0 };
 }
 
-/** A center → a priority-list row: its code in place of a tier, health from its mean score. */
+/**
+ * A center → a priority-list row, health from its mean score. The code stands in for the name, so the row is narrow
+ * enough to keep its trend line. A center with a logo shows it in the badge column (the code its screen-reader text);
+ * without one the column stays empty rather than repeat the code.
+ */
 export function centerRow(c: OrgCenterDto): PriorityItem {
   const r = c.rollup;
   return {
     id: c.id,
-    name: c.name,
-    badge: c.code ?? undefined,
+    name: c.code ?? c.name,
+    ...(c.logo ? { badge: c.code ?? c.name, badgeImage: c.logo } : {}),
     // A center with no topics has no health of its own; show it as on track rather than alarm.
     health: priorityHealth(r.health ?? 'healthy'),
     trend: r.trend,
@@ -55,7 +64,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [AiSummary, PriorityList, BarChart, KpiChart, SegmentedBar, Skeleton, Select, BriefDialog],
+  imports: [AiSummary, Button, Footnotes, PriorityList, BarChart, KpiChart, SegmentedBar, Skeleton, Select, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -117,15 +126,79 @@ export class DashboardPage {
     const period = read(this.#summary)?.period;
     return period ? priorityCharts(read(this.#topics) ?? [], read(this.#papers) ?? [], period.from, period.to) : [];
   });
+  /** Donovan's logo, for the summary's header and answers. */
+  protected readonly donovanIcon = Object.assign(document.createElement('img'), { src: '/brand/donovan.svg', alt: '', width: 20, height: 20 });
+
+  /** The page's numbers as Donovan reads them: centers, topics and the period's papers. */
+  readonly #pageData = computed<PageSummaryInput | undefined>(() => {
+    const period = read(this.#summary)?.period;
+    if (!period) return undefined;
+    const papers = (read(this.#papers) ?? []).filter((p) => p.published >= period.from && p.published <= period.to);
+    return { centers: read(this.#org)?.centers ?? [], topics: read(this.#topics) ?? [], papers, period: this.periodWords() };
+  });
+
   /** The page explained in words, from the same numbers; regenerated whenever they change. */
   readonly #regenerated = signal(0);
   protected readonly explainer = computed(() => {
     this.#regenerated();
-    const period = read(this.#summary)?.period;
-    if (!period) return undefined;
-    const papers = (read(this.#papers) ?? []).filter((p) => p.published >= period.from && p.published <= period.to);
-    return pageSummary({ centers: read(this.#org)?.centers ?? [], topics: read(this.#topics) ?? [], papers, period: this.periodWords() });
+    const data = this.#pageData();
+    if (!data) return undefined;
+    const summary = pageSummary(data);
+    // Answers cite centers and topics the summary may not, so their sources join the summary's
+    const extra = this.messages().flatMap((m) => m.sources ?? []);
+    const sources = [...summary.sources];
+    for (const x of extra) if (!sources.some((s) => s.id === x.id)) sources.push(x);
+    return { ...summary, sources };
   });
+
+  /**
+   * Follow-ups to Donovan. The first one turns the page into a chat: everything but Donovan fades away and its card
+   * takes the page, the summary at the top and the conversation under it.
+   */
+  protected readonly messages = signal<(AiSummaryMessage & { sources?: AiSummarySource[] })[]>([]);
+  protected readonly chatting = computed(() => this.messages().length > 0);
+  #asked = 0;
+
+  protected onAsk(event: CustomEvent<{ question: string }>): void {
+    const data = this.#pageData();
+    if (!data) return event.preventDefault();
+    const n = ++this.#asked;
+    const question = { id: `q${n}`, role: 'user' as const, text: event.detail.question, status: 'done' as const };
+    const thinking = { id: `a${n}`, role: 'assistant' as const, text: '', status: 'thinking' as const };
+    this.#morph(() => this.messages.update((m) => [...m, question, thinking]));
+    // Rules answer at once; a short pause reads as Donovan considering it, and leaves room for a model later
+    setTimeout(() => {
+      const a = answerFollowUp(event.detail.question, data);
+      this.messages.update((m) =>
+        m.map((x) => (x.id === thinking.id ? { ...x, text: a.text, points: a.points, sources: a.sources, status: 'done' as const } : x)),
+      );
+    }, 450);
+  }
+
+  /** Back to the whole page; the conversation is cleared. */
+  protected endChat(): void {
+    this.#morph(() => this.messages.set([]));
+  }
+
+  /** A layout change animated as a morph where the browser can (View Transitions), instantly where it can't. */
+  #morph(change: () => void): void {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (doc.startViewTransition && !reduced) doc.startViewTransition(change);
+    else change();
+  }
+
+  /** The caveats under the charts, from public/summary-notes.json so they can change without a release. */
+  readonly #notes = resource({
+    loader: async () => (await fetch('/summary-notes.json')).json() as Promise<{ heading: string; notes: FootnoteNote[] }>,
+  });
+  protected readonly notes = computed(() => (this.#notes.hasValue() ? this.#notes.value() : undefined));
+  /** A note's link opens in the app, not as a page load. */
+  protected openNote(event: CustomEvent<{ href: string }>): void {
+    if (!event.detail.href.startsWith('/')) return;
+    event.preventDefault();
+    void this.#router.navigateByUrl(event.detail.href);
+  }
   protected readonly generatedAt = computed(() => (this.explainer(), Date.now()));
   /** Donovan shows it's rewriting while a newly picked period's numbers load. */
   protected readonly explainerStatus = computed(() => (this.#summary.isLoading() ? 'summarising' : 'done'));
@@ -136,7 +209,7 @@ export class DashboardPage {
   readonly #history = scopedResource((api) => api.invoke(portfolioControllerHistory, {}));
   protected readonly historyCards = computed(() => {
     const h = read(this.#history);
-    return h ? [historyCard('Papers', h.papers, h.months, 'var(--tc-chart-1)'), historyCard('People', h.people, h.months, 'var(--tc-chart-2)')] : [];
+    return h ? [historyCard('Papers', h.papers, h.months, h.forecastMonths, 'var(--tc-chart-1)'), historyCard('People', h.people, h.months, h.forecastMonths, 'var(--tc-chart-2)')] : [];
   });
   protected readonly yearChange = yearChange;
   protected readonly wholeNumber = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
