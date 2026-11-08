@@ -27,7 +27,7 @@ const CHART_SIZE = 4;
 export type PaperBar = {
   /** The topic's id, to open it */
   id: string;
-  /** The topic's name: the bar */
+  /** The topic's name, numbered when another topic shares it: the bar */
   x: string;
   /** The center's code: the segment */
   center: string;
@@ -78,16 +78,32 @@ function contributingCenters(papers: PaperListItemDto[]): string[] {
 }
 
 /**
+ * Each topic's bar label: its name, numbered from the second on when names repeat – "Grid Storage", "Grid Storage (2)" –
+ * since the chart makes one bar per label, and two topics under one name would merge into one bar.
+ */
+function barLabels(topics: TopicSummaryDto[]): Map<string, string> {
+  const seen = new Map<string, number>();
+  return new Map(
+    topics.map((t) => {
+      const n = (seen.get(t.name) ?? 0) + 1;
+      seen.set(t.name, n);
+      return [t.id, n === 1 ? t.name : `${t.name} (${n})`];
+    }),
+  );
+}
+
+/**
  * A bar per topic, a segment per center: the sum of `value` over the topic's papers with an author in that center – a
  * paper with authors in two centers counts toward both. Every center is on every bar, at 0 where it has none, so the
  * bars line up and the colours stay put.
  */
 function topicBars(topics: TopicSummaryDto[], papers: PaperListItemDto[], centers: string[], value: (p: PaperListItemDto) => number): PaperBar[] {
+  const labels = barLabels(topics);
   return topics.flatMap((t) => {
     const own = papers.filter((p) => p.topicId === t.id);
     return (centers.length ? centers : ['']).map((center) => ({
       id: t.id,
-      x: t.name,
+      x: labels.get(t.id)!,
       center,
       y: own.filter((p) => paperCenters(p).includes(center)).reduce((s, p) => s + value(p), 0),
     }));

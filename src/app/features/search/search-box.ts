@@ -100,9 +100,11 @@ export class SearchBox {
 
   /**
    * Runs the search again. The menu shows it pending, then "Couldn't run Try again" if it fails once more; when it
-   * works, focusing the field opens the results again.
+   * works, focusing the field opens the results again – unless the viewer has moved on meanwhile, to another page or
+   * another field, when the focus stays where they put it.
    */
   async #retry(): Promise<void> {
+    const url = this.#router.url;
     this.results.reload();
     await new Promise<void>((resolve, reject) => {
       const check = () => {
@@ -112,6 +114,9 @@ export class SearchBox {
       };
       setTimeout(check, 0);
     });
-    this.#host.nativeElement.querySelector('input')?.focus();
+    const host = this.#host.nativeElement;
+    const focused = document.activeElement;
+    const stayed = this.#router.url === url && (!focused || focused === document.body || host.contains(focused));
+    if (stayed) host.querySelector('input')?.focus();
   }
 }

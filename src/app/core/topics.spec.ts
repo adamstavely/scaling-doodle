@@ -83,6 +83,20 @@ describe('priorityMetricCharts', () => {
   });
 });
 
+describe('topics that share a name', () => {
+  const twin = (id: string) => ({ id, name: 'Grid Storage', bin: 1 }) as unknown as TopicSummaryDto;
+  const withViews = (topicId: string, views: number) =>
+    ({ ...paper(topicId, '2026-10-01', 'CCI'), periodTotals: { views, citations: 0 } }) as unknown as PaperListItemDto;
+
+  it('keep a bar each, numbered from the second, each opening its own topic', () => {
+    const [readership] = priorityMetricCharts([twin('g1'), twin('g2')], [withViews('g1', 100), withViews('g2', 200)]);
+    expect(readership.bars).toEqual([
+      { id: 'g1', x: 'Grid Storage', center: 'CCI', y: 100 },
+      { id: 'g2', x: 'Grid Storage (2)', center: 'CCI', y: 200 },
+    ]);
+  });
+});
+
 describe('papers whose authors are in no center', () => {
   const topics = [topic('a', 1)];
   const orphan = { ...paper('a', '2026-10-10'), periodTotals: { views: 400, citations: 3 } } as unknown as PaperListItemDto;

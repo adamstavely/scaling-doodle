@@ -119,6 +119,30 @@ test.describe('smoke', () => {
     await expect(page.getByText('Neuromorphic Computing').first()).toBeVisible();
   });
 
+  test('a retry that finishes after the viewer moved on leaves their focus alone', async ({ page }) => {
+    // The failing request's 500 is expected here, so this test doesn't fail on console errors
+    let fail = true;
+    let answer: () => void = () => {};
+    await page.route('**/api/search?q=neu*', async (route) => {
+      if (fail) return route.fulfill({ status: 500, json: { statusCode: 500 } });
+      await new Promise<void>((resolve) => (answer = resolve));
+      return route.fulfill({ json: { topics: [], gaps: [], papers: [], people: [] } });
+    });
+    await page.goto('/');
+    const input = page.locator('app-search-box tc-command-menu input');
+    await input.fill('neu');
+    await expect(page.getByText("Couldn't search")).toBeVisible();
+    fail = false;
+    const retried = page.waitForRequest('**/api/search?q=neu*');
+    await input.press('Enter');
+    await retried;
+    await page.getByRole('link', { name: 'People' }).first().click();
+    await expect(page).toHaveURL(/\/people$/);
+    answer();
+    await page.waitForTimeout(300);
+    await expect(input).not.toBeFocused();
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');
