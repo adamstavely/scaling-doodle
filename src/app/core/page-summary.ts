@@ -63,7 +63,7 @@ export function pageSummary({ centers, topics, papers, period }: PageSummaryInpu
     (papers.length ? `, ${joint} with partner labs.` : '.');
 
   const summary = [
-    `This page shows the portfolio ${period}. Centers, on the right, rolls each center's topics up: its trend and the papers it published last month and this month.`,
+    `This page shows the portfolio ${period}. Mission Centers, on the right, rolls each center's topics up: its trend and the papers it published last month and this month.`,
     `The charts below take the topics four at a time in priority order – P1 first, the most at risk first within a tier – and count each one's papers ${period}, split by the centers their authors belong to. A paper written across two centers counts for both.`,
     `Unilateral vs. joint research, beside them, splits the same papers into work done alone and work done with partner labs.`,
   ].join('\n\n');

@@ -130,7 +130,7 @@ export class DashboardPage {
   }
   protected readonly papersNote = computed(() => `Papers published ${this.periodWords()}, by the authors' center`);
 
-  /** The Centers list shows momentum and papers only. */
+  /** The Mission Centers list shows momentum and papers only. */
   protected readonly centerHiddenColumns: PriorityColumn[] = ['coverage', 'open', 'work'];
 
   /** The paper-count columns both lists share. */
