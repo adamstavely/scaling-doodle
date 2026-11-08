@@ -4,7 +4,7 @@ import { Select } from '@adamstavely/trenchcoat/angular/select';
 import { AiSummary } from '@adamstavely/trenchcoat/angular/ai-summary';
 import { Button } from '@adamstavely/trenchcoat/angular/button';
 import { Footnotes } from '@adamstavely/trenchcoat/angular/footnotes';
-import type { AiSummaryMessage, AiSummarySource } from '@adamstavely/trenchcoat/ai-summary';
+import type { AiSummaryLength, AiSummaryMessage, AiSummarySource } from '@adamstavely/trenchcoat/ai-summary';
 import type { FootnoteNote } from '@adamstavely/trenchcoat/footnotes';
 import { BarChart } from '@adamstavely/trenchcoat/angular/bar-chart';
 import { KpiChart } from '@adamstavely/trenchcoat/angular/kpi-chart';
@@ -30,10 +30,10 @@ import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
 
+/** Papers last month and this month, in full: the codes leave Mission Centers room for wider columns. */
 const PAPER_COLUMNS: PriorityFigureColumn[] = [
-  // Short, to fit the column; each list's description says these count papers published.
-  { id: 'lastMonth', label: 'Last mo.' },
-  { id: 'thisMonth', label: 'This mo.' },
+  { id: 'lastMonth', label: 'Last month', width: 88 },
+  { id: 'thisMonth', label: 'This month', width: 88 },
 ];
 
 function paperFigures(r: RecentPapersDto | undefined): Record<string, number> {
@@ -137,13 +137,19 @@ export class DashboardPage {
     return { centers: read(this.#org)?.centers ?? [], topics: read(this.#topics) ?? [], papers, period: this.periodWords() };
   });
 
+  /** Short or Detailed, as picked on Donovan's card. Short fits beside the KPI cards, the ask box in view. */
+  protected readonly length = signal<AiSummaryLength>('short');
+  protected onLength(event: CustomEvent<{ length: AiSummaryLength }>): void {
+    this.length.set(event.detail.length);
+  }
+
   /** The page explained in words, from the same numbers; regenerated whenever they change. */
   readonly #regenerated = signal(0);
   protected readonly explainer = computed(() => {
     this.#regenerated();
     const data = this.#pageData();
     if (!data) return undefined;
-    const summary = pageSummary(data);
+    const summary = pageSummary(data, this.length());
     // Answers cite centers and topics the summary may not, so their sources join the summary's
     const extra = this.messages().flatMap((m) => m.sources ?? []);
     const sources = [...summary.sources];
