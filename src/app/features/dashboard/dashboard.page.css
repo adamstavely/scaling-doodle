@@ -42,16 +42,17 @@
 }
 
 /*
- * The page's grid: four equal quarters, so card edges line up from row to row.
- *   Donovan     │ Papers, People │ Mission Centers ───────────
- *   P1–P2       │ P2–P3          │ P3–P4       │ Unilateral
- *   Readership ─────────────────  │ Citations ──────────────
- * Mission Centers' half is wide enough for its trend and paper columns. Cards in a row stretch to its height; Mission
- * Centers sets the top row's.
+ * The page's grid.
+ *   Donovan (25%) │ Papers, People │ Mission Centers (≥460px)
+ *   P1–P2         │ P2–P3          │ P3–P4          │ Unilateral     four equal boxes across the page
+ *   Readership ──────────────────  │ Citations ──────────────
+ * The top and bottom rows share four tracks – a quarter of the page, the middle, and the rail split in two – and the
+ * rail is at least 460px so Mission Centers keeps its trend and paper columns. The second row is its own four equal
+ * columns. Cards in a row stretch to its height; Mission Centers sets the top row's.
  */
 .layout {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 25% minmax(0, 1fr) repeat(2, clamp(222px, calc(15% - var(--tc-space-2)), 272px));
   gap: var(--tc-space-4);
   align-items: stretch;
 }
@@ -80,13 +81,17 @@
   grid-row: 1;
   grid-column: 3 / 5;
 }
-/* The chart rows' cards are the grid's own cells: each takes the next track of its row */
-.priorities,
+/* The second row: four equal boxes across the page */
+.priorities {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--tc-space-4);
+}
+/* The third row's cards are the grid's own cells */
 .metrics {
   display: contents;
-}
-.priorities > * {
-  grid-row: 2;
 }
 /* Readership over the first two tracks, citations over the rail's */
 .metrics > * {
@@ -116,9 +121,11 @@
     grid-template-columns: 1fr;
   }
   .layout > *,
-  .priorities > *,
   .metrics > * {
     grid-row: auto;
     grid-column: 1;
+  }
+  .priorities {
+    grid-template-columns: 1fr;
   }
 }
