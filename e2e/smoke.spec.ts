@@ -11,7 +11,7 @@ test.describe('smoke', () => {
     // A bar per topic (stacked by center): count the topics each chart draws
     const bars = () => charts.evaluateAll((els) => els.map((e) => new Set((e as unknown as { data: { id: string }[] }).data.map((d) => d.id)).size));
     expect(await bars()).toEqual([4, 4, 4]);
-    const centers = page.locator('tc-priority-list[heading="Centers"]');
+    const centers = page.locator('tc-priority-list[heading="Mission Centers"]');
     expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['AFMC', 'ACMC', 'CCI', 'CMC', 'CIMC', 'CTMC', 'EAPMC', 'EEMC', 'NEMC', 'SCAMC', 'WCPMC']);
 
     // The view switch lives in the avatar's account card.
