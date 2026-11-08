@@ -71,8 +71,13 @@ export function todayIso(): string {
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** A date as the page headings show it: "2026-11-08" → "08 November 2026" (day, month by name, year). */
-export function asOfDate(iso: string): string {
-  const [y, m, d] = iso.split('-');
-  return `${d} ${MONTH_NAMES[Number(m) - 1]} ${y}`;
+/**
+ * When a page's numbers are from, beside its heading: "as of: Today, 8 November 2026 at 22:00", or without "Today, "
+ * when they're from another day. Local time, 24-hour.
+ */
+export function asOfLabel(at: Date, now: Date = new Date()): string {
+  const sameDay = at.getFullYear() === now.getFullYear() && at.getMonth() === now.getMonth() && at.getDate() === now.getDate();
+  const date = `${at.getDate()} ${MONTH_NAMES[at.getMonth()]} ${at.getFullYear()}`;
+  const time = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
+  return `as of: ${sameDay ? 'Today, ' : ''}${date} at ${time}`;
 }
