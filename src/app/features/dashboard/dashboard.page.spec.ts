@@ -89,6 +89,10 @@ describe('DashboardPage', () => {
     });
   });
 
+  it('leaves the trend empty for a center with no topics', () => {
+    expect(centerRow({ ...center, rollup: { ...center.rollup, topics: 0, momentum: 0 } })).not.toHaveProperty('change');
+  });
+
   it("shows a center's logo in the badge column, its code the screen-reader text", () => {
     expect(centerRow({ ...center, logo: '/logos/cis.svg' })).toEqual(expect.objectContaining({ name: 'CIS', badge: 'CIS', badgeImage: '/logos/cis.svg' }));
   });
