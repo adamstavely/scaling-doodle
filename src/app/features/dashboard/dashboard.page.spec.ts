@@ -62,7 +62,7 @@ describe('DashboardPage', () => {
     http.expectOne((r) => r.url === '/api/portfolio/summary' && r.params.has('period')).flush(summary);
     http.expectOne((r) => r.url === '/api/topics').flush([topic]);
     http.expectOne('/api/org').flush({ centers: [center], otherTeams: [] });
-    http.expectOne('/api/papers').flush([]);
+    http.expectOne((r) => r.url === '/api/papers' && r.params.has('period')).flush([]);
     await fixture.whenStable();
 
     const page = fixture.componentInstance as unknown as {

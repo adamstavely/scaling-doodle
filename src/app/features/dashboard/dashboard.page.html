@@ -83,6 +83,23 @@
       [data]="collaboration()"
     ></tc-segmented-bar>
   </div>
+
+  <!-- Readership and citations within the period, every priority, stacked by the authors' centers. -->
+  <div class="metrics-row">
+    @for (chart of metricCharts(); track chart.id) {
+      <tc-bar-chart
+        [heading]="chart.heading"
+        [description]="metricNote()"
+        layout="stacked"
+        [series]="'center'"
+        [sort]="false"
+        [format]="'compact'"
+        [unit]="' ' + chart.unit"
+        [data]="chart.bars"
+        (tc-mark-click)="openTopicBar($event)"
+      ></tc-bar-chart>
+    }
+  </div>
 } @else if (!error()) {
   <div class="loading" aria-busy="true" aria-label="Loading the portfolio">
     <div class="grid">

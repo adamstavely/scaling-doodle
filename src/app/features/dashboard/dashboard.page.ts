@@ -17,7 +17,7 @@ import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth } from '../../core/format';
 import { asOfDate, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { pageSummary } from '../../core/page-summary';
-import { priorityCharts, type PaperBar } from '../../core/topics';
+import { priorityCharts, priorityMetricCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
@@ -77,7 +77,8 @@ export class DashboardPage {
 
   readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
-  readonly #papers = scopedResource((api) => api.invoke(papersControllerList, {}));
+  /** Every paper in scope, each with its views and citations within the period. */
+  readonly #papers = scopedResource((api) => api.invoke(papersControllerList, { period: this.period() }), undefined, () => this.period());
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
 
   protected readonly error = computed(
@@ -127,6 +128,9 @@ export class DashboardPage {
   protected regenerate(): void {
     this.#regenerated.update((n) => n + 1);
   }
+  /** Readership and citations within the period, per priority, by the authors' centers. */
+  protected readonly metricCharts = computed(() => priorityMetricCharts(read(this.#topics) ?? [], read(this.#papers) ?? []));
+  protected readonly metricNote = computed(() => `${this.periodWords()[0].toUpperCase()}${this.periodWords().slice(1)}, any paper's, by the authors' center`);
   protected readonly papersNote = computed(() => `Papers published ${this.periodWords()}, by the authors' center`);
 
   /** The Mission Centers list shows each center's name, trend and papers only: no coverage, gaps, work or health word. */
