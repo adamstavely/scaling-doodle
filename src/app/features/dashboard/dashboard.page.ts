@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Select } from '@adamstavely/trenchcoat/angular/select';
 import { AiSummary } from '@adamstavely/trenchcoat/angular/ai-summary';
 import { BarChart } from '@adamstavely/trenchcoat/angular/bar-chart';
+import { KpiChart } from '@adamstavely/trenchcoat/angular/kpi-chart';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
 import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
@@ -11,11 +12,13 @@ import type { OrgCenterDto } from '../../api/generated/models/org-center-dto';
 import type { RecentPapersDto } from '../../api/generated/models/recent-papers-dto';
 import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
 import { papersControllerList } from '../../api/generated/fn/papers/papers-controller-list';
+import { portfolioControllerHistory } from '../../api/generated/fn/portfolio/portfolio-controller-history';
 import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/portfolio-controller-summary';
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth } from '../../core/format';
 import { asOfDate, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
+import { historyCard, yearChange } from '../../core/history';
 import { pageSummary } from '../../core/page-summary';
 import { priorityCharts, priorityMetricCharts, type PaperBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
@@ -52,7 +55,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [AiSummary, PriorityList, BarChart, SegmentedBar, Skeleton, Select, BriefDialog],
+  imports: [AiSummary, PriorityList, BarChart, KpiChart, SegmentedBar, Skeleton, Select, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -128,6 +131,15 @@ export class DashboardPage {
   protected regenerate(): void {
     this.#regenerated.update((n) => n + 1);
   }
+  /** Papers to date and headcount over two years: the top row's Papers and People cards. */
+  readonly #history = scopedResource((api) => api.invoke(portfolioControllerHistory, {}));
+  protected readonly historyCards = computed(() => {
+    const h = read(this.#history);
+    return h ? [historyCard('Papers', h.papers, h.months, 'var(--tc-chart-1)'), historyCard('People', h.people, h.months, 'var(--tc-chart-2)')] : [];
+  });
+  protected readonly yearChange = yearChange;
+  protected readonly wholeNumber = (n: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(n);
+
   /** Readership and citations within the period, per priority, by the authors' centers. */
   protected readonly metricCharts = computed(() => priorityMetricCharts(read(this.#topics) ?? [], read(this.#papers) ?? []));
   protected readonly metricNote = computed(() => `${this.periodWords()[0].toUpperCase()}${this.periodWords().slice(1)}, any paper's, by the authors' center`);
