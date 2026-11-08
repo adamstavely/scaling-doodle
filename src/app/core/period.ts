@@ -43,8 +43,8 @@ export function periodOptions(today: string): PeriodOption[] {
   ];
 }
 
-/** The period a page shows when none is picked: this quarter. */
-export const DEFAULT_PERIOD_INDEX = 2;
+/** The period a page shows when none is picked: this month. */
+export const DEFAULT_PERIOD_INDEX = 0;
 
 /** The short label for any period value the API accepts. */
 export function periodShort(value: string): string {

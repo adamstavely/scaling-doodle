@@ -104,7 +104,9 @@ export function briefTemplate(
     <div class="brief">
       <div class="brief-head">
         <tc-select
-          label="Brief period"
+          label="Time frame"
+          label-visible
+          label-placement="start"
           .options=${periods}
           .value=${b.period.label}
           @tc-value-change=${(e: CustomEvent<{ value: string }>) => on.period(e.detail.value)}

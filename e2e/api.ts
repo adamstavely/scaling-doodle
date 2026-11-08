@@ -9,7 +9,7 @@ function fixtureFor(url: URL, user: string): string | undefined {
   const keyOf = (u: URL) => (u.pathname.replace(/^\/api\//, '') + u.search).replace(/[?&=/]/g, '_');
   const file = join(FIXTURES, user, `${keyOf(url)}.json`);
   if (existsSync(file)) return readFileSync(file, 'utf8');
-  // The dashboard's default period is the current quarter, which moves with the calendar; fixtures were recorded
+  // The dashboard's default period is the current month, which moves with the calendar; fixtures were recorded
   // without a period (year to date), so fall back to the same request without one.
   if (!url.searchParams.has('period')) return undefined;
   const bare = new URL(url);
