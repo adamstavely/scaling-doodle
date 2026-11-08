@@ -81,6 +81,26 @@ test.describe('smoke', () => {
     await expect(page).toHaveURL(/\/topics\/t-neuro$/);
   });
 
+  test('arrow keys move through two gaps of the same topic', async ({ page, errors }) => {
+    void errors;
+    const hit = (id: string, label: string) => ({ id, label, detail: 'high', topicId: 't-neuro', score: 1 });
+    await page.route('**/api/search?q=unproven*', (route) =>
+      route.fulfill({ json: { topics: [], gaps: [hit('g2', 'Learning rule unproven'), hit('g3', 'Endurance unproven')], papers: [], people: [] } }),
+    );
+    await page.goto('/');
+    const search = page.locator('app-search-box tc-command-menu');
+    const input = search.locator('input');
+    await input.fill('unproven');
+    await expect(page.getByText('Endurance unproven').first()).toBeVisible();
+    // The active row, by the combobox's aria-activedescendant
+    const active = () =>
+      input.evaluate((el) => (document.getElementById(el.getAttribute('aria-activedescendant') ?? '')?.textContent ?? '').replace(/\s+/g, ' ').trim());
+    const seen = [await active()];
+    await input.press('ArrowDown');
+    seen.push(await active());
+    expect(seen).toEqual(['Learning rule unproven high', 'Endurance unproven high']);
+  });
+
   test('topic detail draws the traceability spine', async ({ page, errors }) => {
     void errors;
     await page.goto('/topics/t-neuro');
