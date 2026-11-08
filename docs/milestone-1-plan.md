@@ -157,5 +157,5 @@ A and B can run in parallel. EKS manifests and Elastic Cloud provisioning come a
 1. **Health** is computed by the system, and **momentum** is the change in health (§1). The New Topic flow no longer asks for a health value.
 2. **Coverage** counts only `active` work. Work in `review` doesn't count.
 3. **Only the Chief** can grade papers.
-4. **Anything Trench Coat is missing** gets added to Trench Coat first (step A2).
+4. **Trench Coat gets bug fixes and reusable features** (step A2): anything another app would plausibly use. Layout and styling only Intellect needs stay in the app's CSS. Trench Coat changes go out as one release per task, and app work that doesn't need the new release ships without waiting for it.
 5. **The seed** starts with the prototype's 12 topics.
