@@ -65,14 +65,14 @@ export function partnerBreakdown(p: PartnerLabsDto): {
   };
 }
 
-/** Every lab's joint papers, lab by lab, each saying who started it. */
+/** Every lab's joint papers, grouped under the lab, each saying who started it. */
 export function partnerPapers(p: PartnerLabsDto): SearchResult[] {
   return p.labs.flatMap((lab) =>
     lab.papers.map((paper) => ({
       // A paper with two partners shows under each, so its id here is per lab.
       id: `${lab.name}|${paper.id}`,
       title: paper.title,
-      // The lab shows as the result's tag.
+      // The list groups by kind, so this puts each paper under its lab.
       kind: lab.name,
       source: paper.venue,
       href: `/papers/${paper.id}`,

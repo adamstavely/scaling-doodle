@@ -1,40 +1,62 @@
+/* The navy top bar runs the full width, with the logo and name at its left; the side nav starts under it. Both stay in
+   place while the page scrolls. */
 .shell {
+  --app-bar-h: 72px;
   display: grid;
   grid-template-columns: auto 1fr;
-  grid-template-rows: 60px 1fr;
+  grid-template-rows: var(--app-bar-h) 1fr;
   grid-template-areas:
-    'sidebar topbar'
+    'topbar topbar'
     'sidebar content';
   min-height: 100dvh;
 }
 
 /* Brand navy in both themes, on the side nav and the top bar. The side nav is pinned to the dark theme (data-tc-theme
-   in app.html) so its text, icons and hover fills are drawn for a dark background; the top bar's tc-header-nav does the
-   same with `inverse`, which leaves its menus on the page's theme. */
+   in app.html) so its text, icons and hover fills are drawn for a dark background; the top bar's tc-header-brand and
+   tc-header-nav do the same with `inverse`, which leaves the header nav's menus on the page's theme. */
 .shell {
   --app-chrome: #081d35;
 }
 
 .sidebar {
   grid-area: sidebar;
+  position: sticky;
+  top: var(--app-bar-h);
+  align-self: start;
+  height: calc(100dvh - var(--app-bar-h));
   background: var(--app-chrome);
   border-right-color: transparent;
   /* The links' text, larger than the body's 13px; the side nav's links take their size from it. */
   font-size: 16px;
-  /* A larger INTELLECT name and logo, with room under them before the first link. */
-  --tc-snav-brand-size: var(--tc-font-size-xl);
-  --tc-snav-logo-size: 32px;
+  /* Room under the collapse button before the first link, and between the links. */
   --tc-snav-head-gap: var(--tc-space-12);
+  --tc-snav-item-gap: var(--tc-space-2);
+  --tc-snav-item-height: 36px;
 }
 
 .topbar {
   grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--tc-space-4);
-  padding: 0 var(--tc-space-6);
+  gap: var(--tc-space-6);
+  padding: 0 var(--tc-space-6) 0 var(--tc-space-4);
   background: var(--app-chrome);
+}
+
+/* INTELLECT and its logo, large. */
+.brand {
+  flex: none;
+  --tc-hb-name-size: 48px;
+  --tc-hb-logo-size: 44px;
+  --tc-hb-gap: var(--tc-space-3);
+}
+
+/* The header nav keeps to the bar's right end. */
+.topbar tc-header-nav {
+  margin-inline-start: auto;
 }
 
 /* Pages use the full width beside the nav; side columns grow with it (see each page's grid). */

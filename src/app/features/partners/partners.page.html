@@ -29,7 +29,7 @@
       ></tc-segmented-bar>
     </div>
 
-    <tc-results-list heading="Joint papers" group="none" [results]="papers()" (tc-open)="openPaper($event)"></tc-results-list>
+    <tc-results-list heading="Joint papers by lab" group="kind" plural-kinds="false" [results]="papers()" (tc-open)="openPaper($event)"></tc-results-list>
   } @else {
     <p class="note">No joint papers yet. Papers written with a partner lab show here.</p>
   }

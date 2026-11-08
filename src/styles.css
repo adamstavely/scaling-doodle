@@ -82,7 +82,7 @@ body {
 
 /* Printing the brief prints just the brief. */
 @media print {
-  .brief-head tc-segmented-control {
+  .brief-head tc-select {
     display: none;
   }
 

@@ -4,18 +4,16 @@
     <tc-side-nav
       class="sidebar"
       data-tc-theme="dark"
-      brand="INTELLECT"
-      brand-href="/"
-      [brandIcon]="brandIcon"
       collapsible
       [items]="navItems"
       [current]="currentNav()"
       (tc-navigate)="onNavigate($event)"
     ></tc-side-nav>
 
-    <!-- The navy bar spans the row; tc-header-nav is its right end. `inverse` draws its buttons for the dark bar while
-         their menus keep the page's light or dark theme. -->
+    <!-- The navy bar spans the page: the brand, the search, then tc-header-nav at its right end. `inverse` draws them for
+         the dark bar while the header nav's menus keep the page's light or dark theme. -->
     <header class="topbar">
+      <tc-header-brand class="brand" inverse name="INTELLECT" href="/" [icon]="brandIcon" (tc-navigate)="onBrandNavigate($event)"></tc-header-brand>
       <!-- Loaded once the page is idle, so the command menu isn't part of every page's first download. -->
       @defer (on idle) {
         <app-search-box />

@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AppPicker } from '@adamstavely/trenchcoat/angular/app-picker';
+import { HeaderBrand } from '@adamstavely/trenchcoat/angular/header-brand';
 import { HeaderNav } from '@adamstavely/trenchcoat/angular/header-nav';
 import { LookProvider } from '@adamstavely/trenchcoat/angular/look-provider';
 import { Notifications } from '@adamstavely/trenchcoat/angular/notifications';
@@ -44,7 +45,7 @@ function navIdFor(url: string): string {
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, LookProvider, HeaderNav, Notifications, AppPicker, SideNav, SearchBox],
+  imports: [RouterOutlet, LookProvider, HeaderBrand, HeaderNav, Notifications, AppPicker, SideNav, SearchBox],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -96,6 +97,12 @@ export class App {
   /** Plain clicks go through the router; tc-side-nav leaves modifier and middle clicks to the browser. */
   protected onNavigate(event: CustomEvent<SideNavNavigate>): void {
     if (!event.detail.href) return;
+    event.preventDefault();
+    void this.#router.navigateByUrl(event.detail.href);
+  }
+
+  /** The brand goes home through the router rather than reloading the page. */
+  protected onBrandNavigate(event: CustomEvent<{ href: string }>): void {
     event.preventDefault();
     void this.#router.navigateByUrl(event.detail.href);
   }
