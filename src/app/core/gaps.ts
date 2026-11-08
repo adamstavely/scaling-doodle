@@ -18,9 +18,14 @@ export function exposureGap(g: GapListItemDto): ExposureGap {
   };
 }
 
+/**
+ * One CSV cell. Text that a spreadsheet would read as a formula – starting with =, +, -, @, a tab or a carriage return
+ * – gets a leading apostrophe, so it shows as text and never runs (OWASP's CSV injection guidance; quoting alone
+ * doesn't stop it). Numbers are ours and stay numbers. Then the usual quoting for commas, quotes and line breaks.
+ */
 const cell = (v: string | number) => {
-  const s = String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  const s = typeof v === 'number' ? String(v) : /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
 /** The gap review as CSV: one row per gap, most severe first as given. */
