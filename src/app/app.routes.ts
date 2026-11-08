@@ -42,6 +42,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/partners/partners.page').then((m) => m.PartnersPage),
   },
   {
+    path: 'centers/:id',
+    title: 'Mission Center · INTELLECT',
+    loadComponent: () => import('./features/center/center.page').then((m) => m.CenterPage),
+  },
+  {
     path: 'org',
     title: 'Centers & Teams · INTELLECT',
     loadComponent: () => import('./features/org/org.page').then((m) => m.OrgPage),

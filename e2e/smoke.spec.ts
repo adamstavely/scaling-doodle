@@ -101,6 +101,17 @@ test.describe('smoke', () => {
     await expect(page.locator('tc-results-list')).toContainText('Sparse Spiking Networks');
   });
 
+  test('a center page opens from Centers & Teams and shows that center', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/org');
+    await page.locator('tc-org-unit-card').filter({ hasText: 'Center for Cyber Intelligence' }).getByRole('button', { name: 'Open center' }).click();
+    await expect(page).toHaveURL(/\/centers\/c-cci/);
+    await expect(page.getByRole('heading', { name: 'Center for Cyber Intelligence' })).toBeVisible();
+    const topics = page.locator('tc-priority-list[heading="Topics"]');
+    await expect(topics).toBeVisible();
+    expect(await topics.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(4);
+  });
+
   test('people lists the roster', async ({ page, errors }) => {
     void errors;
     await page.goto('/people');

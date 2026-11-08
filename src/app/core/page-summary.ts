@@ -36,7 +36,7 @@ export function pageSummary({ centers, topics, papers, period }: PageSummaryInpu
     return id;
   };
   const citeTopic = (t: TopicSummaryDto) => cite(`topic:${t.id}`, t.name, `/topics/${t.id}`);
-  const citeCenter = (c: OrgCenterDto) => cite(`center:${c.id}`, c.name, `/org#${c.id}`);
+  const citeCenter = (c: OrgCenterDto) => cite(`center:${c.id}`, c.name, `/centers/${c.id}`);
 
   const staffed = centers.filter((c) => c.rollup.topics > 0);
   const empty = centers.filter((c) => c.rollup.topics === 0);

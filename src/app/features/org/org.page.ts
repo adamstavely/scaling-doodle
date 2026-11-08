@@ -113,6 +113,7 @@ export function centerCard(c: OrgCenterDto) {
     stats: stats(c.rollup),
     health: healthCounts(c.rollup),
     teams: c.teams.map(team),
+    actions: [{ id: 'open', label: 'Open center' }],
   };
 }
 
@@ -147,6 +148,11 @@ export class OrgPage {
     this.#fragment = null;
     document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   });
+
+  /** A center card's Open center goes to that center's page. */
+  protected openCenter(id: string): void {
+    void this.#router.navigate(['/centers', id]);
+  }
 
   protected openTopic(event: CustomEvent<OrgOpen>): void {
     void this.#router.navigate(['/topics', event.detail.item.id]);

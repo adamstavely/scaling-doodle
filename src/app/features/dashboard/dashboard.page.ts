@@ -165,11 +165,12 @@ export class DashboardPage {
     event.preventDefault();
     const [kind, id] = event.detail.sourceId.split(':');
     if (kind === 'topic') void this.#router.navigate(['/topics', id]);
-    else if (kind === 'center') void this.#router.navigate(['/org'], { fragment: id });
+    else if (kind === 'center') void this.#router.navigate(['/centers', id]);
   }
 
+  /** A Mission Centers row opens that center's page. */
   protected openCenter(event: CustomEvent<PriorityOpen>): void {
-    void this.#router.navigate(['/org'], { fragment: event.detail.id });
+    void this.#router.navigate(['/centers', event.detail.id]);
   }
 
   protected onPeriodChange(event: CustomEvent<{ value: string }>): void {

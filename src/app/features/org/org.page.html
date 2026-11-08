@@ -19,6 +19,8 @@
       [stats]="c.stats"
       [health]="c.health"
       [teams]="c.teams"
+      [actions]="c.actions"
+      (tc-action)="openCenter(c.id)"
       (tc-open)="openTopic($event)"
     ></tc-org-unit-card>
   } @empty {
