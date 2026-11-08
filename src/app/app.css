@@ -49,7 +49,7 @@
 /* INTELLECT and its logo, large. */
 .brand {
   flex: none;
-  --tc-hb-name-size: 48px;
+  --tc-hb-name-size: 40px;
   --tc-hb-logo-size: 44px;
   --tc-hb-gap: var(--tc-space-3);
 }
