@@ -10,7 +10,7 @@ test.describe('smoke', () => {
     await expect(priorities).toBeVisible();
     expect(await priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
     const centers = page.locator('tc-priority-list[heading="Centers"]');
-    expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['CEC', 'CIS', 'CQL']);
+    expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['AFMC', 'ACMC', 'CCI', 'CMC', 'CIMC', 'CTMC', 'EAPMC', 'EEMC', 'NEMC', 'SCAMC', 'WCPMC']);
 
     // The view switch lives in the avatar's account card.
     await page.getByRole('button', { name: /^Account/ }).click();
@@ -84,7 +84,7 @@ test.describe('smoke', () => {
   test('org shows each center', async ({ page, errors }) => {
     void errors;
     await page.goto('/org');
-    await expect(page.locator('tc-org-unit-card')).toHaveCount(3);
+    await expect(page.locator('tc-org-unit-card')).toHaveCount(11);
   });
 
   test('partner labs shows each lab and who started the work', async ({ page, errors }) => {
