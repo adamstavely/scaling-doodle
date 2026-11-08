@@ -35,6 +35,7 @@ const center = {
   lead: { id: 'mo', name: 'Marcus Okonkwo', initials: 'MO' },
   rollup: {
     health: 'healthy',
+    topics: 2,
     trend: [70, 72, 75],
     momentum: 5,
     coverage: 0.5,
@@ -87,6 +88,10 @@ describe('DashboardPage', () => {
       work: 6,
       figures: { lastMonth: 3, thisMonth: 0 },
     });
+  });
+
+  it('leaves the trend empty for a center with no topics', () => {
+    expect(centerRow({ ...center, rollup: { ...center.rollup, topics: 0, momentum: 0 } })).not.toHaveProperty('change');
   });
 
   it("shows a center's logo in the badge column, its code the screen-reader text", () => {

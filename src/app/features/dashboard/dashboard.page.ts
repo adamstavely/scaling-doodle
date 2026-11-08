@@ -54,7 +54,8 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
     // A center with no topics has no health of its own; show it as on track rather than alarm.
     health: priorityHealth(r.health ?? 'healthy'),
     trend: r.trend,
-    change: r.momentum / 100,
+    // With no topics there's no trend to report: an empty cell, not "– 0%".
+    ...(r.topics > 0 ? { change: r.momentum / 100 } : {}),
     coverage: r.coverage,
     open: r.openGaps,
     work: r.work,
