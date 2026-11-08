@@ -19,7 +19,7 @@
   gap: var(--tc-space-3);
 }
 .as-of {
-  font-size: var(--tc-font-size-2xl);
+  font-size: var(--tc-font-size-xl);
   color: var(--tc-text-muted);
   font-variant-numeric: tabular-nums;
 }
