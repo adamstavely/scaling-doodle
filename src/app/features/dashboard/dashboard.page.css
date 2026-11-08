@@ -42,17 +42,16 @@
 }
 
 /*
- * The page's grid: four tracks – a quarter of the page, the middle, and the rail split in two – so card edges line up
- * from row to row.
+ * The page's grid: four equal quarters, so card edges line up from row to row.
  *   Donovan     │ Papers, People │ Mission Centers ───────────
  *   P1–P2       │ P2–P3          │ P3–P4       │ Unilateral
  *   Readership ─────────────────  │ Citations ──────────────
- * The rail (the last two tracks) is at least 460px so Mission Centers keeps its trend and paper columns. Cards in a row
- * stretch to its height; Mission Centers sets the top row's.
+ * Mission Centers' half is wide enough for its trend and paper columns. Cards in a row stretch to its height; Mission
+ * Centers sets the top row's.
  */
 .layout {
   display: grid;
-  grid-template-columns: 25% minmax(0, 1fr) repeat(2, clamp(222px, calc(15% - var(--tc-space-2)), 272px));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--tc-space-4);
   align-items: stretch;
 }
