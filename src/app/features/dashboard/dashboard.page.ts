@@ -93,9 +93,13 @@ export class DashboardPage {
 
   /** This period's papers, done alone vs. with partner labs, over the caller's scope. */
   protected readonly collaboration = computed(() => collaborationParts(read(this.#summary)?.collaborationInPeriod));
-  /** The period in words, for the cards' descriptions: "this quarter", "this year". */
+  /**
+   * The period in words, for the cards' descriptions: "this quarter", "this year". It names the period the loaded numbers
+   * are for, not the one just picked, so words and numbers agree while a new period loads.
+   */
   protected readonly periodWords = computed(() => {
-    const when = this.periods.find((p) => p.value === this.period())?.label.toLowerCase() ?? 'this period';
+    const shown = read(this.#summary)?.period.label ?? this.period();
+    const when = this.periods.find((p) => p.value.toLowerCase() === shown.toLowerCase())?.label.toLowerCase() ?? 'this period';
     return when === 'year to date' ? 'this year' : when === 'fiscal year' ? 'this fiscal year' : when;
   });
   protected readonly collaborationNote = computed(
@@ -117,6 +121,8 @@ export class DashboardPage {
     return pageSummary({ centers: read(this.#org)?.centers ?? [], topics: read(this.#topics) ?? [], papers, period: this.periodWords() });
   });
   protected readonly generatedAt = computed(() => (this.explainer(), Date.now()));
+  /** Donovan shows it's rewriting while a newly picked period's numbers load. */
+  protected readonly explainerStatus = computed(() => (this.#summary.isLoading() ? 'summarising' : 'done'));
   protected regenerate(): void {
     this.#regenerated.update((n) => n + 1);
   }

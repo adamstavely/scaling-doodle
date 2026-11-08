@@ -28,7 +28,7 @@
         <tc-ai-summary
           heading="Donovan"
           subject="Metrics Summary"
-          status="done"
+          [status]="explainerStatus()"
           [model]="'Donovan · rules, no model yet'"
           [generatedAt]="generatedAt()"
           [tldr]="s.tldr"
