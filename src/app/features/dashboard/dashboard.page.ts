@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import { Select } from '@adamstavely/trenchcoat/angular/select';
+import { BarChart } from '@adamstavely/trenchcoat/angular/bar-chart';
 import { PriorityList } from '@adamstavely/trenchcoat/angular/priority-list';
 import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
@@ -14,7 +15,7 @@ import { centerPriorityRows } from '../../core/center-priorities';
 import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth, PRIORITY_TIERS } from '../../core/format';
 import { DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
-import { topicPriorityItem } from '../../core/topics';
+import { priorityCharts, type TopicBar } from '../../core/topics';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { BriefDialog } from '../dialogs/brief-dialog';
@@ -50,7 +51,7 @@ export function centerRow(c: OrgCenterDto): PriorityItem {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [PriorityList, SegmentedBar, Skeleton, Select, BriefDialog],
+  imports: [PriorityList, BarChart, SegmentedBar, Skeleton, Select, BriefDialog],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.css',
 })
@@ -95,9 +96,9 @@ export class DashboardPage {
     return `Papers published ${when === 'year to date' ? 'this year' : when === 'fiscal year' ? 'this fiscal year' : when}${this.isChief() ? ' across the portfolio' : ' on your topics'}`;
   });
 
-  protected readonly priorities = computed<PriorityItem[]>(() =>
-    (read(this.#topics) ?? []).map((t) => ({ ...topicPriorityItem(t), figures: paperFigures(t.recentPapers) })),
-  );
+  protected readonly priorityCharts = computed(() => priorityCharts(read(this.#topics) ?? []));
+  /** The at-risk topics' bars are the emphasised ones. */
+  protected readonly atRisk = (bar: Record<string, unknown>) => (bar as TopicBar).health === 'at-risk';
 
   /** The Centers list shows momentum and papers only. */
   protected readonly centerHiddenColumns: PriorityColumn[] = ['coverage', 'open', 'work'];
@@ -114,8 +115,9 @@ export class DashboardPage {
   );
 
 
-  protected openTopic(event: CustomEvent<PriorityOpen>): void {
-    void this.#router.navigate(['/topics', event.detail.id]);
+  protected openTopicBar(event: CustomEvent<{ event: unknown }>): void {
+    const id = ((event.detail.event as { datum?: TopicBar | null }).datum)?.id;
+    if (id) void this.#router.navigate(['/topics', id]);
   }
 
   protected openCenter(event: CustomEvent<PriorityOpen>): void {

@@ -35,14 +35,21 @@
         (tc-open)="openCenterTier($event)"
       ></tc-priority-list>
 
-      <tc-priority-list
-        heading="Priorities"
-        description="Topics most at risk first · papers published last month and this month"
-        [items]="priorities()"
-        [tiers]="tiers"
-        [figures]="paperColumns"
-        (tc-open)="openTopic($event)"
-      ></tc-priority-list>
+      <!-- Priorities: each topic's health score, P1–P2 and P3–P4, on one scale; at-risk topics stand out. -->
+      <div class="priority-charts">
+        @for (chart of priorityCharts(); track chart.id) {
+          <tc-bar-chart
+            [heading]="chart.heading"
+            description="Health score, most at risk first"
+            orientation="horizontal"
+            [sort]="false"
+            [yDomain]="[0, 100]"
+            [highlight]="atRisk"
+            [data]="chart.bars"
+            (tc-mark-click)="openTopicBar($event)"
+          ></tc-bar-chart>
+        }
+      </div>
     </div>
 
     <aside class="rail">

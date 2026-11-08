@@ -6,18 +6,17 @@ test.describe('smoke', () => {
     void errors;
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Metrics Summary' })).toBeVisible();
-    const priorities = page.locator('tc-priority-list[heading="Priorities"]');
-    await expect(priorities).toBeVisible();
-    expect(await priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(12);
+    const charts = page.locator('.priority-charts tc-bar-chart');
+    await expect(charts).toHaveCount(2);
+    const bars = () => charts.evaluateAll((els) => els.map((e) => (e as unknown as { data: unknown[] }).data.length));
+    expect(await bars()).toEqual([6, 6]);
     const centers = page.locator('tc-priority-list[heading="Centers"]');
     expect(await centers.evaluate((e) => (e as unknown as { items: { badge?: string }[] }).items.map((i) => i.badge))).toEqual(['CEC', 'CIS', 'CQL']);
 
     // The view switch lives in the avatar's account card.
     await page.getByRole('button', { name: /^Account/ }).click();
     await page.getByRole('menuitem', { name: /PI view/ }).or(page.getByRole('button', { name: /PI view/ })).first().click();
-    await expect
-      .poll(() => priorities.evaluate((e) => (e as unknown as { items: unknown[] }).items.length))
-      .toBe(2);
+    await expect.poll(async () => (await bars()).reduce((a, b) => a + b, 0)).toBe(2);
   });
 
   test('research topics lists every topic in view, grouped by priority', async ({ page, errors }) => {
