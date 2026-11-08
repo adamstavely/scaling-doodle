@@ -128,6 +128,26 @@ test.describe('smoke', () => {
     expect(await topics.evaluate((e) => (e as unknown as { items: unknown[] }).items.length)).toBe(4);
   });
 
+  test('New Topic waits for its data, then keeps what was typed', async ({ page, errors }) => {
+    void errors;
+    const people = readFileSync(join(__dirname, 'fixtures/hv/people.json'), 'utf8');
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    await page.route('**/api/people', async (route) => {
+      await held;
+      await route.fulfill({ contentType: 'application/json', body: people });
+    });
+    await page.goto('/topics?new=topic');
+    // While people are loading, there's no form to type into
+    await expect(page.locator('tc-dialog tc-skeleton')).toBeVisible();
+    await expect(page.locator('tc-dialog tc-stepper-form')).toHaveCount(0);
+    release();
+    const name = page.locator('tc-dialog tc-stepper-form').getByRole('textbox').first();
+    await name.fill('Quantum Networking');
+    await page.waitForTimeout(400);
+    await expect(name).toHaveValue('Quantum Networking');
+  });
+
   test('people lists the roster', async ({ page, errors }) => {
     void errors;
     await page.goto('/people');
