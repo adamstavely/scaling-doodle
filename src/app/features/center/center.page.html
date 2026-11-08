@@ -7,7 +7,7 @@
         <p class="eyebrow">{{ c.code ?? 'Mission center' }}</p>
         <div class="title">
           <h1>{{ c.name }}</h1>
-          <span class="as-of">As of: {{ asOf }}</span>
+          <span class="as-of">{{ asOf() }}</span>
         </div>
         @if (c.lead || c.focus) {
           <p class="about">

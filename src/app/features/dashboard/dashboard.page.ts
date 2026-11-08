@@ -17,7 +17,7 @@ import { portfolioControllerSummary } from '../../api/generated/fn/portfolio/por
 import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
 import { collaborationParts } from '../../core/collaboration';
 import { priorityHealth } from '../../core/format';
-import { asOfDate, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
+import { asOfLabel, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { historyCard, yearChange } from '../../core/history';
 import { pageSummary } from '../../core/page-summary';
 import { priorityCharts, priorityMetricCharts, type PaperBar } from '../../core/topics';
@@ -70,7 +70,6 @@ export class DashboardPage {
 
   protected readonly periods = periodOptions(todayIso());
   /** Today, DD MM YYYY, beside the heading: the page's numbers are as of now. */
-  protected readonly asOf = asOfDate(todayIso());
   protected readonly period = computed(() => {
     const p = this.periodParam();
     return this.periods.some((o) => o.value === p) ? p! : this.periods[DEFAULT_PERIOD_INDEX].value;
@@ -79,6 +78,8 @@ export class DashboardPage {
 
 
   readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
+  /** When the page's numbers were loaded: "as of: Today, 8 November 2026 at 22:00". New numbers, new time. */
+  protected readonly asOf = computed(() => (read(this.#summary), asOfLabel(new Date())));
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
   /** Every paper in scope, each with its views and citations within the period. */
   readonly #papers = scopedResource((api) => api.invoke(papersControllerList, { period: this.period() }), undefined, () => this.period());

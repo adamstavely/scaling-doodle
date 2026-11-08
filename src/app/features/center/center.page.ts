@@ -18,7 +18,7 @@ import { topicsControllerList } from '../../api/generated/fn/topics/topics-contr
 import { centerCollaboration, centerData, centerPaperResults, centerTiles, centerTopicItems } from '../../core/center';
 import { collaborationParts } from '../../core/collaboration';
 import { PRIORITY_TIERS } from '../../core/format';
-import { asOfDate, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
+import { asOfLabel, DEFAULT_PERIOD_INDEX, periodOptions, todayIso } from '../../core/period';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { centerCard } from '../org/org.page';
 
@@ -48,7 +48,6 @@ export class CenterPage {
     return this.periods.some((o) => o.value === p) ? p! : this.periods[DEFAULT_PERIOD_INDEX].value;
   });
   protected readonly periodChoices = this.periods.map((p) => ({ value: p.value, label: p.label }));
-  protected readonly asOf = asOfDate(todayIso());
   protected readonly tiers = PRIORITY_TIERS;
   protected readonly paperColumns = PAPER_COLUMNS;
 
@@ -57,6 +56,8 @@ export class CenterPage {
   readonly #people = scopedResource((api) => api.invoke(peopleControllerList));
   readonly #papers = scopedResource((api) => api.invoke(papersControllerList, { period: this.period() }), undefined, () => this.period());
   readonly #summary = scopedResource((api) => api.invoke(portfolioControllerSummary, { period: this.period() }), undefined, () => this.period());
+  /** When the page's numbers were loaded: "as of: Today, 8 November 2026 at 22:00". New numbers, new time. */
+  protected readonly asOf = computed(() => (read(this.#summary), asOfLabel(new Date())));
 
   protected readonly error = computed(
     () => this.#org.error() ?? this.#topics.error() ?? this.#people.error() ?? this.#papers.error() ?? this.#summary.error(),

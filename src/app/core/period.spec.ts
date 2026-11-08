@@ -1,4 +1,4 @@
-import { asOfDate, daysToQuarterEnd, fiscalQuarter, periodOptions, periodShort } from './period';
+import { asOfLabel, daysToQuarterEnd, fiscalQuarter, periodOptions, periodShort } from './period';
 
 describe('periods', () => {
   it('places dates in the US federal fiscal year', () => {
@@ -29,9 +29,11 @@ describe('periods', () => {
     expect(daysToQuarterEnd('2027-02-01')).toBe(58);
   });
 
-  it('writes the as-of date as day, month by name, year', () => {
-    expect(asOfDate('2026-11-08')).toBe('08 November 2026');
-    expect(asOfDate('2027-01-31')).toBe('31 January 2027');
+  it('says when the numbers are from: today, or a date, with the time', () => {
+    const now = new Date(2026, 10, 8, 23, 5);
+    expect(asOfLabel(new Date(2026, 10, 8, 22, 0), now)).toBe('as of: Today, 8 November 2026 at 22:00');
+    expect(asOfLabel(new Date(2026, 10, 7, 9, 4), now)).toBe('as of: 7 November 2026 at 09:04');
+    expect(asOfLabel(new Date(2027, 0, 31, 0, 0), new Date(2027, 0, 31, 12, 0))).toBe('as of: Today, 31 January 2027 at 00:00');
   });
 
   it('shortens any period', () => {
