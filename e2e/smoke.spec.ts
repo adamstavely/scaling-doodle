@@ -6,13 +6,13 @@ test.describe('smoke', () => {
     void errors;
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Metrics Summary' })).toBeVisible();
-    const charts = page.locator('.bottom-row tc-bar-chart');
+    const charts = page.locator('.priorities tc-bar-chart');
     await expect(charts).toHaveCount(3);
     // A bar per topic (stacked by center): count the topics each chart draws
     const bars = () => charts.evaluateAll((els) => els.map((e) => new Set((e as unknown as { data: { id: string }[] }).data.map((d) => d.id)).size));
     expect(await bars()).toEqual([4, 4, 4]);
     // Readership and citations: every topic in each
-    const metrics = page.locator('.metrics-row tc-bar-chart');
+    const metrics = page.locator('.metrics tc-bar-chart');
     await expect(metrics).toHaveCount(2);
     expect(await metrics.evaluateAll((els) => els.map((e) => new Set((e as unknown as { data: { id: string }[] }).data.map((d) => d.id)).size))).toEqual([12, 12]);
     const centers = page.locator('tc-priority-list[heading="Mission Centers"]');
