@@ -1,6 +1,6 @@
 import type { PartnerLabsDto } from '../api/generated/models/partner-labs-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
-import { findLab, labCard, labPapers, labSlug, labStartedSplit, labTiles, partnerTiles } from './partners';
+import { findLab, gapCoverage, labCard, labPapers, labSlug, labStartedSplit, labTiles, partnerTiles } from './partners';
 
 const paper = (id: string, initiatedBy: 'us' | 'partner' | 'other-partner', initiator: string | null, otherPartners: string[] = []) => ({
   id,
@@ -110,5 +110,17 @@ describe('a partner lab', () => {
     ]);
     expect(results[0].meta).toEqual(['We started', 'with Scripps', '5 citations', '1.2K views']);
     expect(results[1].meta?.[0]).toBe('Scripps started');
+  });
+});
+
+describe('coverage across topics', () => {
+  const topic = (coverage: number, openGaps: number) => ({ stats: { coverage, openGaps } }) as unknown as TopicSummaryDto;
+
+  it('weighs each topic by its open gaps: one covered gap beside 99 uncovered is 1%, not 50%', () => {
+    expect(gapCoverage([topic(1, 1), topic(0, 99)])).toBeCloseTo(0.01);
+  });
+
+  it('counts everything covered when no gaps are open', () => {
+    expect(gapCoverage([topic(1, 0), topic(1, 0)])).toBe(1);
   });
 });

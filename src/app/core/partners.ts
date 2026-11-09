@@ -91,6 +91,16 @@ function healthCounts(topics: TopicSummaryDto[]): OrgHealthCounts {
   return { 'on-track': count('healthy'), watch: count('watch'), 'at-risk': count('at-risk') };
 }
 
+/**
+ * The share of open gaps with work against them across topics: each topic's coverage weighted by its open gaps, so
+ * one covered gap beside 99 uncovered ones is 1%, not the 50% an average of the topics' percentages would say. With no
+ * open gaps, everything is covered.
+ */
+export function gapCoverage(topics: TopicSummaryDto[]): number {
+  const open = topics.reduce((s, t) => s + t.stats.openGaps, 0);
+  return open ? topics.reduce((s, t) => s + t.stats.coverage * t.stats.openGaps, 0) / open : 1;
+}
+
 /** Our team, as a lab's card lists it: its name and lead, from the org tree. */
 export type TeamRef = { name: string; lead?: { name: string } | null };
 
@@ -122,7 +132,7 @@ export function labCard(l: PartnerLabDto, topics: TopicSummaryDto[], teams: Map<
       name: team?.name ?? 'Team',
       lead: team?.lead ? { name: team.lead.name } : undefined,
       health: healthCounts(teamTopics),
-      coverage: teamTopics.reduce((s, t) => s + t.stats.coverage, 0) / teamTopics.length,
+      coverage: gapCoverage(teamTopics),
       gaps: teamTopics.reduce((s, t) => s + t.stats.openGaps, 0),
       fte: Math.round(teamTopics.reduce((s, t) => s + t.stats.fte, 0) * 10) / 10,
       figures: [{ id: 'joint', value: String(papersIn(teamTopics)), label: 'joint papers' }],

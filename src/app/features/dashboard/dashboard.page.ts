@@ -160,31 +160,46 @@ export class DashboardPage {
 
   /**
    * Follow-ups to Donovan. The first one turns the page into a chat: everything but Donovan fades away and its card
-   * takes the page, the summary at the top and the conversation under it.
+   * takes the page, the summary at the top and the conversation under it. Each answer keeps the period it was worked
+   * out for, so when the time frame changes the conversation says which answers are about another period.
    */
-  protected readonly messages = signal<(AiSummaryMessage & { sources?: AiSummarySource[] })[]>([]);
-  protected readonly chatting = computed(() => this.messages().length > 0);
+  readonly #messages = signal<(AiSummaryMessage & { sources?: AiSummarySource[]; period?: string })[]>([]);
+  protected readonly messages = computed<(AiSummaryMessage & { sources?: AiSummarySource[] })[]>(() => {
+    const now = this.#pageData()?.period;
+    return this.#messages().map(({ period, ...m }) =>
+      period && now && period !== now ? { ...m, text: `Answered for ${period}: ${m.text}` } : m,
+    );
+  });
+  protected readonly chatting = computed(() => this.#messages().length > 0);
+  /** The page's numbers for one period, with nothing still loading for a newly picked one. */
+  readonly #settled = computed(() => (this.#summary.isLoading() || this.#papers.isLoading() ? undefined : this.#pageData()));
   #asked = 0;
 
   protected onAsk(event: CustomEvent<{ question: string }>): void {
-    const data = this.#pageData();
-    if (!data) return event.preventDefault();
+    if (!this.#pageData()) return event.preventDefault();
     const n = ++this.#asked;
     const question = { id: `q${n}`, role: 'user' as const, text: event.detail.question, status: 'done' as const };
     const thinking = { id: `a${n}`, role: 'assistant' as const, text: '', status: 'thinking' as const };
-    this.#morph(() => this.messages.update((m) => [...m, question, thinking]));
-    // Rules answer at once; a short pause reads as Donovan considering it, and leaves room for a model later
-    setTimeout(() => {
+    this.#morph(() => this.#messages.update((m) => [...m, question, thinking]));
+    // Rules answer at once; a short pause reads as Donovan considering it, and leaves room for a model later. The
+    // answer is worked out from the numbers on the page when it's given – a time frame picked meanwhile is the one it
+    // answers for, once its numbers have loaded.
+    const answer = () => {
+      const data = this.#settled();
+      if (!data) return void setTimeout(answer, 150);
       const a = answerFollowUp(event.detail.question, data);
-      this.messages.update((m) =>
-        m.map((x) => (x.id === thinking.id ? { ...x, text: a.text, points: a.points, sources: a.sources, status: 'done' as const } : x)),
+      this.#messages.update((m) =>
+        m.map((x) =>
+          x.id === thinking.id ? { ...x, text: a.text, points: a.points, sources: a.sources, period: data.period, status: 'done' as const } : x,
+        ),
       );
-    }, 450);
+    };
+    setTimeout(answer, 450);
   }
 
   /** Back to the whole page; the conversation is cleared. */
   protected endChat(): void {
-    this.#morph(() => this.messages.set([]));
+    this.#morph(() => this.#messages.set([]));
   }
 
   /** A layout change animated as a morph where the browser can (View Transitions), instantly where it can't. */

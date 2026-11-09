@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { html } from 'lit';
@@ -94,6 +94,11 @@ export class NewTopicDialog {
   });
 
   constructor() {
+    // However the dialog closed – Cancel, Escape, or the browser's Back taking `?new=topic` away, which never passes
+    // through #close – it opens clean: a new key, so a different topic isn't refused as a replay of the last one.
+    effect(() => {
+      if (this.open()) untracked(() => this.#reset());
+    });
     effect(() => {
       const me = read(this.#session.me);
       const draft = this.#draft() ?? this.#initial();
@@ -162,11 +167,15 @@ export class NewTopicDialog {
     void this.#router.navigate(commands);
   }
 
-  /** Forget the draft and the created topic, so the next New topic starts clean. */
-  #close(): void {
+  /** Forget the draft, the created topic and the key, so the next New topic starts clean. */
+  #reset(): void {
     this.#draft.set(undefined);
     this.#createdTopic.set(undefined);
     this.#idempotencyKey = newKey();
+  }
+
+  #close(): void {
+    this.#reset();
     this.closed.emit();
   }
 
