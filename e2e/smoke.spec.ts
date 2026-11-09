@@ -275,7 +275,7 @@ test.describe('smoke', () => {
     void errors;
     await page.goto('/partners');
     await page.locator('tc-org-unit-card').filter({ hasText: 'Sandia National Laboratories' }).getByRole('button', { name: 'Open lab' }).click();
-    await expect(page).toHaveURL(/\/partners\/sandia-national-laboratories$/);
+    await expect(page).toHaveURL(/\/partners\/lab-b0a08a946a6c0c55$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Sandia National Laboratories' })).toBeVisible();
     // Still under Partner Labs in the nav
     await expect(page.locator('tc-side-nav').getByRole('link', { name: 'Partner Labs' })).toHaveAttribute('aria-current', 'page');
@@ -545,7 +545,7 @@ test.describe('smoke', () => {
     void errors;
     await page.setViewportSize({ width: 320, height: 800 });
     // Sections switched off in FEATURES open the Summary, so they're left out
-    const paths = ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/partners/sandia-national-laboratories', '/people'];
+    const paths = ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/partners/lab-b0a08a946a6c0c55', '/people'];
     for (const path of paths.filter((p) => FEATURES[p.slice(1) as keyof typeof FEATURES] ?? true)) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');

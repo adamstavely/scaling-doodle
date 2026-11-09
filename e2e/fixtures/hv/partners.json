@@ -1,111 +1,114 @@
 {
-    "papers": 3,
-    "joint": 2,
-    "initiatedByUs": 1,
-    "initiatedByPartners": 1,
-    "labs": [
+  "papers": 3,
+  "joint": 2,
+  "initiatedByUs": 1,
+  "initiatedByPartners": 1,
+  "labs": [
+    {
+      "id": "lab-38cfa86274670ade",
+      "name": "NREL",
+      "joint": 1,
+      "initiatedByUs": 1,
+      "initiatedByThem": 0,
+      "initiatedByOthers": 0,
+      "citations": 21,
+      "views": 33800,
+      "topics": [
         {
-            "name": "NREL",
-            "joint": 1,
-            "initiatedByUs": 1,
-            "initiatedByThem": 0,
-            "initiatedByOthers": 0,
-            "citations": 21,
-            "views": 33800,
-            "topics": [
-                {
-                    "id": "t-carbon",
-                    "name": "Carbon-Negative Materials"
-                }
-            ],
-            "lastPublished": "2026-02-01",
-            "papers": [
-                {
-                    "id": "p5",
-                    "title": "Seawater-Buffered Mineralization for Sub-$80/ton CO\u2082 Capture",
-                    "venue": "Joule",
-                    "published": "2026-02-01",
-                    "topic": {
-                        "id": "t-carbon",
-                        "name": "Carbon-Negative Materials"
-                    },
-                    "initiatedBy": "us",
-                    "initiator": null,
-                    "otherPartners": [
-                        "Scripps Institution of Oceanography"
-                    ],
-                    "citations": 21,
-                    "views": 33800
-                }
-            ]
-        },
-        {
-            "name": "Sandia National Laboratories",
-            "joint": 1,
-            "initiatedByUs": 0,
-            "initiatedByThem": 1,
-            "initiatedByOthers": 0,
-            "citations": 73,
-            "views": 46100,
-            "topics": [
-                {
-                    "id": "t-neuro",
-                    "name": "Neuromorphic Computing"
-                }
-            ],
-            "lastPublished": "2025-11-01",
-            "papers": [
-                {
-                    "id": "p1",
-                    "title": "Sparse Spiking Networks Approach Dense Accuracy at 40\u00d7 Lower Energy",
-                    "venue": "Nature Machine Intelligence",
-                    "published": "2025-11-01",
-                    "topic": {
-                        "id": "t-neuro",
-                        "name": "Neuromorphic Computing"
-                    },
-                    "initiatedBy": "partner",
-                    "initiator": "Sandia National Laboratories",
-                    "otherPartners": [],
-                    "citations": 73,
-                    "views": 46100
-                }
-            ]
-        },
-        {
-            "name": "Scripps Institution of Oceanography",
-            "joint": 1,
-            "initiatedByUs": 1,
-            "initiatedByThem": 0,
-            "initiatedByOthers": 0,
-            "citations": 21,
-            "views": 33800,
-            "topics": [
-                {
-                    "id": "t-carbon",
-                    "name": "Carbon-Negative Materials"
-                }
-            ],
-            "lastPublished": "2026-02-01",
-            "papers": [
-                {
-                    "id": "p5",
-                    "title": "Seawater-Buffered Mineralization for Sub-$80/ton CO\u2082 Capture",
-                    "venue": "Joule",
-                    "published": "2026-02-01",
-                    "topic": {
-                        "id": "t-carbon",
-                        "name": "Carbon-Negative Materials"
-                    },
-                    "initiatedBy": "us",
-                    "initiator": null,
-                    "otherPartners": [
-                        "NREL"
-                    ],
-                    "citations": 21,
-                    "views": 33800
-                }
-            ]
+          "id": "t-carbon",
+          "name": "Carbon-Negative Materials"
         }
-    ]
+      ],
+      "lastPublished": "2026-02-01",
+      "papers": [
+        {
+          "id": "p5",
+          "title": "Seawater-Buffered Mineralization for Sub-$80/ton CO₂ Capture",
+          "venue": "Joule",
+          "published": "2026-02-01",
+          "topic": {
+            "id": "t-carbon",
+            "name": "Carbon-Negative Materials"
+          },
+          "initiatedBy": "us",
+          "initiator": null,
+          "otherPartners": [
+            "Scripps Institution of Oceanography"
+          ],
+          "citations": 21,
+          "views": 33800
+        }
+      ]
+    },
+    {
+      "id": "lab-b0a08a946a6c0c55",
+      "name": "Sandia National Laboratories",
+      "joint": 1,
+      "initiatedByUs": 0,
+      "initiatedByThem": 1,
+      "initiatedByOthers": 0,
+      "citations": 73,
+      "views": 46100,
+      "topics": [
+        {
+          "id": "t-neuro",
+          "name": "Neuromorphic Computing"
+        }
+      ],
+      "lastPublished": "2025-11-01",
+      "papers": [
+        {
+          "id": "p1",
+          "title": "Sparse Spiking Networks Approach Dense Accuracy at 40× Lower Energy",
+          "venue": "Nature Machine Intelligence",
+          "published": "2025-11-01",
+          "topic": {
+            "id": "t-neuro",
+            "name": "Neuromorphic Computing"
+          },
+          "initiatedBy": "partner",
+          "initiator": "Sandia National Laboratories",
+          "otherPartners": [],
+          "citations": 73,
+          "views": 46100
+        }
+      ]
+    },
+    {
+      "id": "lab-aa57b874d71468a9",
+      "name": "Scripps Institution of Oceanography",
+      "joint": 1,
+      "initiatedByUs": 1,
+      "initiatedByThem": 0,
+      "initiatedByOthers": 0,
+      "citations": 21,
+      "views": 33800,
+      "topics": [
+        {
+          "id": "t-carbon",
+          "name": "Carbon-Negative Materials"
+        }
+      ],
+      "lastPublished": "2026-02-01",
+      "papers": [
+        {
+          "id": "p5",
+          "title": "Seawater-Buffered Mineralization for Sub-$80/ton CO₂ Capture",
+          "venue": "Joule",
+          "published": "2026-02-01",
+          "topic": {
+            "id": "t-carbon",
+            "name": "Carbon-Negative Materials"
+          },
+          "initiatedBy": "us",
+          "initiator": null,
+          "otherPartners": [
+            "NREL"
+          ],
+          "citations": 21,
+          "views": 33800
+        }
+      ]
+    }
+  ]
 }
