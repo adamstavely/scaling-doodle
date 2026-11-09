@@ -21,6 +21,10 @@ describe('App', () => {
       | (HTMLElement & { items: { label: string }[]; current: string | null })
       | null;
     expect(nav?.items.map((i) => i.label)).toContain('Papers & Impact');
+    // Switched off in FEATURES for now
+    expect(nav?.items.map((i) => i.label)).not.toContain('People');
+    expect(nav?.items.map((i) => i.label)).not.toContain('Resourcing');
+    expect(nav?.items.map((i) => i.label)).not.toContain('Gaps & Coverage');
     expect(nav?.current).toBe('dashboard');
   });
 });

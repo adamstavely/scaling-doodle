@@ -180,8 +180,8 @@ test.describe('smoke', () => {
     const retried = page.waitForRequest('**/api/search?q=neu*');
     await input.press('Enter');
     await retried;
-    await page.getByRole('link', { name: 'People' }).first().click();
-    await expect(page).toHaveURL(/\/people$/);
+    await page.getByRole('link', { name: 'Partner Labs' }).first().click();
+    await expect(page).toHaveURL(/\/partners$/);
     answer();
     await page.waitForTimeout(300);
     await expect(input).not.toBeFocused();

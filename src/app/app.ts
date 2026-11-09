@@ -14,6 +14,7 @@ import { profileMenuIcon, type ProfileMenuItem } from '@adamstavely/trenchcoat/p
 import type { SideNavItem, SideNavNavigate } from '@adamstavely/trenchcoat/side-nav';
 import type { TermsSection } from '@adamstavely/trenchcoat/terms-dialog';
 import { Apps } from './core/apps';
+import { featureOn } from './core/features';
 import { icon } from './core/icons';
 import { ThemeService } from './core/theme';
 import { SearchBox } from './features/search/search-box';
@@ -85,17 +86,19 @@ export class App {
   /** tc-side-nav keeps the logo in the collapsed rail too. */
   protected readonly brandIcon = brandLogo();
 
-  protected readonly navItems: SideNavItem[] = [
-    // The mockup's order.
-    { id: 'dashboard', label: 'Summary', href: '/', icon: icon('dashboard') },
-    { id: 'org', label: 'Centers & Teams', href: '/org', icon: icon('org') },
-    { id: 'topics', label: 'Research Topics', href: '/topics', icon: icon('topics') },
-    { id: 'gaps', label: 'Gaps & Coverage', href: '/gaps', icon: icon('gaps') },
-    { id: 'resourcing', label: 'Resourcing', href: '/resourcing', icon: icon('resourcing') },
-    { id: 'papers', label: 'Papers & Impact', href: '/papers', icon: icon('papers') },
-    { id: 'partners', label: 'Partner Labs', href: '/partners', icon: icon('partners') },
-    { id: 'people', label: 'People', href: '/people', icon: icon('people') },
-  ];
+  /** The mockup's order, less the sections switched off in FEATURES. */
+  protected readonly navItems: SideNavItem[] = (
+    [
+      { id: 'dashboard', label: 'Summary', href: '/', icon: icon('dashboard') },
+      { id: 'org', label: 'Centers & Teams', href: '/org', icon: icon('org') },
+      { id: 'topics', label: 'Research Topics', href: '/topics', icon: icon('topics') },
+      { id: 'gaps', label: 'Gaps & Coverage', href: '/gaps', icon: icon('gaps') },
+      { id: 'resourcing', label: 'Resourcing', href: '/resourcing', icon: icon('resourcing') },
+      { id: 'papers', label: 'Papers & Impact', href: '/papers', icon: icon('papers') },
+      { id: 'partners', label: 'Partner Labs', href: '/partners', icon: icon('partners') },
+      { id: 'people', label: 'People', href: '/people', icon: icon('people') },
+    ] satisfies SideNavItem[]
+  ).filter((item) => featureOn(item.id));
 
   protected readonly currentNav = toSignal(
     this.#router.events.pipe(
@@ -113,7 +116,12 @@ export class App {
       badge: this.session.viewAs() === value ? 'Current' : undefined,
     })),
     // A switch: the card stays open while it's flipped.
-    { id: THEME_ITEM, label: 'Dark mode', icon: profileMenuIcon('moon'), checked: this.#theme.theme() === 'dark' },
+    {
+      id: THEME_ITEM,
+      label: 'Dark mode',
+      icon: profileMenuIcon('moon'),
+      checked: this.#theme.theme() === 'dark',
+    },
     { id: TERMS_ITEM, label: 'Terms and Conditions', icon: profileMenuIcon('terms') },
   ]);
 
