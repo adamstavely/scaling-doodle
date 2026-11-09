@@ -29,7 +29,7 @@
   /* The links' text, larger than the body's 13px; the side nav's links take their size from it. */
   font-size: 16px;
   /* Room under the collapse button before the first link, and between the links. */
-  --tc-snav-head-gap: var(--tc-space-12);
+  --tc-snav-head-gap: var(--tc-space-6);
   --tc-snav-item-gap: var(--tc-space-2);
   --tc-snav-item-height: 36px;
 }
