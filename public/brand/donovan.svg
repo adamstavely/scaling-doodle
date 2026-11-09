@@ -1,16 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Donovan">
-  <!-- Donovan, INTELLECT's AI: two rounded strokes in an A – the long one sunset orange to violet, the short one blue. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="9 20 160 160" role="img" aria-label="Donovan">
+  <!-- Donovan, INTELLECT's AI: an A of two strokes – the long one rising to a point, sunset orange to violet, and the
+       short one blue, its rounded top in shadow where it crosses the long one. The A's left side is one straight edge. -->
   <defs>
-    <linearGradient id="donovan-long" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0" stop-color="#eba45c" />
-      <stop offset="0.55" stop-color="#d4867a" />
-      <stop offset="1" stop-color="#a45ab4" />
+    <linearGradient id="donovan-long" gradientUnits="userSpaceOnUse" x1="84" y1="35" x2="138" y2="178">
+      <stop offset="0" stop-color="#eda75a" />
+      <stop offset="0.5" stop-color="#d1847c" />
+      <stop offset="1" stop-color="#9f55b2" />
     </linearGradient>
-    <linearGradient id="donovan-short" x1="0.6" y1="0" x2="0.2" y2="1">
-      <stop offset="0" stop-color="#2d4f8f" />
-      <stop offset="1" stop-color="#4ba7d7" />
+    <linearGradient id="donovan-short" gradientUnits="userSpaceOnUse" x1="72" y1="88" x2="44" y2="175">
+      <stop offset="0" stop-color="#1b2f66" />
+      <stop offset="0.35" stop-color="#2c5f9e" />
+      <stop offset="1" stop-color="#4ba9d8" />
     </linearGradient>
   </defs>
-  <line x1="51" y1="15" x2="74" y2="81" stroke="url(#donovan-long)" stroke-width="17" stroke-linecap="round" />
-  <line x1="48" y1="49" x2="31" y2="81" stroke="url(#donovan-short)" stroke-width="17" stroke-linecap="round" />
+  <path d="M90 25 L150.7 147.9 A20 20 0 0 1 113.3 162.1 L92.5 107.8 L75 105 L52.7 97.9 Z" fill="url(#donovan-long)" />
+  <line x1="70.5" y1="107" x2="46" y2="155" stroke="url(#donovan-short)" stroke-width="40" stroke-linecap="round" />
 </svg>
