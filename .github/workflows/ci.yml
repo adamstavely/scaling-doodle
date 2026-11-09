@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  packages: read # @adamstavely/trenchcoat comes from GitHub Packages
 
 jobs:
   ci:
@@ -19,13 +18,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          registry-url: https://npm.pkg.github.com
-          scope: '@adamstavely'
       # npm 11.4 crashes resolving this tree ("reading 'edgesOut'"); match package.json's packageManager.
       - run: npm install -g npm@11.21.2
       - run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run lint:tc
       - run: npm test -- --watch=false
       - run: npm run build
@@ -42,4 +37,3 @@ jobs:
           context: .
           push: false
           tags: intellect-web:ci
-          secrets: npm_token=${{ secrets.GITHUB_TOKEN }}

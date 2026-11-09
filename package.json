@@ -13,12 +13,13 @@
     "prebuild": "npm run api:gen",
     "pretest": "npm run api:gen",
     "lint:tc": "trenchcoat lint src",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "tc:vendor": "scripts/vendor-trenchcoat.sh"
   },
   "private": true,
   "packageManager": "npm@11.21.2",
   "dependencies": {
-    "@adamstavely/trenchcoat": "0.17.7",
+    "@adamstavely/trenchcoat": "file:vendor/adamstavely-trenchcoat-0.17.7.tgz",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",
