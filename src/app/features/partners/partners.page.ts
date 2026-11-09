@@ -1,81 +1,53 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BreakdownChart } from '@adamstavely/trenchcoat/angular/breakdown-chart';
-import { DataTable } from '@adamstavely/trenchcoat/angular/data-table';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
-import { ResultsList } from '@adamstavely/trenchcoat/angular/results-list';
-import { SegmentedBar } from '@adamstavely/trenchcoat/angular/segmented-bar';
+import { OrgUnitCard } from '@adamstavely/trenchcoat/angular/org-unit-card';
 import { Skeleton } from '@adamstavely/trenchcoat/angular/shimmer-loader';
-import type { DataColumn, DataRow } from '@adamstavely/trenchcoat/data-table';
-import type { ResultsOpen } from '@adamstavely/trenchcoat/results-list';
+import type { OrgOpen } from '@adamstavely/trenchcoat/org-unit-card';
+import { orgControllerTree } from '../../api/generated/fn/org/org-controller-tree';
 import { partnersControllerList } from '../../api/generated/fn/partners/partners-controller-list';
-import { LAB_COLUMNS, labRows, partnerBreakdown, partnerPapers, partnerTiles, startedSplit } from '../../core/partners';
+import { topicsControllerList } from '../../api/generated/fn/topics/topics-controller-list';
+import { labCard, partnerTiles, TeamRef } from '../../core/partners';
 import { read, scopedResource } from '../../core/scoped-resource';
-import { Session } from '../../core/session';
 
-/** The labs we publish with: each lab, linked to its own page; joint papers per lab, and who started the work. */
+/**
+ * The labs we publish with, laid out as Centers & Teams is: the joint research across them, then a card per lab with
+ * its joint papers, who started them, and our teams that wrote them – Open lab goes to the lab's own page.
+ */
 @Component({
   selector: 'app-partners-page',
-  imports: [OpsOverview, DataTable, BreakdownChart, SegmentedBar, ResultsList, Skeleton],
+  imports: [OpsOverview, OrgUnitCard, Skeleton],
   templateUrl: './partners.page.html',
   styleUrl: './partners.page.css',
 })
 export class PartnersPage {
   readonly #router = inject(Router);
-  readonly #session = inject(Session);
 
   readonly #partners = scopedResource((api) => api.invoke(partnersControllerList));
+  readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
+  readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
 
-  protected readonly error = computed(() => this.#partners.error());
-  protected readonly ready = computed(() => this.#partners.hasValue());
-  protected readonly scopeLabel = computed(() =>
-    this.#session.viewAs() === 'chief' ? 'Directorate · whole portfolio' : `${read(this.#session.me)?.name ?? ''} · your topics`,
-  );
+  protected readonly error = computed(() => this.#partners.error() ?? this.#topics.error());
+  // The org tree only names the teams, so the cards don't wait on it if it fails.
+  protected readonly ready = computed(() => this.#partners.hasValue() && this.#topics.hasValue() && (this.#org.hasValue() || !!this.#org.error()));
 
-  readonly #data = computed(() => read(this.#partners));
-  protected readonly hasLabs = computed(() => !!this.#data()?.labs.length);
-  protected readonly tiles = computed(() => {
-    const d = this.#data();
-    return d ? partnerTiles(d) : [];
+  readonly #teams = computed(() => {
+    const org = read(this.#org);
+    const all = [...(org?.centers.flatMap((c) => c.teams) ?? []), ...(org?.otherTeams ?? [])];
+    return new Map<string, TeamRef>(all.map((t) => [t.id, { name: t.name, lead: t.lead }]));
   });
-  protected readonly split = computed(() => {
-    const d = this.#data();
-    return d ? startedSplit(d) : [];
+  protected readonly summary = computed(() => {
+    const p = read(this.#partners);
+    return p ? partnerTiles(p) : [];
   });
-  protected readonly breakdown = computed(() => {
-    const d = this.#data();
-    return d ? partnerBreakdown(d) : { records: [], dimensions: [], measures: [] };
-  });
-  protected readonly labColumns = LAB_COLUMNS;
-  protected readonly labs = computed(() => {
-    const d = this.#data();
-    return d ? labRows(d) : [];
-  });
-  /** A lab's name is a link to its page; the table draws the rest. */
-  protected readonly labCell = (row: DataRow, column: DataColumn): Node | undefined => {
-    if (column.key !== 'name') return undefined;
-    const link = Object.assign(document.createElement('a'), { href: `/partners/${row.id}`, textContent: String(row['name']), className: 'lab-link' });
-    // Drawn inside the table, out of reach of this page's styles
-    link.style.color = 'var(--tc-accent-text)';
-    link.style.fontWeight = 'var(--tc-font-weight-medium)';
-    return link;
-  };
+  protected readonly labs = computed(() => (read(this.#partners)?.labs ?? []).map((l) => labCard(l, read(this.#topics) ?? [], this.#teams())));
 
-  protected readonly papers = computed(() => {
-    const d = this.#data();
-    return d ? partnerPapers(d) : [];
-  });
-
-  /** A lab's link opens its page in the app rather than reloading it; a modified click is left to the browser. */
-  protected openLabLink(event: MouseEvent): void {
-    const link = (event.target as Element).closest?.('a.lab-link');
-    if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    void this.#router.navigateByUrl(link.getAttribute('href')!);
+  /** A lab card's Open lab goes to that lab's page. */
+  protected openLab(id: string): void {
+    void this.#router.navigate(['/partners', id]);
   }
 
-  protected openPaper(event: CustomEvent<ResultsOpen>): void {
-    event.preventDefault();
-    void this.#router.navigateByUrl(event.detail.result.href ?? '/papers');
+  protected openTopic(event: CustomEvent<OrgOpen>): void {
+    void this.#router.navigate(['/topics', event.detail.item.id]);
   }
 }

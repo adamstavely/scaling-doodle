@@ -259,22 +259,22 @@ test.describe('smoke', () => {
     await expect(page.locator('tc-org-unit-card')).toHaveCount(11);
   });
 
-  test('partner labs shows each lab and who started the work', async ({ page, errors }) => {
+  test('partner labs shows a card per lab, as Centers & Teams shows centers', async ({ page, errors }) => {
     void errors;
     await page.goto('/partners');
     await expect(page.getByRole('heading', { name: 'Partner Labs' })).toBeVisible();
-    const chart = page.locator('tc-breakdown-chart');
-    await expect(chart).toBeVisible();
-    expect(await chart.evaluate((e) => (e as unknown as { records: unknown[] }).records.length)).toBe(3);
-    await expect(page.locator('tc-results-list')).toContainText('Sparse Spiking Networks');
+    await expect(page.locator('tc-ops-overview')).toBeVisible();
+    const cards = page.locator('tc-org-unit-card');
+    await expect(cards).toHaveCount(3);
+    const sandia = cards.filter({ hasText: 'Sandia National Laboratories' });
+    // Our team that wrote with the lab, with the topic
+    expect(await sandia.evaluate((e) => (e as unknown as { teams: { name: string }[] }).teams.map((t) => t.name))).toEqual(['Cognitive Systems']);
   });
 
-  test('a partner lab page opens from the Labs table and shows that lab', async ({ page, errors }) => {
+  test('a partner lab page opens from its card and shows that lab', async ({ page, errors }) => {
     void errors;
     await page.goto('/partners');
-    const labs = page.locator('tc-data-table');
-    await expect(labs.getByRole('link')).toHaveCount(3);
-    await labs.getByRole('link', { name: 'Sandia National Laboratories' }).click();
+    await page.locator('tc-org-unit-card').filter({ hasText: 'Sandia National Laboratories' }).getByRole('button', { name: 'Open lab' }).click();
     await expect(page).toHaveURL(/\/partners\/sandia-national-laboratories$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Sandia National Laboratories' })).toBeVisible();
     // Still under Partner Labs in the nav

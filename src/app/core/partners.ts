@@ -1,11 +1,11 @@
-import type { BreakdownDimension, BreakdownMeasure, BreakdownRecord } from '@adamstavely/trenchcoat/breakdown-chart';
-import type { DataColumn, DataRow } from '@adamstavely/trenchcoat/data-table';
 import type { OpsTile } from '@adamstavely/trenchcoat/ops-overview';
+import type { OrgHealthCounts, OrgStat, OrgTeam } from '@adamstavely/trenchcoat/org-unit-card';
 import type { SearchResult } from '@adamstavely/trenchcoat/results-list';
 import type { PartnerLabDto } from '../api/generated/models/partner-lab-dto';
 import type { PartnerLabsDto } from '../api/generated/models/partner-labs-dto';
 import type { PartnerPaperDto } from '../api/generated/models/partner-paper-dto';
-import { compactNumber, localDate, percent } from './format';
+import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
+import { compactNumber, localDate, percent, priorityHealth, PRIORITY_TIERS } from './format';
 
 /** Who started a joint paper, from one lab's side, as the page words it. */
 export const STARTED_BY: Record<PartnerPaperDto['initiatedBy'], string> = {
@@ -14,14 +14,7 @@ export const STARTED_BY: Record<PartnerPaperDto['initiatedBy'], string> = {
   'other-partner': 'Another partner started',
 };
 
-/** Ours in the first chart colour (blue), theirs in the sixth (amber) for contrast in both looks, a third lab's neutral. */
-const STARTED_COLORS: Record<string, string> = {
-  [STARTED_BY.us]: 'var(--tc-chart-1)',
-  [STARTED_BY.partner]: 'var(--tc-chart-6)',
-  [STARTED_BY['other-partner']]: 'var(--tc-chart-neutral)',
-};
-
-/** Labs, joint papers, and who started them, across the caller's scope. */
+/** The row above the labs: labs, joint papers, and who started them, across the caller's scope. */
 export function partnerTiles(p: PartnerLabsDto): OpsTile[] {
   const share = (n: number) => (p.joint ? `${percent(n / p.joint)} of joint papers` : 'no joint papers');
   return [
@@ -30,64 +23,6 @@ export function partnerTiles(p: PartnerLabsDto): OpsTile[] {
     { id: 'us', label: 'We started', value: String(p.initiatedByUs), sub: share(p.initiatedByUs) },
     { id: 'them', label: 'Partners started', value: String(p.initiatedByPartners), sub: share(p.initiatedByPartners) },
   ];
-}
-
-/** The overall split of joint papers by who started them, for tc-segmented-bar. */
-export function startedSplit(p: PartnerLabsDto): { label: string; value: number }[] {
-  return [
-    { label: 'We started', value: p.initiatedByUs },
-    { label: 'Partners started', value: p.initiatedByPartners },
-  ];
-}
-
-/**
- * One record per lab per joint paper, for tc-breakdown-chart: bars per lab (or topic), split by who started the work,
- * counting papers or summing their citations. A paper with two partners counts once under each lab.
- */
-export function partnerBreakdown(p: PartnerLabsDto): {
-  records: BreakdownRecord[];
-  dimensions: BreakdownDimension[];
-  measures: BreakdownMeasure[];
-} {
-  const records = p.labs.flatMap((lab) =>
-    lab.papers.map((paper) => ({ lab: lab.name, started: STARTED_BY[paper.initiatedBy], topic: paper.topic.name, citations: paper.citations })),
-  );
-  const topics = [...new Set(records.map((r) => r.topic))].sort();
-  return {
-    records,
-    dimensions: [
-      { key: 'lab', label: 'Lab', values: p.labs.map((l) => l.name) },
-      { key: 'started', label: 'Started by', values: Object.values(STARTED_BY), colors: STARTED_COLORS },
-      { key: 'topic', label: 'Topic', values: topics },
-    ],
-    measures: [
-      { key: 'papers', label: 'Joint papers', unit: 'papers' },
-      { key: 'citations', label: 'Citations', unit: 'citations', field: 'citations' },
-    ],
-  };
-}
-
-/** Every lab's joint papers, grouped under the lab, each saying who started it. */
-export function partnerPapers(p: PartnerLabsDto): SearchResult[] {
-  return p.labs.flatMap((lab) =>
-    lab.papers.map((paper) => ({
-      // A paper with two partners shows under each, so its id here is per lab.
-      id: `${lab.name}|${paper.id}`,
-      title: paper.title,
-      // The list groups by kind, so this puts each paper under its lab.
-      kind: lab.name,
-      source: paper.venue,
-      href: `/papers/${paper.id}`,
-      date: localDate(paper.published),
-      meta: [
-        paper.initiatedBy === 'other-partner' ? `${paper.initiator} started` : STARTED_BY[paper.initiatedBy],
-        paper.topic.name,
-        ...(paper.otherPartners.length ? [`with ${paper.otherPartners.join(', ')}`] : []),
-        `${paper.citations} citations`,
-        `${compactNumber(paper.views)} views`,
-      ],
-    })),
-  );
 }
 
 /**
@@ -106,31 +41,6 @@ export function labSlug(name: string): string {
 /** The lab with that address, if it's in the caller's view. */
 export function findLab(p: PartnerLabsDto, slug: string): PartnerLabDto | undefined {
   return p.labs.find((l) => labSlug(l.name) === slug);
-}
-
-/** The Labs table: a row per lab, most joint papers first as the API gives them; the name links to the lab's page. */
-export const LAB_COLUMNS: DataColumn[] = [
-  { key: 'name', label: 'Lab', type: 'text', width: '280px' },
-  { key: 'joint', label: 'Joint papers', type: 'number' },
-  { key: 'us', label: 'We started', type: 'number' },
-  { key: 'them', label: 'They started', type: 'number' },
-  { key: 'citations', label: 'Citations', type: 'number' },
-  { key: 'topics', label: 'Topics', type: 'number' },
-  // YYYY-MM-DD, so sorting the column sorts by date
-  { key: 'last', label: 'Latest joint paper', type: 'text' },
-];
-
-export function labRows(p: PartnerLabsDto): DataRow[] {
-  return p.labs.map((l) => ({
-    id: labSlug(l.name),
-    name: l.name,
-    joint: l.joint,
-    us: l.initiatedByUs,
-    them: l.initiatedByThem,
-    citations: l.citations,
-    topics: l.topics.length,
-    last: l.lastPublished,
-  }));
 }
 
 /** One lab's joint papers, and who started them, citations and views. */
@@ -173,4 +83,70 @@ export function labPapers(l: PartnerLabDto): SearchResult[] {
       `${compactNumber(paper.views)} views`,
     ],
   }));
+}
+
+/** A topic's health as a card counts it. */
+function healthCounts(topics: TopicSummaryDto[]): OrgHealthCounts {
+  const count = (h: TopicSummaryDto['health']) => topics.filter((t) => t.health === h).length;
+  return { 'on-track': count('healthy'), watch: count('watch'), 'at-risk': count('at-risk') };
+}
+
+/** Our team, as a lab's card lists it: its name and lead, from the org tree. */
+export type TeamRef = { name: string; lead?: { name: string } | null };
+
+/**
+ * One lab → tc-org-unit-card's properties, as Centers & Teams draws a center: its joint research in the stats, the
+ * health of the topics the joint papers are in, and our teams that wrote them, each with those topics and how many
+ * joint papers it has with the lab.
+ */
+export function labCard(l: PartnerLabDto, topics: TopicSummaryDto[], teams: Map<string, TeamRef>) {
+  const ids = new Set(l.topics.map((t) => t.id));
+  const own = topics.filter((t) => ids.has(t.id));
+  const share = (n: number): Partial<OrgStat> => (l.joint ? { sub: `${percent(n / l.joint)} of joint papers`, meter: n / l.joint } : {});
+  const stats: OrgStat[] = [
+    { id: 'joint', label: 'Joint papers', value: String(l.joint), sub: `latest ${shortDate(l.lastPublished)}` },
+    { id: 'us', label: 'We started', value: String(l.initiatedByUs), ...share(l.initiatedByUs) },
+    { id: 'them', label: 'They started', value: String(l.initiatedByThem), ...share(l.initiatedByThem) },
+    ...(l.initiatedByOthers ? [{ id: 'others', label: 'Another partner started', value: String(l.initiatedByOthers), ...share(l.initiatedByOthers) }] : []),
+    { id: 'citations', label: 'Citations', value: compactNumber(l.citations), sub: `${compactNumber(l.views)} views` },
+    { id: 'topics', label: 'Topics', value: String(l.topics.length) },
+  ];
+
+  const byTeam = new Map<string, TopicSummaryDto[]>();
+  for (const t of own) byTeam.set(t.teamId, [...(byTeam.get(t.teamId) ?? []), t]);
+  const papersIn = (teamTopics: TopicSummaryDto[]) => l.papers.filter((p) => teamTopics.some((t) => t.id === p.topic.id)).length;
+  const rows: OrgTeam[] = [...byTeam].map(([id, teamTopics]) => {
+    const team = teams.get(id);
+    return {
+      id,
+      name: team?.name ?? 'Team',
+      lead: team?.lead ? { name: team.lead.name } : undefined,
+      health: healthCounts(teamTopics),
+      coverage: teamTopics.reduce((s, t) => s + t.stats.coverage, 0) / teamTopics.length,
+      gaps: teamTopics.reduce((s, t) => s + t.stats.openGaps, 0),
+      fte: Math.round(teamTopics.reduce((s, t) => s + t.stats.fte, 0) * 10) / 10,
+      figures: [{ id: 'joint', value: String(papersIn(teamTopics)), label: 'joint papers' }],
+      items: teamTopics.map((t) => ({
+        id: t.id,
+        label: t.name,
+        priority: t.bin,
+        tag: PRIORITY_TIERS[t.bin],
+        coverage: t.stats.coverage,
+        open: t.stats.openGaps,
+        // Health points on a 0–100 scale, as a fraction (see the dashboard).
+        momentum: t.momentum / 100,
+        health: priorityHealth(t.health),
+      })),
+    };
+  });
+
+  return {
+    id: labSlug(l.name),
+    heading: l.name,
+    description: `Our joint research since ${shortDate(l.papers.at(-1)?.published ?? l.lastPublished)}`,
+    stats,
+    health: healthCounts(own),
+    teams: rows,
+    actions: [{ id: 'open', label: 'Open lab' }],
+  };
 }

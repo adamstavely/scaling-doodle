@@ -1,5 +1,6 @@
 import type { PartnerLabsDto } from '../api/generated/models/partner-labs-dto';
-import { findLab, labPapers, labRows, labSlug, labStartedSplit, labTiles, partnerBreakdown, partnerPapers, partnerTiles, startedSplit } from './partners';
+import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
+import { findLab, labCard, labPapers, labSlug, labStartedSplit, labTiles, partnerTiles } from './partners';
 
 const paper = (id: string, initiatedBy: 'us' | 'partner' | 'other-partner', initiator: string | null, otherPartners: string[] = []) => ({
   id,
@@ -33,31 +34,6 @@ describe('partners', () => {
       ['We started', '1', '50% of joint papers'],
       ['Partners started', '1', '50% of joint papers'],
     ]);
-    expect(startedSplit(data)).toEqual([
-      { label: 'We started', value: 1 },
-      { label: 'Partners started', value: 1 },
-    ]);
-  });
-
-  it('makes a breakdown record per lab per paper', () => {
-    const b = partnerBreakdown(data);
-    expect(b.records).toEqual([
-      { lab: 'NREL', started: 'We started', topic: 'Carbon', citations: 5 },
-      { lab: 'NREL', started: 'Another partner started', topic: 'Carbon', citations: 5 },
-      { lab: 'Scripps', started: 'They started', topic: 'Carbon', citations: 5 },
-    ]);
-    expect(b.dimensions[0].values).toEqual(['NREL', 'Scripps']);
-  });
-
-  it('lists each lab’s papers under it, saying who started each', () => {
-    const results = partnerPapers(data);
-    expect(results.map((r) => [r.id, r.kind, r.meta?.[0]])).toEqual([
-      ['NREL|p5', 'NREL', 'We started'],
-      ['NREL|p6', 'NREL', 'Scripps started'],
-      ['Scripps|p6', 'Scripps', 'They started'],
-    ]);
-    expect(results[0].meta).toEqual(['We started', 'Carbon', 'with Scripps', '5 citations', '1.2K views']);
-    expect(results[0].href).toBe('/papers/p5');
   });
 });
 
@@ -70,8 +46,38 @@ describe('a partner lab', () => {
     expect(findLab(data, 'nowhere')).toBeUndefined();
   });
 
-  it('is a row of the Labs table, its id the address its name links to', () => {
-    expect(labRows(data)[0]).toEqual({ id: 'nrel', name: 'NREL', joint: 2, us: 1, them: 0, citations: 10, topics: 0, last: '2026-02-01' });
+  it('is a card as Centers & Teams draws a center: stats, the health of its topics, and our teams that wrote with it', () => {
+    const topic = (id: string, teamId: string, health: TopicSummaryDto['health']) =>
+      ({ id, name: id, teamId, health, bin: 1, momentum: -3, stats: { coverage: 0.5, openGaps: 2, fte: 1.5 } }) as unknown as TopicSummaryDto;
+    const nrel = { ...data.labs[0], topics: [{ id: 't-carbon', name: 'Carbon' }] };
+    const card = labCard(nrel, [topic('t-carbon', 'tm-1', 'at-risk'), topic('t-other', 'tm-1', 'healthy')], new Map([['tm-1', { name: 'Materials', lead: { name: 'Sofia Almeida' } }]]));
+    expect(card.id).toBe('nrel');
+    expect(card.heading).toBe('NREL');
+    expect(card.actions).toEqual([{ id: 'open', label: 'Open lab' }]);
+    // Another partner started one of NREL's papers, so that stat shows
+    expect(card.stats.map((s) => [s.label, s.value])).toEqual([
+      ['Joint papers', '2'],
+      ['We started', '1'],
+      ['They started', '0'],
+      ['Another partner started', '1'],
+      ['Citations', '10'],
+      ['Topics', '1'],
+    ]);
+    expect(card.stats[1]).toMatchObject({ sub: '50% of joint papers', meter: 0.5 });
+    // Only the topics the joint papers are in: t-other isn't one
+    expect(card.health).toEqual({ 'on-track': 0, watch: 0, 'at-risk': 1 });
+    expect(card.teams).toEqual([
+      expect.objectContaining({
+        id: 'tm-1',
+        name: 'Materials',
+        lead: { name: 'Sofia Almeida' },
+        coverage: 0.5,
+        gaps: 2,
+        fte: 1.5,
+        figures: [{ id: 'joint', value: '2', label: 'joint papers' }],
+        items: [expect.objectContaining({ id: 't-carbon', priority: 1, health: 'at-risk', momentum: -0.03 })],
+      }),
+    ]);
   });
 
   it('sums its joint papers, who started them, citations and topics', () => {
