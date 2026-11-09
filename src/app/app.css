@@ -24,8 +24,8 @@
   top: var(--app-bar-h);
   align-self: start;
   height: calc(100dvh - var(--app-bar-h));
-  /* A faint low-poly mesh over the lower half (public/brand/nav-mesh.svg fades itself in), on the navy */
-  background: url('/brand/nav-mesh.svg') center bottom / 100% 50% no-repeat, var(--app-chrome);
+  /* A faint low-poly mesh over the lower two thirds or so (public/brand/nav-mesh.svg fades itself in), on the navy */
+  background: url('/brand/nav-mesh.svg') center bottom / 100% 70% no-repeat, var(--app-chrome);
   border-right-color: transparent;
   /* The links' text, larger than the body's 13px; the side nav's links take their size from it. */
   font-size: 16px;
