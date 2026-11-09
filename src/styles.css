@@ -4,7 +4,7 @@
 /* The page canvas: in light mode a navy-tinted white, the side nav's #081d35 taken almost to white, so white cards
    stand off it; dark mode keeps Trench Coat's base surface. */
 :root {
-  --app-canvas: light-dark(#f2f5f9, var(--tc-surface-base));
+  --app-canvas: light-dark(#e9eef4, var(--tc-surface-base));
 }
 
 /* Primary buttons in the nav's navy (#081d35) in light mode; dark mode keeps Trench Coat's, since navy would vanish on
