@@ -24,7 +24,7 @@ import { topicPriorityItem } from '../../core/topics';
 export class PartnerLabPage {
   readonly #router = inject(Router);
 
-  /** The lab's address, from the route: its name as a slug (labSlug). */
+  /** The lab's id, from the route: the API's stable id for it. */
   readonly lab = input.required<string>();
 
   protected readonly tiers = PRIORITY_TIERS;

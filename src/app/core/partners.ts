@@ -26,21 +26,11 @@ export function partnerTiles(p: PartnerLabsDto): OpsTile[] {
 }
 
 /**
- * A lab's address on the site, from its name – labs have no id of their own: "Sandia National Laboratories" →
- * "sandia-national-laboratories".
+ * The lab with that id, if it's in the caller's view. The id is the API's: stable, and distinct for distinct names –
+ * "A+B Research" and "A B Research" are two labs with two pages.
  */
-export function labSlug(name: string): string {
-  return name
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
-/** The lab with that address, if it's in the caller's view. */
-export function findLab(p: PartnerLabsDto, slug: string): PartnerLabDto | undefined {
-  return p.labs.find((l) => labSlug(l.name) === slug);
+export function findLab(p: PartnerLabsDto, id: string): PartnerLabDto | undefined {
+  return p.labs.find((l) => l.id === id);
 }
 
 /** One lab's joint papers, and who started them, citations and views. */
@@ -151,7 +141,7 @@ export function labCard(l: PartnerLabDto, topics: TopicSummaryDto[], teams: Map<
   });
 
   return {
-    id: labSlug(l.name),
+    id: l.id,
     heading: l.name,
     description: `Our joint research since ${shortDate(l.papers.at(-1)?.published ?? l.lastPublished)}`,
     stats,

@@ -1,6 +1,6 @@
 import type { PartnerLabsDto } from '../api/generated/models/partner-labs-dto';
 import type { TopicSummaryDto } from '../api/generated/models/topic-summary-dto';
-import { findLab, gapCoverage, labCard, labPapers, labSlug, labStartedSplit, labTiles, partnerTiles } from './partners';
+import { findLab, gapCoverage, labCard, labPapers, labStartedSplit, labTiles, partnerTiles } from './partners';
 
 const paper = (id: string, initiatedBy: 'us' | 'partner' | 'other-partner', initiator: string | null, otherPartners: string[] = []) => ({
   id,
@@ -21,8 +21,8 @@ const data: PartnerLabsDto = {
   initiatedByUs: 1,
   initiatedByPartners: 1,
   labs: [
-    { name: 'NREL', joint: 2, initiatedByUs: 1, initiatedByThem: 0, initiatedByOthers: 1, citations: 10, views: 2400, topics: [], lastPublished: '2026-02-01', papers: [paper('p5', 'us', null, ['Scripps']), paper('p6', 'other-partner', 'Scripps', ['Scripps'])] },
-    { name: 'Scripps', joint: 1, initiatedByUs: 0, initiatedByThem: 1, initiatedByOthers: 0, citations: 5, views: 1200, topics: [], lastPublished: '2026-02-01', papers: [paper('p6', 'partner', 'Scripps', ['NREL'])] },
+    { id: 'lab-nrel', name: 'NREL', joint: 2, initiatedByUs: 1, initiatedByThem: 0, initiatedByOthers: 1, citations: 10, views: 2400, topics: [], lastPublished: '2026-02-01', papers: [paper('p5', 'us', null, ['Scripps']), paper('p6', 'other-partner', 'Scripps', ['Scripps'])] },
+    { id: 'lab-scripps', name: 'Scripps', joint: 1, initiatedByUs: 0, initiatedByThem: 1, initiatedByOthers: 0, citations: 5, views: 1200, topics: [], lastPublished: '2026-02-01', papers: [paper('p6', 'partner', 'Scripps', ['NREL'])] },
   ],
 };
 
@@ -38,12 +38,11 @@ describe('partners', () => {
 });
 
 describe('a partner lab', () => {
-  it('has an address from its name, which finds it again', () => {
-    expect(labSlug('Sandia National Laboratories')).toBe('sandia-national-laboratories');
-    expect(labSlug('Scripps Institution of Oceanography')).toBe('scripps-institution-of-oceanography');
-    expect(labSlug('  École Polytechnique (EPFL) ')).toBe('ecole-polytechnique-epfl');
-    expect(findLab(data, 'scripps')?.name).toBe('Scripps');
-    expect(findLab(data, 'nowhere')).toBeUndefined();
+  it('is found by the API id, not its name – labs whose names differ only in punctuation stay apart', () => {
+    expect(findLab(data, 'lab-scripps')?.name).toBe('Scripps');
+    expect(findLab(data, 'scripps')).toBeUndefined();
+    const twins = { ...data, labs: [{ ...data.labs[0], id: 'lab-1', name: 'A+B Research' }, { ...data.labs[0], id: 'lab-2', name: 'A B Research' }] };
+    expect(findLab(twins, 'lab-2')?.name).toBe('A B Research');
   });
 
   it('is a card as Centers & Teams draws a center: stats, the health of its topics, and our teams that wrote with it', () => {
@@ -51,7 +50,7 @@ describe('a partner lab', () => {
       ({ id, name: id, teamId, health, bin: 1, momentum: -3, stats: { coverage: 0.5, openGaps: 2, fte: 1.5 } }) as unknown as TopicSummaryDto;
     const nrel = { ...data.labs[0], topics: [{ id: 't-carbon', name: 'Carbon' }] };
     const card = labCard(nrel, [topic('t-carbon', 'tm-1', 'at-risk'), topic('t-other', 'tm-1', 'healthy')], new Map([['tm-1', { name: 'Materials', lead: { name: 'Sofia Almeida' } }]]));
-    expect(card.id).toBe('nrel');
+    expect(card.id).toBe('lab-nrel');
     expect(card.heading).toBe('NREL');
     expect(card.actions).toEqual([{ id: 'open', label: 'Open lab' }]);
     // Another partner started one of NREL's papers, so that stat shows
