@@ -49,12 +49,12 @@
 }
 
 /* A step up from the page's controls, in scale with the bar: the bell, the app picker and the avatar button at 32px,
-   the avatar's face at 28px. Each Trench Coat element sets the tokens for itself (data-look), so they're set on each. */
-.topbar tc-header-nav,
-.topbar tc-notifications,
-.topbar tc-app-picker {
-  --tc-control-h-md: 32px;
-  --tc-control-h-sm: 28px;
+   their icons at 20px, the avatar at 28px with 13px initials. Set on the header nav, they reach the bell and picker. */
+.topbar tc-header-nav {
+  --tc-hn-trigger-size: 32px;
+  --tc-hn-icon-size: 20px;
+  --tc-hn-face-size: 28px;
+  --tc-hn-initials-size: 13px;
 }
 
 /* INTELLECT and its logo, large. */
