@@ -503,6 +503,23 @@ test.describe('smoke', () => {
     await expect(page.getByText('has no teams, topics or papers yet')).toHaveCount(0);
   });
 
+  test('a center page keeps a place for the logo left of its code and name, filled when it has one', async ({ page, errors }) => {
+    void errors;
+    const org = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/org.json'), 'utf8'));
+    await page.route('**/api/org', (route) => route.fulfill({ json: org }));
+    await page.goto('/centers/c-cci');
+    const logo = page.locator('.identity .logo');
+    const name = page.getByRole('heading', { level: 1, name: 'Center for Cyber Intelligence' });
+    await expect(name).toBeVisible();
+    // No logo yet: the placeholder tile holds the space, left of the name
+    await expect(logo).toHaveClass(/logo--empty/);
+    expect((await logo.boundingBox())!.x + 56).toBeLessThan((await name.boundingBox())!.x);
+    // With one, it shows there
+    org.centers.find((c: { id: string }) => c.id === 'c-cci').logo = '/brand/donovan.svg';
+    await page.reload();
+    await expect(page.locator('.identity .logo img')).toHaveAttribute('src', '/brand/donovan.svg');
+  });
+
   test('people lists the roster', async ({ page, errors }) => {
     void errors;
     test.skip(!FEATURES.people, 'People is switched off');

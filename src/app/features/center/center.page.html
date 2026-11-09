@@ -3,7 +3,20 @@
 } @else if (ready()) {
   @if (center(); as c) {
     <header class="page-head">
-      <div>
+      <div class="identity">
+        <!-- The center's logo beside its code and name; until it has one, a tile holds the place -->
+        <div class="logo" [class.logo--empty]="!c.logo">
+          @if (c.logo) {
+            <img [src]="c.logo" alt="" />
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+              <path d="M10 6h4M10 10h4M10 14h4M10 18h4" />
+            </svg>
+          }
+        </div>
         <p class="eyebrow">{{ c.code ?? 'Mission center' }}</p>
         <div class="title">
           <h1>{{ c.name }}</h1>
