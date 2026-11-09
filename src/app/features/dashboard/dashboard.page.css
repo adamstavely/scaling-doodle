@@ -12,7 +12,7 @@
   gap: var(--tc-space-4);
 }
 
-/* The heading with the as-of date beside it, a size smaller, on one baseline */
+/* The heading with the as-of date beside it, well smaller, on one baseline */
 .title {
   display: flex;
   align-items: baseline;
@@ -20,7 +20,7 @@
   gap: var(--tc-space-3);
 }
 .as-of {
-  font-size: var(--tc-font-size-xl);
+  font-size: var(--tc-font-size-lg);
   color: var(--tc-text-muted);
   font-variant-numeric: tabular-nums;
 }
