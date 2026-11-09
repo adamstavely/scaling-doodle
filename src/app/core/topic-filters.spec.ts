@@ -43,8 +43,22 @@ describe('topic filters', () => {
 
   it('round-trips through the URL, dropping what is not in use', () => {
     const f = { ...NO_FILTERS, q: 'quantum', priority: ['1', '2'], region: ['c-nemc'] };
-    expect(filterParams(f)).toEqual({ q: 'quantum', priority: '1,2', type: null, region: 'c-nemc', subject: null });
-    expect(parseFilters({ q: 'quantum', priority: '1,2', region: 'c-nemc' })).toEqual(f);
+    expect(filterParams(f)).toEqual({ q: 'quantum', priority: ['1', '2'], type: null, region: ['c-nemc'], subject: null });
+    expect(parseFilters({ q: 'quantum', priority: ['1', '2'], region: 'c-nemc' })).toEqual(f);
     expect(facetValue(f)).toEqual({ priority: ['1', '2'], region: ['c-nemc'] });
+  });
+
+  it('keeps a subject with a comma in it as one pick', () => {
+    const f = { ...NO_FILTERS, subject: ['climate,policy'] };
+    expect(parseFilters(filterParams(f) as Record<string, string[]>)).toEqual(f);
+  });
+
+  it('reads a hand-edited URL without failing: repeats, unknown values, empties', () => {
+    expect(parseFilters({ q: ['a', 'b'], priority: ['1', '2', '2', '9', ''], type: ['national', 'bogus'], region: '' })).toEqual({
+      ...NO_FILTERS,
+      q: 'a',
+      priority: ['1', '2'],
+      type: ['national'],
+    });
   });
 });

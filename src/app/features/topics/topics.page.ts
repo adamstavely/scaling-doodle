@@ -11,7 +11,7 @@ import { topicsControllerList } from '../../api/generated/fn/topics/topics-contr
 import { PRIORITY_TIERS } from '../../core/format';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
-import { facetValue, filterParams, filterTopics, parseFilters, TopicFilters, topicFacets } from '../../core/topic-filters';
+import { facetValue, filterParams, filterTopics, parseFilters, QueryParam, TopicFilters, topicFacets } from '../../core/topic-filters';
 import { topicPriorityItem } from '../../core/topics';
 import { NewTopicDialog } from '../dialogs/new-topic-dialog';
 
@@ -31,12 +31,15 @@ export class TopicsPage {
 
   /** `?new=topic` opens the New Topic dialog, as on the dashboard. */
   readonly newParam = input<string | undefined>(undefined, { alias: 'new' });
-  /** The filters, from the query params: `?q=quantum&priority=1,2&type=national&region=c-nemc&subject=climate` */
-  readonly q = input<string>();
-  readonly priority = input<string>();
-  readonly type = input<string>();
-  readonly region = input<string>();
-  readonly subject = input<string>();
+  /**
+   * The filters, from the query params: `?q=quantum&priority=1&priority=2&type=national&region=c-nemc&subject=climate`.
+   * Each may come once or repeated, whatever the URL says, so parseFilters checks them.
+   */
+  readonly q = input<QueryParam>();
+  readonly priority = input<QueryParam>();
+  readonly type = input<QueryParam>();
+  readonly region = input<QueryParam>();
+  readonly subject = input<QueryParam>();
 
   readonly #topics = scopedResource((api) => api.invoke(topicsControllerList, { sort: 'risk' }));
   readonly #org = scopedResource((api) => api.invoke(orgControllerTree));
@@ -61,6 +64,13 @@ export class TopicsPage {
     const all = this.#all().length;
     const shown = this.#shown().length;
     return shown === all ? 'Grouped by priority, most at risk first' : `${shown} of ${all} topics · grouped by priority, most at risk first`;
+  });
+  /** The result announcement: the count of topics left, or that none match. */
+  protected readonly resultStatus = computed(() => {
+    const all = this.#all().length;
+    const shown = this.#shown().length;
+    if (!shown && all) return 'No topics match. Change the search or clear a filter.';
+    return shown === all ? `Showing all ${all} topics` : `Showing ${shown} of ${all} topics`;
   });
   protected readonly scopeLabel = computed(() =>
     this.#session.viewAs() === 'chief' ? 'Directorate · all topics' : `${read(this.#session.me)?.name ?? ''} · your topics`,

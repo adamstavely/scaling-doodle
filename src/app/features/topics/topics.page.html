@@ -11,6 +11,8 @@
 @if (error()) {
   <p role="alert" class="note">Couldn't load the topics. Is intellect-api running?</p>
 } @else if (ready()) {
+  <!-- What the filters left, said to screen readers as it changes, since focus stays in the search box or filters -->
+  <p class="visually-hidden" role="status">{{ resultStatus() }}</p>
   <div class="layout">
     <tc-facet-sidebar
       search-label="Search topics"

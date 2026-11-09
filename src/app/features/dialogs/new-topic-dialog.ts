@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { html } from 'lit';
 import { Dialog } from '@adamstavely/trenchcoat/angular/dialog';
@@ -16,6 +17,9 @@ import { PRIORITY_TIERS } from '../../core/format';
 import { read, scopedResource } from '../../core/scoped-resource';
 import { Session } from '../../core/session';
 import { createBody, EMPTY_TOPIC, NewTopicValues, newTopicSteps, previewItem, teamOptions } from './new-topic';
+
+/** A fresh Idempotency-Key: 128 random bits as hex (crypto.randomUUID needs HTTPS; this works on plain HTTP too). */
+const newKey = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('');
 
 @Component({
   selector: 'app-new-topic-dialog',
@@ -71,6 +75,11 @@ export class NewTopicDialog {
   /** What's been entered so far, for the live preview. */
   readonly #draft = signal<NewTopicValues | undefined>(undefined);
   readonly #createdTopic = signal<TopicDetailDto | undefined>(undefined);
+  /**
+   * The Idempotency-Key for this New Topic: one per opening, kept across Create's retries, so a retry after the topic
+   * was saved but the answer was lost finishes that topic instead of making a second.
+   */
+  #idempotencyKey = newKey();
 
   /**
    * The live preview. tc-dialog redraws its whole content when the template changes, which would rebuild the form
@@ -132,11 +141,18 @@ export class NewTopicDialog {
 
   async #create(values: NewTopicValues, teams: ReturnType<typeof teamOptions>, me: { id: string; role: string }) {
     try {
-      const topic = await this.#api.invoke(topicsControllerCreate, { body: createBody(values, teams, me) });
+      const topic = await this.#api.invoke(topicsControllerCreate, {
+        'idempotency-key': this.#idempotencyKey,
+        body: createBody(values, teams, me),
+      });
       this.#createdTopic.set(topic);
       this.created.emit(topic);
-    } catch {
+    } catch (e) {
       // tc-stepper-form shows a thrown message beside Finish, which retries.
+      if (e instanceof HttpErrorResponse && e.status === 409) {
+        // An earlier try saved the topic, and the details have changed since: the key can't make a second one
+        throw new Error('This topic was already saved with the earlier details. Close this to find it under Research Topics.');
+      }
       throw new Error("Couldn't create the topic. Check the details and try again.");
     }
   }
@@ -150,6 +166,7 @@ export class NewTopicDialog {
   #close(): void {
     this.#draft.set(undefined);
     this.#createdTopic.set(undefined);
+    this.#idempotencyKey = newKey();
     this.closed.emit();
   }
 

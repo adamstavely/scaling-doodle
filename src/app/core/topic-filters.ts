@@ -82,19 +82,29 @@ export function facetValue(f: TopicFilters): FacetValues {
   return Object.fromEntries(TOPIC_FACETS.filter((id) => f[id].length).map((id) => [id, f[id]]));
 }
 
-/** The filters as query params – comma-separated picks, null for a facet not in use, so the URL drops it. */
-export function filterParams(f: TopicFilters): Record<keyof TopicFilters, string | null> {
-  const list = (v: string[]) => (v.length ? v.join(',') : null);
+/**
+ * The filters as query params – a facet's picks repeat the param (`?subject=climate&subject=policy`), so a pick may hold
+ * any character, commas included; null for a facet not in use, so the URL drops it.
+ */
+export function filterParams(f: TopicFilters): Record<keyof TopicFilters, string | string[] | null> {
+  const list = (v: string[]) => (v.length ? v : null);
   return { q: f.q || null, priority: list(f.priority), type: list(f.type), region: list(f.region), subject: list(f.subject) };
 }
 
-/** Query params back into filters. */
-export function parseFilters(params: Partial<Record<keyof TopicFilters, string | undefined>>): TopicFilters {
-  const list = (v?: string) => (v ? v.split(',').filter(Boolean) : []);
+/** A query param as the router gives it: absent, once, or repeated. */
+export type QueryParam = string | string[] | undefined;
+
+/**
+ * Query params back into filters. Anything may arrive in a hand-edited URL, so a param is read as a list either way,
+ * a repeated search keeps its first, and a priority or priority type that doesn't exist is dropped.
+ */
+export function parseFilters(params: Partial<Record<keyof TopicFilters, QueryParam>>): TopicFilters {
+  const list = (v: QueryParam, allowed?: Record<string, unknown>) =>
+    [...new Set(v === undefined ? [] : [v].flat())].filter((x) => typeof x === 'string' && x !== '' && (!allowed || Object.hasOwn(allowed, x)));
   return {
-    q: params.q ?? '',
-    priority: list(params.priority),
-    type: list(params.type),
+    q: list(params.q)[0] ?? '',
+    priority: list(params.priority, PRIORITY_TIERS),
+    type: list(params.type, PRIORITY_TYPES),
     region: list(params.region),
     subject: list(params.subject),
   };
