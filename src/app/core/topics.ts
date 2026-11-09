@@ -78,18 +78,32 @@ function contributingCenters(papers: PaperListItemDto[]): string[] {
 }
 
 /**
- * Each topic's bar label: its name, numbered from the second on when names repeat – "Grid Storage", "Grid Storage (2)" –
- * since the chart makes one bar per label, and two topics under one name would merge into one bar.
+ * Each topic's bar label, one per topic id: its name, numbered from the second on when names repeat – "Grid Storage",
+ * "Grid Storage (2)" – since the chart makes one bar per label, and two topics under one label would merge into one bar
+ * that opens only one of them. A number another topic's name already uses is skipped: "AI", "AI", "AI (2)" label as
+ * "AI", "AI (3)", "AI (2)".
  */
 function barLabels(topics: TopicSummaryDto[]): Map<string, string> {
-  const seen = new Map<string, number>();
-  return new Map(
-    topics.map((t) => {
-      const n = (seen.get(t.name) ?? 0) + 1;
-      seen.set(t.name, n);
-      return [t.id, n === 1 ? t.name : `${t.name} (${n})`];
-    }),
-  );
+  const used = new Set<string>();
+  const labels = new Map<string, string>();
+  // Names as given go first, so a topic named "AI (2)" keeps its name and the numbering works around it
+  const firsts = new Set<string>();
+  for (const t of topics) {
+    if (!used.has(t.name)) {
+      used.add(t.name);
+      firsts.add(t.id);
+      labels.set(t.id, t.name);
+    }
+  }
+  for (const t of topics) {
+    if (firsts.has(t.id)) continue;
+    let n = 2;
+    while (used.has(`${t.name} (${n})`)) n++;
+    const label = `${t.name} (${n})`;
+    used.add(label);
+    labels.set(t.id, label);
+  }
+  return labels;
 }
 
 /**

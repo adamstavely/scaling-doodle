@@ -76,6 +76,21 @@ test.describe('smoke', () => {
     await filters.getByRole('checkbox', { name: /^P1 · Flagship/ }).click();
     await filters.getByRole('checkbox', { name: /^climate/ }).click();
     await expect.poll(names).toEqual(['Carbon-Negative Materials', 'Climate Resilience Modeling', 'Wildfire Prediction Systems']);
+    // Several picks repeat the param, and the count is said to screen readers
+    await expect(page).toHaveURL(/subject=climate/);
+    await expect(page.getByRole('status').filter({ hasText: 'Showing 3 of 12 topics' })).toBeAttached();
+    await filters.getByRole('searchbox', { name: 'Search topics' }).fill('zzz-nothing');
+    await expect(page.getByRole('status').filter({ hasText: 'No topics match' })).toBeAttached();
+  });
+
+  test('research topics reads a hand-edited URL: repeated params, unknown values', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/topics?priority=1&priority=2&priority=9&type=bogus&q=a&q=b');
+    const list = page.locator('tc-priority-list');
+    const bins = () => list.evaluate((e) => (e as unknown as { items: { priority: number }[] }).items.map((i) => i.priority));
+    await expect.poll(async () => (await bins()).length).toBeGreaterThan(0);
+    expect((await bins()).every((b) => b === 1 || b === 2)).toBe(true);
+    await expect(page.locator('tc-facet-sidebar').getByRole('searchbox', { name: 'Search topics' })).toHaveValue('a');
   });
 
   test('gaps and coverage lists every gap still open, with what is invested', async ({ page, errors }) => {
@@ -299,6 +314,37 @@ test.describe('smoke', () => {
     expect([...chosen].sort()).toEqual(['Center', 'Priority', 'Priority type', 'Team']);
     await form.getByRole('button', { name: 'Continue' }).click();
     await expect(form.getByText('How is it funded?')).toBeVisible();
+  });
+
+  test('New Topic retries with the same Idempotency-Key, so a lost answer makes no second topic', async ({ page, errors }) => {
+    const keys: (string | undefined)[] = [];
+    const created = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/topics_t-neuro.json'), 'utf8'));
+    await page.route('**/api/topics', async (route) => {
+      if (route.request().method() !== 'POST') return route.fallback();
+      keys.push(route.request().headers()['idempotency-key']);
+      // The first answer is lost; the retry gets the topic
+      await (keys.length === 1 ? route.fulfill({ status: 500, json: {} }) : route.fulfill({ status: 201, json: created }));
+    });
+    await page.goto('/topics?new=topic');
+    const form = page.locator('tc-dialog tc-stepper-form');
+    await form.getByRole('textbox').first().fill('Quantum Networking');
+    await form.getByRole('button', { name: 'Continue' }).click();
+    await expect(form.getByText('Where does it sit?')).toBeVisible();
+    // Priority and type start picked; a center, then one of its teams
+    await form.getByRole('radiogroup', { name: 'Center' }).getByRole('radio').first().click();
+    await form.getByRole('radiogroup', { name: 'Team' }).getByRole('radio').first().click();
+    const finish = form.getByRole('button', { name: 'Create topic' });
+    for (let i = 0; i < 5 && !(await finish.isVisible()); i++) await form.getByRole('button', { name: 'Continue' }).click();
+    await finish.click();
+    await expect(form.getByRole('alert')).toContainText("Couldn't create the topic");
+    await finish.click();
+    await expect(page.getByText('Topic created')).toBeVisible();
+    expect(keys).toHaveLength(2);
+    expect(keys[0]).toMatch(/^[0-9a-f]{32}$/);
+    expect(keys[1]).toBe(keys[0]);
+    // The browser logs the 500 the test made; that one is expected
+    expect(errors).toEqual([expect.stringContaining('status of 500')]);
+    errors.length = 0;
   });
 
   test('a follow-up to Donovan turns the Summary into a chat, and Back returns the page', async ({ page, errors }) => {

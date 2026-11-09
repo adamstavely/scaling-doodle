@@ -95,6 +95,19 @@ describe('topics that share a name', () => {
       { id: 'g2', x: 'Grid Storage (2)', center: 'CCI', y: 200 },
     ]);
   });
+
+  it('skip a number another topic is already named with', () => {
+    const named = (id: string, name: string) => ({ id, name, bin: 1 }) as unknown as TopicSummaryDto;
+    const [readership] = priorityMetricCharts(
+      [named('a1', 'AI'), named('a2', 'AI'), named('a3', 'AI (2)')],
+      [withViews('a1', 100), withViews('a2', 200), withViews('a3', 300)],
+    );
+    expect(readership.bars.map((b) => [b.id, b.x, b.y])).toEqual([
+      ['a1', 'AI', 100],
+      ['a2', 'AI (3)', 200],
+      ['a3', 'AI (2)', 300],
+    ]);
+  });
 });
 
 describe('papers whose authors are in no center', () => {
