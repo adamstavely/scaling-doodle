@@ -9,6 +9,17 @@
   <tc-ops-overview heading="Joint research" [tiles]="tiles()"></tc-ops-overview>
 
   @if (hasLabs()) {
+    <!-- Every lab, each name opening the lab's own page -->
+    <tc-data-table
+      heading="Labs"
+      readonly
+      [selectable]="false"
+      [columns]="labColumns"
+      [rows]="labs()"
+      [renderCell]="labCell"
+      (click)="openLabLink($event)"
+    ></tc-data-table>
+
     <div class="grid">
       <tc-breakdown-chart
         heading="Joint papers by lab"
