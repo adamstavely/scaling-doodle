@@ -10,27 +10,8 @@
   font-weight: var(--tc-font-weight-semibold);
   color: var(--tc-text-strong);
 }
-.eyebrow {
-  margin: 0 0 var(--tc-space-1);
-  font-size: var(--tc-font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--tc-text-muted);
-}
+.page-head p,
 .note {
-  margin: 0;
+  margin: var(--tc-space-1) 0 0;
   color: var(--tc-text-secondary);
 }
-
-.grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
-  gap: var(--tc-space-4);
-  align-items: start;
-}
-@media (max-width: 1100px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-

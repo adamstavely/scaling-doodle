@@ -1,49 +1,30 @@
 <header class="page-head">
-  <p class="eyebrow">{{ scopeLabel() }}</p>
   <h1>Partner Labs</h1>
+  <p>Each lab rolls up our joint papers with it, and the teams that wrote them. Open a lab to see its papers.</p>
 </header>
 
 @if (error()) {
   <p role="alert" class="note">Couldn't load partner labs. Is intellect-api running?</p>
 } @else if (ready()) {
-  <tc-ops-overview heading="Joint research" [tiles]="tiles()"></tc-ops-overview>
-
-  @if (hasLabs()) {
-    <!-- Every lab, each name opening the lab's own page -->
-    <tc-data-table
-      heading="Labs"
-      readonly
-      [selectable]="false"
-      [columns]="labColumns"
-      [rows]="labs()"
-      [renderCell]="labCell"
-      (click)="openLabLink($event)"
-    ></tc-data-table>
-
-    <div class="grid">
-      <tc-breakdown-chart
-        heading="Joint papers by lab"
-        fill
-        [records]="breakdown().records"
-        [dimensions]="breakdown().dimensions"
-        [measures]="breakdown().measures"
-        slice="lab"
-        segment="started"
-      ></tc-breakdown-chart>
-
-      <tc-segmented-bar
-        heading="Who started our joint work"
-        description="Joint papers we took to a partner lab, and ones a lab brought to us"
-        [highlight]="'We started'"
-        sort="false"
-        [data]="split()"
-      ></tc-segmented-bar>
-    </div>
-
-    <tc-results-list heading="Joint papers by lab" group="kind" plural-kinds="false" [results]="papers()" (tc-open)="openPaper($event)"></tc-results-list>
-  } @else {
-    <p class="note">No joint papers yet. Papers written with a partner lab show here.</p>
+  @if (summary().length) {
+    <tc-ops-overview heading="Joint research at a glance" [tiles]="summary()"></tc-ops-overview>
+  }
+  @for (l of labs(); track l.id) {
+    <tc-org-unit-card
+      [id]="l.id"
+      [heading]="l.heading"
+      [description]="l.description"
+      [stats]="l.stats"
+      [health]="l.health"
+      [teams]="l.teams"
+      [actions]="l.actions"
+      (tc-action)="openLab(l.id)"
+      (tc-open)="openTopic($event)"
+    ></tc-org-unit-card>
+  } @empty {
+    <p class="note">No joint papers yet. Labs we write papers with show here.</p>
   }
 } @else {
-  <tc-skeleton height="560" radius="12"></tc-skeleton>
+  <tc-skeleton height="320" radius="12"></tc-skeleton>
+  <tc-skeleton height="320" radius="12"></tc-skeleton>
 }
