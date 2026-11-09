@@ -28,8 +28,10 @@
   border-right-color: transparent;
   /* The links' text, larger than the body's 13px; the side nav's links take their size from it. */
   font-size: 16px;
+  /* A little narrower than Trench Coat's 248px; still room for the longest link at 16px. */
+  --tc-snav-width: 220px;
   /* Room under the collapse button before the first link, and between the links. */
-  --tc-snav-head-gap: var(--tc-space-6);
+  --tc-snav-head-gap: var(--tc-space-3);
   --tc-snav-item-gap: var(--tc-space-2);
   --tc-snav-item-height: 36px;
 }
