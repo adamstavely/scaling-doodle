@@ -22,19 +22,6 @@
           <h1>{{ c.name }}</h1>
           <span class="as-of">{{ asOf() }}</span>
         </div>
-        @if (c.lead || c.focus) {
-          <p class="about">
-            @if (c.lead) {
-              <span>Led by {{ c.lead.name }}</span>
-            }
-            @if (c.lead && c.focus) {
-              <span aria-hidden="true"> · </span>
-            }
-            @if (c.focus) {
-              <span>{{ c.focus }}</span>
-            }
-          </p>
-        }
       </div>
       <tc-select label="Time frame" label-visible label-placement="start" align="end" [options]="periodChoices" [value]="period()" (tc-value-change)="onPeriodChange($event)"></tc-select>
     </header>
