@@ -48,6 +48,15 @@
   background: var(--app-chrome);
 }
 
+/* A step up from the page's controls, in scale with the bar: the bell, the app picker and the avatar button at 32px,
+   the avatar's face at 28px. Each Trench Coat element sets the tokens for itself (data-look), so they're set on each. */
+.topbar tc-header-nav,
+.topbar tc-notifications,
+.topbar tc-app-picker {
+  --tc-control-h-md: 32px;
+  --tc-control-h-sm: 28px;
+}
+
 /* INTELLECT and its logo, large. */
 .brand {
   justify-self: start;

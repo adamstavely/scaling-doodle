@@ -44,6 +44,11 @@ const SEARCH_FAILED: CommandMenuGroup = {
       display: block;
       width: min(420px, 40vw);
     }
+    /* At the top bar's 32px, with the bell, the app picker and the avatar */
+    tc-command-menu {
+      --tc-control-h-md: 32px;
+      --tc-control-h-sm: 28px;
+    }
     /* On a narrow screen the search has its own row across the top bar */
     @media (max-width: 640px) {
       :host {
