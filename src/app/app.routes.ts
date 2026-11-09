@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { whenOn } from './core/features';
 
 export const routes: Routes = [
   {
@@ -18,11 +19,13 @@ export const routes: Routes = [
   },
   {
     path: 'gaps',
+    canMatch: [whenOn('gaps')],
     title: 'Gaps & Coverage · INTELLECT',
     loadComponent: () => import('./features/gaps/gaps.page').then((m) => m.GapsPage),
   },
   {
     path: 'resourcing',
+    canMatch: [whenOn('resourcing')],
     title: 'Resourcing · INTELLECT',
     loadComponent: () => import('./features/resourcing/resourcing.page').then((m) => m.ResourcingPage),
   },
@@ -53,6 +56,7 @@ export const routes: Routes = [
   },
   {
     path: 'people',
+    canMatch: [whenOn('people')],
     title: 'People · INTELLECT',
     loadComponent: () => import('./features/people/people.page').then((m) => m.PeoplePage),
   },

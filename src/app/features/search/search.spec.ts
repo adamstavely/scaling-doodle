@@ -11,9 +11,12 @@ const results = {
   people: [{ id: 'mo', label: 'Marcus Okonkwo', detail: 'PI', topicId: null, score: 1 }],
 } as unknown as SearchResultsDto;
 
+/** Every feature switched on, whatever FEATURES says today */
+const allOn = () => true;
+
 describe('search', () => {
   it('groups hits by kind, each command with its own id', () => {
-    expect(searchGroups(results)).toEqual([
+    expect(searchGroups(results, allOn)).toEqual([
       { id: 'topics', label: 'Topics', commands: [{ id: 'topics:t-neuro', label: 'Neuromorphic Computing', hint: 'at-risk' }] },
       {
         id: 'gaps',
@@ -29,17 +32,25 @@ describe('search', () => {
   });
 
   it('never gives two commands one id – two gaps of one topic used to share it', () => {
-    const ids = searchGroups(results).flatMap((g) => g.commands.map((c) => c.id));
+    const ids = searchGroups(results, allOn).flatMap((g) => g.commands.map((c) => c.id));
     expect(new Set(ids).size).toBe(ids.length);
   });
 
   it('opens topics and gaps on the topic, papers on the paper, people on the roster', () => {
-    const t = searchTargets(results);
+    const t = searchTargets(results, allOn);
     expect(t.get('topics:t-neuro')).toEqual(['/topics', 't-neuro']);
     expect(t.get('gaps:g2')).toEqual(['/topics', 't-neuro']);
     expect(t.get('gaps:g3')).toEqual(['/topics', 't-neuro']);
     expect(t.get('papers:p4')).toEqual(['/papers', 'p4']);
     expect(t.get('people:mo')).toEqual(['/people']);
     expect(t.get('nonsense')).toBeUndefined();
+  });
+
+  it('leaves out people, group and all, while People is switched off: they would open its roster', () => {
+    const peopleOff = (feature: string) => feature !== 'people';
+    expect(searchGroups(results, peopleOff).map((g) => g.id)).toEqual(['topics', 'gaps', 'papers']);
+    expect(searchTargets(results, peopleOff).has('people:mo')).toBe(false);
+    // Gaps open their topic, so they stay whatever Gaps & Coverage's switch says
+    expect(searchTargets(results, (f) => f !== 'gaps').get('gaps:g2')).toEqual(['/topics', 't-neuro']);
   });
 });
