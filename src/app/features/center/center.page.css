@@ -71,7 +71,7 @@
   color: var(--tc-text-strong);
 }
 .as-of {
-  font-size: var(--tc-font-size-xl);
+  font-size: var(--tc-font-size-lg);
   color: var(--tc-text-muted);
   font-variant-numeric: tabular-nums;
 }
