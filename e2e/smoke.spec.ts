@@ -350,6 +350,37 @@ test.describe('smoke', () => {
     await expect(form.getByText('How is it funded?')).toBeVisible();
   });
 
+  test('New Topic closed by the browser\'s Back opens clean, with a new Idempotency-Key', async ({ page, errors }) => {
+    void errors;
+    const keys: (string | undefined)[] = [];
+    const created = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/topics_t-neuro.json'), 'utf8'));
+    await page.route('**/api/topics', async (route) => {
+      if (route.request().method() !== 'POST') return route.fallback();
+      keys.push(route.request().headers()['idempotency-key']);
+      await route.fulfill({ status: 201, json: created });
+    });
+    await page.goto('/topics');
+    const create = async (name: string) => {
+      await page.getByRole('button', { name: 'New topic' }).click();
+      const form = page.locator('tc-dialog tc-stepper-form');
+      await form.getByRole('textbox').first().fill(name);
+      await form.getByRole('button', { name: 'Continue' }).click();
+      await form.getByRole('radiogroup', { name: 'Center' }).getByRole('radio').first().click();
+      await form.getByRole('radiogroup', { name: 'Team' }).getByRole('radio').first().click();
+      const finish = form.getByRole('button', { name: 'Create topic' });
+      for (let i = 0; i < 5 && !(await finish.isVisible()); i++) await form.getByRole('button', { name: 'Continue' }).click();
+      await finish.click();
+      await expect(page.getByText('Topic created')).toBeVisible();
+    };
+    await create('Quantum Networking');
+    // Closed by the browser, not the dialog
+    await page.goBack();
+    await expect(page).not.toHaveURL(/new=topic/);
+    await create('Photonic Interconnects');
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).not.toBe(keys[0]);
+  });
+
   test('New Topic retries with the same Idempotency-Key, so a lost answer makes no second topic', async ({ page, errors }) => {
     const keys: (string | undefined)[] = [];
     const created = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/topics_t-neuro.json'), 'utf8'));
@@ -379,6 +410,39 @@ test.describe('smoke', () => {
     // The browser logs the 500 the test made; that one is expected
     expect(errors).toEqual([expect.stringContaining('status of 500')]);
     errors.length = 0;
+  });
+
+  test('a Donovan answer pending when the time frame changes answers for the new one, and says so once it changes again', async ({ page, errors }) => {
+    void errors;
+    const summary = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/portfolio_summary.json'), 'utf8'));
+    let release!: () => void;
+    const ytdHeld = new Promise<void>((r) => (release = r));
+    // The fixture has one summary for every period; answer each with its own period, and hold Year to date back
+    await page.route('**/api/portfolio/summary**', async (route) => {
+      const period = new URL(route.request().url()).searchParams.get('period') ?? 'ytd';
+      if (period === 'ytd') await ytdHeld;
+      const range = period === 'ytd' ? summary.period : { label: period, from: `${period}-01`, to: `${period}-28` };
+      await route.fulfill({ json: { ...summary, period: range } });
+    });
+    await page.goto('/');
+    const donovan = page.locator('tc-ai-summary');
+    const ask = donovan.getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
+    await ask.fill('How many papers were published?');
+    await ask.press('Enter');
+    // Year to date is picked while Donovan is still thinking, and its numbers are slow to come
+    await page.locator('tc-select').first().evaluate((el) => el.dispatchEvent(new CustomEvent('tc-value-change', { detail: { value: 'ytd' } })));
+    await expect(page).toHaveURL(/period=ytd/);
+    // Past the answer's usual pause: before this fix it was given then, from this month's numbers
+    await page.waitForTimeout(800);
+    release();
+    const answer = () => donovan.evaluate((e) => (e as unknown as { messages: { role: string; text: string; status?: string }[] }).messages.at(-1));
+    await expect.poll(async () => (await answer())?.status).toBe('done');
+    expect((await answer())?.text).toContain('this year');
+    expect((await answer())?.text).not.toContain('this month');
+    // Back to this month: the answer was about the year, and says so
+    const month = await page.locator('tc-select').first().evaluate((el) => (el as unknown as { options: { value: string }[] }).options[0].value);
+    await page.locator('tc-select').first().evaluate((el, value) => el.dispatchEvent(new CustomEvent('tc-value-change', { detail: { value } })), month);
+    await expect.poll(async () => (await answer())?.text).toMatch(/^Answered for this year: /);
   });
 
   test('a follow-up to Donovan turns the Summary into a chat, and Back returns the page', async ({ page, errors }) => {
