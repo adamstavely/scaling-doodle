@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { FEATURES } from '../src/app/core/features';
 import { expect, test } from './api';
 
 // Trench Coat elements take their data as properties, so the tests read those off the element.
@@ -93,8 +94,21 @@ test.describe('smoke', () => {
     await expect(page.locator('tc-facet-sidebar').getByRole('searchbox', { name: 'Search topics' })).toHaveValue('a');
   });
 
+  test('a switched-off section is out of the nav and its URL opens the Summary', async ({ page, errors }) => {
+    void errors;
+    const off = { gaps: 'Gaps & Coverage', resourcing: 'Resourcing', people: 'People' } as const;
+    for (const [feature, label] of Object.entries(off)) {
+      if (FEATURES[feature as keyof typeof FEATURES]) continue;
+      await page.goto(`/${feature}`);
+      await expect(page).toHaveURL(/\/$/);
+      await expect(page.getByRole('heading', { name: 'Metrics Summary' })).toBeVisible();
+      await expect(page.locator('tc-side-nav').getByRole('link', { name: label, exact: true })).toHaveCount(0);
+    }
+  });
+
   test('gaps and coverage lists every gap still open, with what is invested', async ({ page, errors }) => {
     void errors;
+    test.skip(!FEATURES.gaps, 'Gaps & Coverage is switched off');
     await page.goto('/gaps');
     await expect(page.getByRole('heading', { name: 'Gaps & Coverage' })).toBeVisible();
     const gaps = await page.locator('tc-gap-exposure').evaluate((e) => (e as unknown as { gaps: { id: string; work: number; budget?: number }[] }).gaps);
@@ -104,6 +118,7 @@ test.describe('smoke', () => {
 
   test('resourcing weighs dollars and people against priority', async ({ page, errors }) => {
     void errors;
+    test.skip(!FEATURES.resourcing, 'Resourcing is switched off');
     await page.goto('/resourcing');
     await expect(page.getByRole('heading', { name: 'Resourcing' })).toBeVisible();
     const tiers = await page.locator('tc-investment-balance').evaluate((e) => (e as unknown as { tiers: { items: number }[] }).tiers);
@@ -446,7 +461,9 @@ test.describe('smoke', () => {
   test('every page reflows at 320px: nothing scrolls sideways (WCAG 1.4.10)', async ({ page, errors }) => {
     void errors;
     await page.setViewportSize({ width: 320, height: 800 });
-    for (const path of ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/people']) {
+    // Sections switched off in FEATURES open the Summary, so they're left out
+    const paths = ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/people'];
+    for (const path of paths.filter((p) => FEATURES[p.slice(1) as keyof typeof FEATURES] ?? true)) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
       await expect(page.locator('main tc-skeleton')).toHaveCount(0);
@@ -488,6 +505,7 @@ test.describe('smoke', () => {
 
   test('people lists the roster', async ({ page, errors }) => {
     void errors;
+    test.skip(!FEATURES.people, 'People is switched off');
     await page.goto('/people');
     const table = page.locator('tc-data-table');
     await expect(table).toBeVisible();
