@@ -1,6 +1,8 @@
 import type { BreakdownDimension, BreakdownMeasure, BreakdownRecord } from '@adamstavely/trenchcoat/breakdown-chart';
+import type { DataColumn, DataRow } from '@adamstavely/trenchcoat/data-table';
 import type { OpsTile } from '@adamstavely/trenchcoat/ops-overview';
 import type { SearchResult } from '@adamstavely/trenchcoat/results-list';
+import type { PartnerLabDto } from '../api/generated/models/partner-lab-dto';
 import type { PartnerLabsDto } from '../api/generated/models/partner-labs-dto';
 import type { PartnerPaperDto } from '../api/generated/models/partner-paper-dto';
 import { compactNumber, localDate, percent } from './format';
@@ -86,4 +88,89 @@ export function partnerPapers(p: PartnerLabsDto): SearchResult[] {
       ],
     })),
   );
+}
+
+/**
+ * A lab's address on the site, from its name – labs have no id of their own: "Sandia National Laboratories" →
+ * "sandia-national-laboratories".
+ */
+export function labSlug(name: string): string {
+  return name
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/** The lab with that address, if it's in the caller's view. */
+export function findLab(p: PartnerLabsDto, slug: string): PartnerLabDto | undefined {
+  return p.labs.find((l) => labSlug(l.name) === slug);
+}
+
+/** The Labs table: a row per lab, most joint papers first as the API gives them; the name links to the lab's page. */
+export const LAB_COLUMNS: DataColumn[] = [
+  { key: 'name', label: 'Lab', type: 'text', width: '280px' },
+  { key: 'joint', label: 'Joint papers', type: 'number' },
+  { key: 'us', label: 'We started', type: 'number' },
+  { key: 'them', label: 'They started', type: 'number' },
+  { key: 'citations', label: 'Citations', type: 'number' },
+  { key: 'topics', label: 'Topics', type: 'number' },
+  // YYYY-MM-DD, so sorting the column sorts by date
+  { key: 'last', label: 'Latest joint paper', type: 'text' },
+];
+
+export function labRows(p: PartnerLabsDto): DataRow[] {
+  return p.labs.map((l) => ({
+    id: labSlug(l.name),
+    name: l.name,
+    joint: l.joint,
+    us: l.initiatedByUs,
+    them: l.initiatedByThem,
+    citations: l.citations,
+    topics: l.topics.length,
+    last: l.lastPublished,
+  }));
+}
+
+/** One lab's joint papers, and who started them, citations and views. */
+export function labTiles(l: PartnerLabDto): OpsTile[] {
+  const share = (n: number) => (l.joint ? `${percent(n / l.joint)} of joint papers` : 'no joint papers');
+  return [
+    { id: 'joint', label: 'Joint papers', value: String(l.joint), sub: `latest ${shortDate(l.lastPublished)}` },
+    { id: 'us', label: 'We started', value: String(l.initiatedByUs), sub: share(l.initiatedByUs) },
+    { id: 'them', label: 'They started', value: String(l.initiatedByThem), sub: share(l.initiatedByThem) },
+    { id: 'citations', label: 'Citations', value: compactNumber(l.citations), sub: `${compactNumber(l.views)} views` },
+    { id: 'topics', label: 'Topics', value: String(l.topics.length), sub: 'the joint papers are in' },
+  ];
+}
+
+/** Who started one lab's joint papers, for tc-segmented-bar; a third partner's share only when there is one. */
+export function labStartedSplit(l: PartnerLabDto): { label: string; value: number }[] {
+  return [
+    { label: STARTED_BY.us, value: l.initiatedByUs },
+    { label: STARTED_BY.partner, value: l.initiatedByThem },
+    ...(l.initiatedByOthers ? [{ label: STARTED_BY['other-partner'], value: l.initiatedByOthers }] : []),
+  ];
+}
+
+/** "1 Nov 2025", in the viewer's locale. */
+const shortDate = (iso: string) => new Date(localDate(iso)).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+/** One lab's joint papers, newest first, each tagged with its topic as a center's papers are, and who started it. */
+export function labPapers(l: PartnerLabDto): SearchResult[] {
+  return l.papers.map((paper) => ({
+    id: paper.id,
+    title: paper.title,
+    kind: paper.topic.name,
+    source: paper.venue,
+    href: `/papers/${paper.id}`,
+    date: localDate(paper.published),
+    meta: [
+      paper.initiatedBy === 'other-partner' ? `${paper.initiator} started` : STARTED_BY[paper.initiatedBy],
+      ...(paper.otherPartners.length ? [`with ${paper.otherPartners.join(', ')}`] : []),
+      `${paper.citations} citations`,
+      `${compactNumber(paper.views)} views`,
+    ],
+  }));
 }

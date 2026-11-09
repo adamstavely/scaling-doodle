@@ -1,0 +1,53 @@
+@if (error()) {
+  <p role="alert" class="note">Couldn't load the partner lab. Is intellect-api running?</p>
+} @else if (ready()) {
+  @if (data(); as l) {
+    <header class="page-head">
+      <div class="identity">
+        <!-- The lab's logo beside its name, as on a center's page; until it has one, a tile holds the place -->
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="m11 17 2 2a1 1 0 1 0 3-3" />
+            <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
+            <path d="m21 3 1 11h-2" />
+            <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" />
+            <path d="M3 4h8" />
+          </svg>
+        </div>
+        <p class="eyebrow">Partner lab</p>
+        <h1>{{ l.name }}</h1>
+      </div>
+    </header>
+
+    <tc-ops-overview heading="Joint research" [tiles]="tiles()"></tc-ops-overview>
+
+    <div class="layout">
+      @if (topics().length) {
+        <tc-priority-list
+          class="topics"
+          heading="Topics"
+          description="Our topics the joint papers are in, by priority"
+          momentum-label="Trend"
+          grouped
+          [items]="topics()"
+          [tiers]="tiers"
+          (tc-open)="openTopic($event)"
+        ></tc-priority-list>
+      }
+      <tc-segmented-bar
+        class="started"
+        heading="Who started our joint work"
+        [description]="'Joint papers with ' + l.name"
+        [highlight]="'We started'"
+        sort="false"
+        [data]="split()"
+      ></tc-segmented-bar>
+      <tc-results-list class="papers" heading="Joint papers" group="none" [results]="papers()" (tc-open)="openPaper($event)"></tc-results-list>
+    </div>
+  } @else {
+    <p class="note">That partner lab isn't in your view.</p>
+  }
+} @else {
+  <tc-skeleton height="96" radius="12"></tc-skeleton>
+  <tc-skeleton height="480" radius="12"></tc-skeleton>
+}

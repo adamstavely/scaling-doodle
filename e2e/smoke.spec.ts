@@ -269,6 +269,25 @@ test.describe('smoke', () => {
     await expect(page.locator('tc-results-list')).toContainText('Sparse Spiking Networks');
   });
 
+  test('a partner lab page opens from the Labs table and shows that lab', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/partners');
+    const labs = page.locator('tc-data-table');
+    await expect(labs.getByRole('link')).toHaveCount(3);
+    await labs.getByRole('link', { name: 'Sandia National Laboratories' }).click();
+    await expect(page).toHaveURL(/\/partners\/sandia-national-laboratories$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Sandia National Laboratories' })).toBeVisible();
+    // Still under Partner Labs in the nav
+    await expect(page.locator('tc-side-nav').getByRole('link', { name: 'Partner Labs' })).toHaveAttribute('aria-current', 'page');
+    const tiles = await page.locator('tc-ops-overview').evaluate((e) => (e as unknown as { tiles: { id: string; value: string }[] }).tiles);
+    expect(tiles.find((t) => t.id === 'them')?.value).toBe('1');
+    await expect(page.locator('tc-priority-list[heading="Topics"]')).toContainText('Neuromorphic Computing');
+    await expect(page.locator('tc-results-list')).toContainText('Sparse Spiking Networks');
+    // A lab that isn't in view says so
+    await page.goto('/partners/nowhere');
+    await expect(page.getByText("That partner lab isn't in your view.")).toBeVisible();
+  });
+
   test('a center page opens from Centers & Teams and shows that center', async ({ page, errors }) => {
     void errors;
     await page.goto('/org');
@@ -462,7 +481,7 @@ test.describe('smoke', () => {
     void errors;
     await page.setViewportSize({ width: 320, height: 800 });
     // Sections switched off in FEATURES open the Summary, so they're left out
-    const paths = ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/people'];
+    const paths = ['/', '/org', '/centers/c-cci', '/topics', '/topics/t-neuro', '/gaps', '/resourcing', '/papers', '/partners', '/partners/sandia-national-laboratories', '/people'];
     for (const path of paths.filter((p) => FEATURES[p.slice(1) as keyof typeof FEATURES] ?? true)) {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
