@@ -109,9 +109,11 @@
   height: 100%;
 }
 /* Donovan's card is its cell's height: shorter text leaves the ask box and footer at the bottom, longer text scrolls
-   between the header and the ask box, which stay put */
+   between the header and the ask box, which stay put. Its logo sits level with "Donovan", not in the middle of the
+   subject, badge and model lines under it. */
 .donovan > tc-ai-summary {
   height: 100%;
+  --tc-head-align: start;
 }
 
 @media (max-width: 1100px) {
@@ -161,7 +163,7 @@
 /* The card fits the window below the page heading and Back – the top bar, the heading, Back and the page's padding
    take about 220px – so the conversation scrolls between Donovan's header and the ask box, not the page */
 .layout.chatting > .donovan > tc-ai-summary {
-  height: max(360px, calc(100dvh - 220px));
+  height: max(360px, calc(100dvh / var(--app-scale) - 220px));
 }
 .end-chat {
   align-self: flex-start;

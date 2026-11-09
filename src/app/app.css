@@ -8,7 +8,7 @@
   grid-template-areas:
     'topbar topbar'
     'sidebar content';
-  min-height: 100dvh;
+  min-height: calc(100dvh / var(--app-scale));
 }
 
 /* Brand navy in both themes, on the side nav and the top bar. The side nav is pinned to the dark theme (data-tc-theme
@@ -23,7 +23,7 @@
   position: sticky;
   top: var(--app-bar-h);
   align-self: start;
-  height: calc(100dvh - var(--app-bar-h));
+  height: calc(100dvh / var(--app-scale) - var(--app-bar-h));
   /* A faint low-poly mesh over the lower two thirds or so (public/brand/nav-mesh.svg fades itself in), on the navy */
   background: url('/brand/nav-mesh.svg') center bottom / 100% 70% no-repeat, var(--app-chrome);
   border-right-color: transparent;

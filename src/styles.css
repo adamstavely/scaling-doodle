@@ -25,6 +25,16 @@
   --tc-aism-send-bg-active: light-dark(#12355f, var(--tc-action-primary-bg-active));
 }
 
+/* The whole site a step smaller – it read as zoomed in at 100%, and right at the browser's 90%. CSS zoom scales
+   everything, Trench Coat's px sizes included; heights taken from the viewport (100dvh) divide by it to still fill
+   the window. */
+:root {
+  --app-scale: 0.9;
+}
+html {
+  zoom: var(--app-scale);
+}
+
 /* The top bar is sticky, so anything scrolled into view – a focused row, a fragment – stops below it rather than
    behind it (WCAG 2.4.11): 64px plus a little air; on narrow screens the bar takes two rows (80px). */
 html {
