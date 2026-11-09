@@ -518,7 +518,9 @@ test.describe('smoke', () => {
     await page.goto('/');
     const donovan = page.locator('tc-ai-summary');
     const ask = donovan.getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
-    for (const q of ['What is at risk?', 'Which center fell the most?', 'Who has no topics?', 'What is at risk now?', 'And the papers?']) {
+    // Enough to run past the card at the site's 90% scale, which leaves the conversation more room
+    const questions = ['What is at risk?', 'Which center fell the most?', 'Who has no topics?', 'What is at risk now?', 'And the papers?'];
+    for (const q of [...questions, ...questions]) {
       await ask.fill(q);
       await ask.press('Enter');
       await expect(donovan.locator('[aria-busy="true"]')).toHaveCount(0);
