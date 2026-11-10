@@ -7,13 +7,11 @@ Angular 21 frontend for **Intellect**, a research-portfolio management app. It's
 
 ## Setup
 
-Trench Coat installs from GitHub Packages, which needs a GitHub token with the `read:packages` scope:
-
 ```bash
-gh auth refresh -h github.com -s read:packages
-export NODE_AUTH_TOKEN=$(gh auth token)
 npm install
 ```
+
+Trench Coat is committed in `vendor/` as the release tarball, so installing, building and the Docker image need no registry access or token.
 
 npm 11.4 crashes on this dependency tree; use npm 11.21.2 or later (`npm install -g npm@11.21.2`).
 
@@ -39,11 +37,19 @@ The smoke tests mock `/api` with the JSON in `e2e/fixtures`, recorded from a fre
 ## Docker
 
 ```bash
-docker build --secret id=npm_token,env=NODE_AUTH_TOKEN -t intellect-web .
+docker build -t intellect-web .
 docker run -p 8080:8080 -e API_UPSTREAM=http://intellect-api:3000 intellect-web
 ```
 
 nginx serves the app on port 8080 and proxies `/api` to `API_UPSTREAM`. In EKS the ingress can route `/api` instead.
+
+## Updating Trench Coat
+
+```bash
+npm run tc:vendor -- 0.17.8
+```
+
+This fetches the release from GitHub Packages (it uses `gh auth token`, which needs the `read:packages` scope), replaces the tarball in `vendor/`, and updates `package.json` and the lockfile. Commit all three.
 
 ## API client
 
