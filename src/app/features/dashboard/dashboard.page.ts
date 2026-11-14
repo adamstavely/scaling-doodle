@@ -205,6 +205,17 @@ export class DashboardPage {
     // answers for, once its numbers have loaded.
     const answer = () => {
       if (context !== this.#context) return;
+      // The numbers failed to load, so there's nothing to answer from: say so and stop waiting. Asking again retries.
+      if (this.#summary.error() || this.#papers.error()) {
+        this.#messages.update((m) =>
+          m.map((x) =>
+            x.id === thinking.id
+              ? { ...x, text: "Couldn't load this period's numbers, so I can't answer yet. Ask again once the page loads.", status: 'error' as const }
+              : x,
+          ),
+        );
+        return;
+      }
       const data = this.#settled();
       if (!data) return void setTimeout(answer, 150);
       const a = answerFollowUp(event.detail.question, data);

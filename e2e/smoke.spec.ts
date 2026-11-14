@@ -214,6 +214,27 @@ test.describe('smoke', () => {
     await expect(page.locator('tc-work-item')).toHaveCount(4);
   });
 
+  test("a PI sees a shared researcher's work on topics outside their view in the capacity bars", async ({ page, errors }) => {
+    void errors;
+    await page.addInitScript(() => localStorage.setItem('intellect.viewAs', 'pi'));
+    // As the API sends it to a PI: Elena's 0.6 FTE elsewhere is out of scope, so only its total comes, as otherFte
+    const people = JSON.parse(readFileSync(join(__dirname, 'fixtures/mo/people.json'), 'utf8')) as { id: string; otherFte?: number }[];
+    await page.route('**/api/people', (route) =>
+      route.fulfill({ json: people.map((p) => ({ ...p, otherFte: p.id === 'ec' ? 0.6 : 0 })) }),
+    );
+    await page.goto('/topics/t-neuro');
+    const bars = page.locator('tc-capacity-bars');
+    const elena = () =>
+      bars.evaluate((e) => (e as unknown as { people: { id: string; capacity: number; allocations: { label: string; amount: number }[] }[] }).people.find((p) => p.id === 'ec'));
+    await expect.poll(async () => (await elena())?.allocations.length).toBe(2);
+    const row = (await elena())!;
+    expect(row.allocations).toEqual([
+      { id: 't-neuro', label: 'Neuromorphic Computing', amount: 0.8 },
+      { id: 'elsewhere', label: 'Other topics', amount: 0.6 },
+    ]);
+    expect(row.allocations.reduce((s, a) => s + a.amount, 0)).toBeGreaterThan(row.capacity);
+  });
+
   test('papers opens the first paper and offers the Chief a grade', async ({ page, errors }) => {
     void errors;
     await page.goto('/papers');
@@ -496,6 +517,40 @@ test.describe('smoke', () => {
     const month = await page.locator('tc-select').first().evaluate((el) => (el as unknown as { options: { value: string }[] }).options[0].value);
     await page.locator('tc-select').first().evaluate((el, value) => el.dispatchEvent(new CustomEvent('tc-value-change', { detail: { value } })), month);
     await expect.poll(async () => (await answer())?.text).toMatch(/^Answered for this year: /);
+  });
+
+  test('a Donovan answer pending when the new time frame fails to load stops waiting', async ({ page, errors }) => {
+    // Count the answer's 150ms re-checks
+    await page.addInitScript(() => {
+      const w = window as unknown as { rechecks: number };
+      w.rechecks = 0;
+      const set = window.setTimeout;
+      window.setTimeout = ((fn: TimerHandler, ms?: number, ...rest: unknown[]) => {
+        if (ms === 150) w.rechecks++;
+        return set(fn, ms, ...rest);
+      }) as typeof window.setTimeout;
+    });
+    const summary = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/portfolio_summary.json'), 'utf8'));
+    await page.route('**/api/portfolio/summary**', (route) =>
+      new URL(route.request().url()).searchParams.get('period') === 'ytd'
+        ? route.fulfill({ status: 503, json: { statusCode: 503 } })
+        : route.fulfill({ json: summary }),
+    );
+    await page.goto('/');
+    const ask = page.locator('tc-ai-summary').getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
+    await ask.fill('What is at risk?');
+    await ask.press('Enter');
+    await page.locator('tc-select').first().evaluate((el) => el.dispatchEvent(new CustomEvent('tc-value-change', { detail: { value: 'ytd' } })));
+    await expect(page.getByRole('alert').filter({ hasText: "Couldn't load the portfolio" })).toBeVisible();
+    await page.waitForTimeout(600);
+    const rechecks = () => page.evaluate(() => (window as unknown as { rechecks: number }).rechecks);
+    const before = await rechecks();
+    await page.waitForTimeout(700);
+    expect(await rechecks()).toBe(before);
+    // The browser logs the 503 the test made
+    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.every((e) => /503|Service Unavailable/.test(e))).toBe(true);
+    errors.length = 0;
   });
 
   test('a follow-up to Donovan turns the Summary into a chat, and Back returns the page', async ({ page, errors }) => {

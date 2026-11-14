@@ -43,16 +43,17 @@ const WORK_STATUS: Record<WorkDto['status'], WorkStatus> = {
 
 /**
  * One person's capacity row on a topic: their capacity (1 when unknown), this topic's allocation and, apart, the rest of
- * their allocations.
+ * their work – the other topics in view plus `otherFte`, the API's total for topics outside it, which it doesn't name.
  */
 export function topicCapacity(
   topicId: string,
   topicName: string,
   person: { id: string; name: string },
   fte: number,
-  record: Pick<PersonSummaryDto, 'capacity' | 'allocations'> | undefined,
+  record: (Pick<PersonSummaryDto, 'capacity' | 'allocations'> & Partial<Pick<PersonSummaryDto, 'otherFte'>>) | undefined,
 ): CapacityPerson {
-  const elsewhere = Math.round((record?.allocations ?? []).filter((a) => a.topicId !== topicId).reduce((s, a) => s + a.fte, 0) * 100) / 100;
+  const inView = (record?.allocations ?? []).filter((a) => a.topicId !== topicId).reduce((s, a) => s + a.fte, 0);
+  const elsewhere = Math.round((inView + (record?.otherFte ?? 0)) * 100) / 100;
   return {
     id: person.id,
     name: person.name,

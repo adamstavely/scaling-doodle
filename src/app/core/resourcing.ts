@@ -94,7 +94,10 @@ export function fiscalYearProgress(today: string, fy?: string): number {
   return Math.min(1, Math.max(0, (Date.UTC(y, m - 1, d) - start) / (end - start)));
 }
 
-/** People with allocations → tc-capacity-bars, naming each topic. */
+/**
+ * People with allocations → tc-capacity-bars, naming each topic in view; work on topics outside it (`otherFte`, a total
+ * the API doesn't break down) is one "Other topics" segment, so someone over capacity draws as over.
+ */
 export function capacityPeople(people: PersonSummaryDto[], topicNames: Map<string, string>): CapacityPerson[] {
   return people
     .filter((p) => p.allocations.length)
@@ -103,6 +106,9 @@ export function capacityPeople(people: PersonSummaryDto[], topicNames: Map<strin
       name: p.name,
       role: p.title,
       capacity: p.capacity,
-      allocations: p.allocations.map((a) => ({ id: a.topicId, label: topicNames.get(a.topicId) ?? a.topicId, amount: a.fte })),
+      allocations: [
+        ...p.allocations.map((a) => ({ id: a.topicId, label: topicNames.get(a.topicId) ?? a.topicId, amount: a.fte })),
+        ...(p.otherFte ? [{ id: 'elsewhere', label: 'Other topics', amount: p.otherFte }] : []),
+      ],
     }));
 }
