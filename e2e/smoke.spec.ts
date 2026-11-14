@@ -253,6 +253,59 @@ test.describe('smoke', () => {
     expect(await grade.evaluate((e) => (e as unknown as { value: string }).value)).toBe('outstanding');
   });
 
+  test("a Chief's grade answering after the switch to PI leaves the PI's \"not in your view\"", async ({ page, errors }) => {
+    const detail = JSON.parse(readFileSync(join(__dirname, 'fixtures/hv/papers_p5.json'), 'utf8'));
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    await page.route('**/api/papers/p5/grade', async (route) => {
+      await held;
+      await route.fulfill({ json: { ...detail, grade: 'excellent' } });
+    });
+    await page.goto('/papers/p5');
+    await expect(page.getByRole('heading', { name: 'Assessment' })).toBeVisible();
+    await page.locator('.grade tc-segmented-control').getByText('Excellent', { exact: true }).click();
+
+    // p5 is the Chief's only: as the PI, it doesn't load
+    await page.getByRole('button', { name: /^Account/ }).click();
+    await page.getByRole('menuitem', { name: /PI view/ }).or(page.getByRole('button', { name: /PI view/ })).first().click();
+    const denied = page.getByRole('alert').filter({ hasText: /outside your view/ });
+    await expect(denied).toBeVisible();
+    release();
+    await page.waitForTimeout(300);
+    await expect(denied).toBeVisible();
+    await expect(page.locator('tc-publication-impact')).toHaveCount(0);
+    // The PI's 404 for p5 is expected
+    expect(errors.every((e) => /404/.test(e))).toBe(true);
+    errors.length = 0;
+  });
+
+  test('switching viewer clears the conversation with Donovan, answers still coming included', async ({ page, errors }) => {
+    void errors;
+    await page.goto('/');
+    const donovan = page.locator('tc-ai-summary');
+    const messages = () => donovan.evaluate((e) => (e as unknown as { messages: unknown[] }).messages.length);
+    const sources = () => donovan.evaluate((e) => (e as unknown as { sources: { label: string }[] }).sources.map((s) => s.label));
+    const ask = donovan.getByRole('textbox', { name: 'Ask Donovan a follow-up…' });
+    await ask.fill('What is at risk?');
+    await ask.press('Enter');
+    await expect(donovan.locator('[aria-busy="true"]')).toHaveCount(0);
+    const chiefSources = await sources();
+    // A second question, still being answered when the viewer switches
+    await ask.fill('What is at risk?');
+    await ask.press('Enter');
+    await page.getByRole('button', { name: /^Account/ }).click();
+    await page.getByRole('menuitem', { name: /PI view/ }).or(page.getByRole('button', { name: /PI view/ })).first().click();
+
+    await expect(page.locator('tc-priority-list[heading="Mission Centers"]')).toBeVisible();
+    await expect.poll(messages).toBe(0);
+    await page.waitForTimeout(800);
+    expect(await messages()).toBe(0);
+    // Nothing the Chief was told stays among the PI's sources
+    const piSources = await sources();
+    expect(piSources.filter((s) => chiefSources.includes(s) && !piSources.includes(s))).toEqual([]);
+    expect(piSources).not.toContain('Climate Resilience Modeling');
+  });
+
   test('org shows each center', async ({ page, errors }) => {
     void errors;
     await page.goto('/org');

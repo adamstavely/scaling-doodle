@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, resource, signal, untracked } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, resource, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { OpsOverview } from '@adamstavely/trenchcoat/angular/ops-overview';
 import { PublicationImpact } from '@adamstavely/trenchcoat/angular/publication-impact';
@@ -145,15 +145,18 @@ export class PapersPage {
       const first = read(this.#list)?.[0];
       if (!this.id() && first) void this.#router.navigate(['/papers', first.id], { replaceUrl: true });
     });
-    // A grade save and its error belong to the paper they were made on.
+    // A grade save and its error belong to the paper and the viewer they were made for. A Chief's save that answers after
+    // the switch to a PI would otherwise put the Chief's paper back over the PI's "not in your view".
     effect(() => {
       this.id();
+      this.#session.viewAs();
       untracked(() => {
         this.#gradeRequest++;
         this.saving.set(false);
         this.saveError.set(null);
       });
     });
+    inject(DestroyRef).onDestroy(() => this.#gradeRequest++);
   }
 
   protected openPaper(event: CustomEvent<ResultsOpen>): void {
@@ -172,10 +175,11 @@ export class PapersPage {
     this.saving.set(true);
     this.saveError.set(null);
     // Each save is numbered, and only the latest one's answer reaches the screen. A save can finish after the Chief has
-    // moved on (or away and back, then saved again): an earlier answer then only refreshes the list, and never
-    // overwrites the newer grade, error or saving state.
+    // moved on (or away and back, then saved again), switched viewer, or left the page: an earlier answer then only
+    // refreshes the list, and never overwrites the newer grade, error or saving state.
     const request = ++this.#gradeRequest;
-    const stillHere = () => this.id() === id && request === this.#gradeRequest;
+    const viewer = this.#session.viewAs();
+    const stillHere = () => this.id() === id && this.#session.viewAs() === viewer && request === this.#gradeRequest;
     try {
       const updated = await this.#api.invoke(papersControllerGrade, { id, body: { grade } });
       if (stillHere()) this.#detail.set(updated);
