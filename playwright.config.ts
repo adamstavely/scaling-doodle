@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Smoke tests run the app against recorded API responses (e2e/fixtures), so CI needs no backend.
-const PORT = 4300;
+// Smoke tests run the app against recorded API responses (e2e/fixtures), so CI needs no backend. E2E_PORT moves the
+// app off 4300 when another app's dev server holds it (a server already on the port is reused outside CI).
+const PORT = Number(process.env['E2E_PORT'] ?? 4300);
 
 export default defineConfig({
   testDir: 'e2e',

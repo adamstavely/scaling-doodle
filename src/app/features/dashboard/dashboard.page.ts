@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, resource, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, resource, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { Select } from '@adamstavely/trenchcoat/angular/select';
 import { AiSummary } from '@adamstavely/trenchcoat/angular/ai-summary';
@@ -171,6 +171,24 @@ export class DashboardPage {
     );
   });
   protected readonly chatting = computed(() => this.#messages().length > 0);
+
+  /**
+   * The conversation belongs to the viewer who had it. Switching viewer clears it, with its sources, and drops answers
+   * still being worked out, so a PI never sees what Donovan told the Chief about the whole portfolio. Leaving the page
+   * drops them too.
+   */
+  #context = 0;
+
+  constructor() {
+    effect(() => {
+      this.#session.viewAs();
+      untracked(() => {
+        this.#context++;
+        if (this.#messages().length) this.#messages.set([]);
+      });
+    });
+    inject(DestroyRef).onDestroy(() => this.#context++);
+  }
   /** The page's numbers for one period, with nothing still loading for a newly picked one. */
   readonly #settled = computed(() => (this.#summary.isLoading() || this.#papers.isLoading() ? undefined : this.#pageData()));
   #asked = 0;
@@ -178,6 +196,7 @@ export class DashboardPage {
   protected onAsk(event: CustomEvent<{ question: string }>): void {
     if (!this.#pageData()) return event.preventDefault();
     const n = ++this.#asked;
+    const context = this.#context;
     const question = { id: `q${n}`, role: 'user' as const, text: event.detail.question, status: 'done' as const };
     const thinking = { id: `a${n}`, role: 'assistant' as const, text: '', status: 'thinking' as const };
     this.#morph(() => this.#messages.update((m) => [...m, question, thinking]));
@@ -185,6 +204,7 @@ export class DashboardPage {
     // answer is worked out from the numbers on the page when it's given – a time frame picked meanwhile is the one it
     // answers for, once its numbers have loaded.
     const answer = () => {
+      if (context !== this.#context) return;
       const data = this.#settled();
       if (!data) return void setTimeout(answer, 150);
       const a = answerFollowUp(event.detail.question, data);
