@@ -25,6 +25,20 @@ describe('topicCapacity', () => {
     ]);
   });
 
+  it('counts work on topics outside the viewer’s scope, which the API sends only as a total', () => {
+    // The PI sees this topic's 0.6; the 0.8 elsewhere is out of their scope, so it comes as otherFte
+    const row = topicCapacity('t-neuro', 'Neuromorphic Computing', person, 0.6, {
+      capacity: 1,
+      allocations: [{ topicId: 't-neuro', fte: 0.6 }],
+      otherFte: 0.8,
+    });
+    expect(row.allocations).toEqual([
+      { id: 't-neuro', label: 'Neuromorphic Computing', amount: 0.6 },
+      { id: 'elsewhere', label: 'Other topics', amount: 0.8 },
+    ]);
+    expect(row.allocations.reduce((s, a) => s + a.amount, 0)).toBeGreaterThan(row.capacity ?? 1);
+  });
+
   it('falls back to full time when the person isn’t in view', () => {
     expect(topicCapacity('t-neuro', 'Neuromorphic Computing', person, 0.4, undefined)).toEqual({
       id: 'ec',

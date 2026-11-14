@@ -54,6 +54,14 @@ describe('resourcing', () => {
     expect(resourcingTiles(mixed, [])[0].sub).toBe('FY26 and FY27 commitments');
   });
 
+  it('adds work outside the viewer’s scope as one Other topics segment', () => {
+    const shared = [{ ...people[0], otherFte: 0.8 }] as PersonSummaryDto[];
+    expect(capacityPeople(shared, new Map([['a', 'Alpha']]))[0].allocations).toEqual([
+      { id: 'a', label: 'Alpha', amount: 0.6 },
+      { id: 'elsewhere', label: 'Other topics', amount: 0.8 },
+    ]);
+  });
+
   it('draws only people with allocations', () => {
     expect(capacityPeople(people, new Map([['a', 'Alpha']]))).toEqual([
       { id: 'x', name: 'X', role: 'PI', capacity: 1, allocations: [{ id: 'a', label: 'Alpha', amount: 0.6 }] },
