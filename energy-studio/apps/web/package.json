@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "build": "npm run lint && vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tokens": "node scripts/tokens.mjs",
+    "lint": "node scripts/tokens.mjs --check && node scripts/check-styles.mjs && trenchcoat lint src"
   },
   "devDependencies": {
     "@types/node": "^22.20.7",
@@ -16,7 +18,11 @@
     "vue-tsc": "^2.2.12"
   },
   "dependencies": {
+    "@adamstavely/trenchcoat": "file:../../vendor/adamstavely-trenchcoat-0.37.0.tgz",
     "@energy-studio/core": "*",
+    "@fontsource-variable/inter": "5.3.0",
+    "lit": "3.3.3",
+    "lucide-vue-next": "1.0.0",
     "vue": "^3.5.46"
   }
 }

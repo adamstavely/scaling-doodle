@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CircleCheck, CircleHelp, Download, ImageUp, LoaderCircle, TriangleAlert } from 'lucide-vue-next';
 import { computed, ref, toRaw, watch } from 'vue';
 import GuidanceDialog from './components/GuidanceDialog.vue';
 import ImageSettings from './components/ImageSettings.vue';
@@ -11,6 +12,11 @@ import { source, state, type Tab } from './lib/state';
 const backdrop = ref<HTMLCanvasElement | null>(null);
 const stage = ref<InstanceType<typeof PreviewStage>>();
 
+const tabs: { value: Tab; label: string }[] = [
+  { value: 'image', label: 'Image settings' },
+  { value: 'motion', label: 'Motion settings' },
+];
+
 function selectTab(tab: Tab) {
   state.tab = tab;
   // Motion previews start playing when you open the tab and stop when you leave.
@@ -19,7 +25,7 @@ function selectTab(tab: Tab) {
 
 const downloadLabel = computed(() => {
   if (state.busy) return state.busy;
-  return state.tab === 'motion' ? 'Download Video' : 'Download Image';
+  return state.tab === 'motion' ? 'Download video' : 'Download image';
 });
 
 const syncLabel = computed(
@@ -66,6 +72,7 @@ async function downloadVideo() {
   const wasPlaying = state.playing;
   state.playing = false; // free the CPU for the recorder
   state.busy = 'Recording 0%';
+  state.progress = 0;
   try {
     const { blob, ext } = await recordVideo({
       src: source.value!,
@@ -74,10 +81,14 @@ async function downloadVideo() {
       motion: toRaw(state.motion),
       seconds: state.motion.duration * state.videoCycles,
       longEdge: state.videoLongEdge,
-      onProgress: (f) => (state.busy = `Recording ${Math.round(f * 100)}%`),
+      onProgress: (f) => {
+        state.busy = `Recording ${Math.round(f * 100)}%`;
+        state.progress = f;
+      },
     });
     downloadBlob(blob, `energy-studio-${Date.now()}.${ext}`);
   } finally {
+    state.progress = null;
     state.playing = wasPlaying;
   }
 }
@@ -90,70 +101,78 @@ watch(
 </script>
 
 <template>
-  <canvas ref="backdrop" class="backdrop" aria-hidden="true" />
-  <div class="shell">
-    <main class="card">
-      <header class="brand">
-        <h1 class="wordmark">ENERGY STUDIO</h1>
-      </header>
+  <tc-look-provider look="clean">
+    <canvas ref="backdrop" class="backdrop" aria-hidden="true" />
+    <div class="shell">
+      <main class="card">
+        <header class="brand">
+          <h1 class="wordmark">Energy Studio</h1>
+        </header>
 
-      <div class="body">
-        <aside class="panel">
-          <nav class="tabs" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="state.tab === 'image'"
-              :class="{ active: state.tab === 'image' }"
-              @click="selectTab('image')"
-            >
-              Image Settings
-            </button>
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="state.tab === 'motion'"
-              :class="{ active: state.tab === 'motion' }"
-              @click="selectTab('motion')"
-            >
-              Motion Settings
-            </button>
-          </nav>
-          <div class="panel-body" role="tabpanel">
-            <ImageSettings v-if="state.tab === 'image'" />
-            <MotionSettings v-else />
-          </div>
-        </aside>
+        <div class="body">
+          <aside class="panel">
+            <tc-segmented-control
+              kind="tabs"
+              variant="underline"
+              aria-label="Settings"
+              :options="tabs"
+              :value="state.tab"
+              @tc-value-change="(e: CustomEvent<{ value: Tab }>) => selectTab(e.detail.value)"
+            />
+            <div class="panel-body" role="tabpanel" :aria-label="state.tab === 'image' ? 'Image settings' : 'Motion settings'">
+              <ImageSettings v-if="state.tab === 'image'" />
+              <MotionSettings v-else />
+            </div>
+          </aside>
 
-        <section class="workspace">
-          <div class="preview">
-            <PreviewStage ref="stage" :backdrop="backdrop" />
-          </div>
-          <footer class="bar">
-            <button type="button" class="download" :disabled="!source || !!state.busy" @click="download">
-              {{ downloadLabel }}
-            </button>
-            <span class="sync" :class="state.sync">{{ syncLabel }}</span>
-            <nav class="links">
-              <button v-if="source" type="button" @click="stage?.openPicker()">Upload different source image</button>
-              <button type="button" @click="state.showGuidance = true">Guidance</button>
-            </nav>
-          </footer>
-        </section>
-      </div>
-    </main>
-  </div>
-  <GuidanceDialog />
+          <section class="workspace">
+            <div class="preview">
+              <PreviewStage ref="stage" :backdrop="backdrop" />
+            </div>
+            <footer class="bar">
+              <tc-button
+                class="download"
+                variant="primary"
+                size="lg"
+                :label="downloadLabel"
+                :disabled="!source || !!state.busy"
+                @click="download"
+              >
+                <Download slot="icon" />
+              </tc-button>
+              <span v-if="syncLabel" class="sync es-note" :class="state.sync">
+                <LoaderCircle v-if="state.sync === 'uploading'" class="sync-icon spin" aria-hidden="true" />
+                <CircleCheck v-else-if="state.sync === 'synced'" class="sync-icon" aria-hidden="true" />
+                <TriangleAlert v-else class="sync-icon" aria-hidden="true" />
+                {{ syncLabel }}
+              </span>
+              <nav class="links" aria-label="More">
+                <tc-button v-if="source" variant="ghost" size="sm" label="Upload different source image" @click="stage?.openPicker()">
+                  <ImageUp slot="icon" />
+                </tc-button>
+                <tc-button variant="ghost" size="sm" label="Guidance" @click="state.showGuidance = true">
+                  <CircleHelp slot="icon" />
+                </tc-button>
+              </nav>
+            </footer>
+          </section>
+        </div>
+      </main>
+    </div>
+    <GuidanceDialog />
+  </tc-look-provider>
 </template>
 
 <style scoped>
+/* A blurred copy of the current image fills the page behind the card. */
 .backdrop {
   position: fixed;
-  inset: -40px;
-  width: calc(100% + 80px);
-  height: calc(100% + 80px);
+  inset: calc(-1 * var(--es-size-backdrop-bleed));
+  width: calc(100% + 2 * var(--es-size-backdrop-bleed));
+  height: calc(100% + 2 * var(--es-size-backdrop-bleed));
   object-fit: cover;
-  filter: blur(18px) saturate(1.25) brightness(0.9);
+  opacity: var(--es-effect-backdrop-opacity);
+  filter: blur(var(--es-size-backdrop-blur)) saturate(var(--es-effect-backdrop-saturate));
   z-index: -1;
 }
 .shell {
@@ -161,176 +180,137 @@ watch(
   display: grid;
   place-items: center;
   grid-template-columns: minmax(0, 1fr);
-  padding: clamp(12px, 4vw, 56px);
+  padding: var(--es-space-page);
 }
 .card {
-  width: min(1480px, 100%);
-  height: min(900px, calc(100vh - 2 * clamp(16px, 4vw, 56px)));
-  min-height: 640px;
+  width: min(var(--es-size-card-max-width), 100%);
+  height: min(var(--es-size-card-max-height), calc(100vh - 2 * var(--es-space-page)));
+  min-height: var(--es-size-card-min-height);
   display: grid;
   grid-template-rows: auto 1fr;
-  background: var(--card);
-  border-radius: 24px;
-  box-shadow: 0 50px 120px -40px rgba(5, 3, 40, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  background: var(--es-color-card);
+  border-radius: var(--es-radius-card);
+  box-shadow: var(--es-shadow-card);
   overflow: hidden;
 }
 .brand {
-  padding: 24px 32px 8px;
+  padding: var(--es-space-card) var(--es-space-card) 0;
 }
 .wordmark {
-  margin: 0;
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: clamp(30px, 3.4vw, 52px);
-  letter-spacing: -0.01em;
-  line-height: 1;
-  color: var(--brand);
+  font-size: var(--es-font-wordmark-size);
+  font-weight: var(--es-font-wordmark-weight);
+  line-height: var(--es-font-wordmark-line-height);
+  color: var(--tc-text-strong);
 }
 .body {
   display: grid;
-  grid-template-columns: minmax(330px, 400px) minmax(0, 1fr);
-  gap: 24px;
-  padding: 16px 24px 24px;
+  grid-template-columns: minmax(var(--es-size-panel-min-width), var(--es-size-panel-max-width)) minmax(0, 1fr);
+  gap: var(--es-space-card);
+  padding: var(--es-space-card);
   min-height: 0;
 }
 .panel {
-  background: var(--panel);
-  border-radius: 20px;
-  padding: 22px 22px 28px;
   display: flex;
   flex-direction: column;
+  gap: var(--es-space-panel);
   min-height: 0;
-}
-.tabs {
-  display: flex;
-  gap: 22px;
-  margin-bottom: 22px;
-}
-.tabs button {
-  border: none;
-  background: none;
-  padding: 0 0 4px;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-}
-.tabs button.active {
-  color: var(--ink);
-  border-bottom-color: var(--ink);
+  padding: var(--es-space-panel);
+  background: var(--es-color-panel);
+  border-radius: var(--es-radius-panel);
 }
 .panel-body {
   overflow-y: auto;
-  margin: 0 -8px;
-  padding: 4px 8px 8px;
+  margin: 0 calc(-1 * var(--tc-space-2));
+  padding: var(--tc-space-1) var(--tc-space-2) var(--tc-space-2);
   scrollbar-width: thin;
 }
 .workspace {
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* lets the preview shrink with the window */
   grid-template-rows: 1fr auto;
-  gap: 16px;
+  gap: var(--tc-space-4);
   min-height: 0;
 }
 .preview {
   min-height: 0;
-  padding: 24px;
+  padding: var(--es-space-preview);
 }
 .bar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: var(--panel);
-  border-radius: 999px;
-  padding: 8px 20px 8px 8px;
+  gap: var(--tc-space-4);
   flex-wrap: wrap;
+  padding: var(--tc-space-2) var(--tc-space-4) var(--tc-space-2) var(--tc-space-2);
+  background: var(--es-color-panel);
+  border-radius: var(--es-radius-panel);
 }
 .download {
-  background: var(--brand);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 14px 52px;
-  font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  cursor: pointer;
-  min-width: 260px;
-  box-shadow: 0 12px 24px -14px var(--brand);
-  transition: transform 0.1s, opacity 0.2s;
-}
-.download:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-.download:disabled {
-  opacity: 0.55;
-  cursor: default;
+  min-width: var(--es-size-download-min-width);
 }
 .sync {
-  font-size: 12px;
-  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tc-space-1-5);
 }
 .sync.offline {
-  color: #8a5a00;
+  color: var(--tc-status-warning-fg);
+}
+.sync.synced .sync-icon {
+  color: var(--tc-status-success-fg);
+}
+.sync-icon {
+  width: var(--es-size-status-icon);
+  height: var(--es-size-status-icon);
+}
+.spin {
+  animation: spin var(--tc-duration-shimmer) linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
 }
 .links {
   margin-left: auto;
   display: flex;
-  gap: 22px;
-}
-.links button {
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
-  font-size: 12px;
-  color: var(--brand);
-  cursor: pointer;
-}
-.links button:hover {
-  text-decoration: underline;
+  gap: var(--tc-space-1);
 }
 
 @media (max-width: 900px) {
+  .shell {
+    padding: var(--es-space-page-narrow);
+  }
   .card {
     height: auto;
     min-height: 0;
   }
   .brand {
-    padding: 20px 20px 4px;
+    padding: var(--es-space-card-narrow) var(--es-space-card-narrow) 0;
   }
   .body {
     grid-template-columns: minmax(0, 1fr);
-    padding: 8px 12px 12px;
-  }
-  .panel {
-    padding: 18px 16px 22px;
+    padding: var(--es-space-card-narrow);
   }
   .workspace {
     order: -1;
   }
   .preview {
-    height: 56vw;
-    min-height: 260px;
     padding: 0;
   }
   .bar {
-    border-radius: 20px;
-    padding: 10px;
+    padding: var(--tc-space-2-5);
   }
   .download {
     width: 100%;
-    min-width: 0;
   }
   .links {
     margin-left: 0;
     flex-wrap: wrap;
-    gap: 8px 18px;
   }
 }
 </style>

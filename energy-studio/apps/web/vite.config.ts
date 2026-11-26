@@ -3,7 +3,10 @@ import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    // Trench Coat's tc-* tags are web components, not Vue components.
+    vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.startsWith('tc-') } } }),
+  ],
   resolve: {
     alias: {
       // Use the shared effect engine from source so the browser gets ES modules.

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { paramsAtTime } from '@energy-studio/core';
 import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue';
+import { ImagePlus, ImageUp, Sparkles, TriangleAlert } from 'lucide-vue-next';
 import { makeSampleImage, prepareBase, renderInto } from '@/lib/render';
 import { loadImage, source, state } from '@/lib/state';
 
@@ -144,11 +145,9 @@ function onKey(e: KeyboardEvent) {
   }
 }
 
-const guideStyle = computed(() =>
-  horizontal.value
-    ? { left: `${state.effect.axis * 100}%`, top: 0, bottom: 0, width: '0' }
-    : { top: `${state.effect.axis * 100}%`, left: 0, right: 0, height: '0' },
-);
+// Runtime geometry goes to CSS as custom properties; the stylesheet decides how to use them.
+const frameVars = computed(() => ({ '--frame-w': `${fit.value.width}px`, '--frame-h': `${fit.value.height}px` }));
+const guideVars = computed(() => ({ '--axis': `${state.effect.axis * 100}%` }));
 
 function openPicker() {
   fileEl.value?.click();
@@ -183,7 +182,7 @@ async function useSample() {
       v-show="source"
       class="frame"
       :class="{ horizontal, dragging }"
-      :style="{ width: `${fit.width}px`, height: `${fit.height}px` }"
+      :style="frameVars"
       role="slider"
       tabindex="0"
       aria-label="Axis position — drag on the image or use arrow keys"
@@ -199,25 +198,31 @@ async function useSample() {
       @keydown="onKey"
     >
       <canvas ref="canvasEl" />
-      <div class="guide" :class="{ visible: hovering || dragging }" :style="guideStyle" />
+      <div class="guide" :class="{ visible: hovering || dragging }" :style="guideVars" />
     </div>
 
     <div v-if="!source" class="empty">
-      <svg viewBox="0 0 48 48" width="54" height="54" fill="none" stroke="currentColor" aria-hidden="true">
-        <rect x="5" y="5" width="38" height="38" stroke-width="1.4" />
-        <line x1="25" y1="5" x2="25" y2="43" stroke-width="1.4" />
-        <line v-for="i in 10" :key="i" x1="5" x2="25" :y1="8 + i * 3" :y2="8 + i * 3" stroke-width="0.9" />
-      </svg>
+      <ImageUp class="empty-icon" aria-hidden="true" />
       <p class="empty-title">Drop a still image to add energy</p>
-      <p class="empty-sub">JPG, PNG, WebP, HEIC up to 40&nbsp;MB</p>
+      <p class="es-note">JPG, PNG, WebP, HEIC up to 40&nbsp;MB</p>
       <div class="empty-actions">
-        <button type="button" class="primary" @click="openPicker">Choose image</button>
-        <button type="button" class="ghost" @click="useSample">Try a sample</button>
+        <tc-button variant="primary" label="Choose image" @click="openPicker">
+          <ImagePlus slot="icon" />
+        </tc-button>
+        <tc-button variant="secondary" label="Try a sample" @click="useSample">
+          <Sparkles slot="icon" />
+        </tc-button>
       </div>
     </div>
 
-    <p v-if="state.error" class="error" role="alert">{{ state.error }}</p>
-    <div v-if="state.busy" class="busy" aria-live="polite">{{ state.busy }}</div>
+    <p v-if="state.error" class="error" role="alert">
+      <TriangleAlert class="error-icon" aria-hidden="true" />
+      {{ state.error }}
+    </p>
+    <div v-if="state.busy" class="busy" aria-live="polite">
+      <span>{{ state.busy }}</span>
+      <tc-progress-bar v-if="state.progress !== null" class="busy-bar" label="Recording video" :value="state.progress" />
+    </div>
   </div>
 </template>
 
@@ -226,23 +231,27 @@ async function useSample() {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 280px;
+  min-height: var(--es-size-preview-min-height);
   display: grid;
   place-items: center;
-  border-radius: 16px;
-  transition: background 0.2s, outline-color 0.2s;
-  outline: 2px dashed transparent;
-  outline-offset: -2px;
+  border-radius: var(--es-radius-panel);
+  outline: var(--es-size-drop-outline) dashed transparent;
+  outline-offset: calc(-1 * var(--es-size-drop-outline));
+  transition:
+    background var(--tc-duration-base) var(--tc-ease-standard),
+    outline-color var(--tc-duration-base) var(--tc-ease-standard);
 }
 .stage.drop-active {
-  background: rgba(29, 18, 230, 0.06);
-  outline-color: var(--brand);
+  background: var(--es-color-drop);
+  outline-color: var(--es-color-drop-outline);
 }
 .frame {
   position: relative;
-  border-radius: 8px;
+  width: var(--frame-w);
+  height: var(--frame-h);
+  border-radius: var(--es-radius-frame);
   overflow: hidden;
-  box-shadow: 0 30px 60px -30px rgba(10, 6, 60, 0.6);
+  box-shadow: var(--es-shadow-frame);
   touch-action: none;
   cursor: ew-resize;
   outline: none;
@@ -251,7 +260,8 @@ async function useSample() {
   cursor: ns-resize;
 }
 .frame:focus-visible {
-  box-shadow: 0 0 0 3px var(--brand), 0 30px 60px -30px rgba(10, 6, 60, 0.6);
+  outline: var(--tc-focus-outline);
+  outline-offset: var(--tc-focus-ring-offset);
 }
 canvas {
   display: block;
@@ -260,17 +270,19 @@ canvas {
 }
 .guide {
   position: absolute;
-  border: 0 dashed rgba(255, 255, 255, 0.85);
+  border: 0 dashed var(--es-color-axis-guide);
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity var(--tc-duration-fast) var(--tc-ease-standard);
   pointer-events: none;
   mix-blend-mode: difference;
 }
 .horizontal .guide {
-  border-left-width: 1px;
+  inset: 0 auto 0 var(--axis);
+  border-left-width: var(--es-size-axis-guide);
 }
 .frame:not(.horizontal) .guide {
-  border-top-width: 1px;
+  inset: var(--axis) 0 auto 0;
+  border-top-width: var(--es-size-axis-guide);
 }
 .guide.visible,
 .frame:focus-visible .guide {
@@ -279,65 +291,57 @@ canvas {
 .empty {
   display: grid;
   justify-items: center;
-  gap: 6px;
+  gap: var(--tc-space-1-5);
   text-align: center;
-  color: var(--brand);
-  padding: 32px;
+  padding: var(--tc-space-8);
+}
+.empty-icon {
+  width: var(--es-size-empty-icon);
+  height: var(--es-size-empty-icon);
+  color: var(--es-color-illustration);
+  stroke-width: 1.25;
 }
 .empty-title {
-  margin: 10px 0 0;
-  font-size: 18px;
-  color: var(--ink);
-}
-.empty-sub {
-  margin: 0;
-  font-size: 13px;
-  color: var(--ink-soft);
+  margin-top: var(--tc-space-2-5);
+  font-size: var(--es-font-empty-title-size);
+  font-weight: var(--tc-font-weight-medium);
+  color: var(--tc-text-primary);
 }
 .empty-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
-}
-.primary,
-.ghost {
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  border-radius: 999px;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-.primary {
-  background: var(--brand);
-  color: #fff;
-  border: none;
-}
-.ghost {
-  background: transparent;
-  color: var(--brand);
-  border: 1.5px solid var(--brand);
+  gap: var(--tc-space-2-5);
+  margin-top: var(--tc-space-4);
 }
 .error {
   position: absolute;
-  bottom: 8px;
-  margin: 0;
-  font-size: 13px;
-  color: #b3261e;
-  background: #fff;
-  padding: 6px 12px;
-  border-radius: 8px;
+  bottom: var(--tc-space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--tc-space-1-5);
+  padding: var(--tc-space-1-5) var(--tc-space-3);
+  border-radius: var(--tc-radius-md);
+  background: var(--tc-status-danger-bg);
+  color: var(--tc-status-danger-fg);
+  font-size: var(--tc-font-size-md);
+}
+.error-icon {
+  flex: none;
+  width: var(--es-size-status-icon);
+  height: var(--es-size-status-icon);
 }
 .busy {
   position: absolute;
-  inset: auto auto 16px 50%;
+  inset: auto auto var(--tc-space-4) 50%;
   transform: translateX(-50%);
-  background: rgba(10, 8, 40, 0.82);
-  color: #fff;
-  font-size: 13px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  backdrop-filter: blur(6px);
+  display: grid;
+  gap: var(--tc-space-1-5);
+  min-width: var(--es-size-download-min-width);
+  padding: var(--tc-space-2) var(--tc-space-4);
+  border-radius: var(--es-radius-busy);
+  background: var(--es-color-busy);
+  color: var(--es-color-busy-text);
+  font-size: var(--tc-font-size-md);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 </style>

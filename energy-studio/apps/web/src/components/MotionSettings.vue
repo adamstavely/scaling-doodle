@@ -1,102 +1,98 @@
 <script setup lang="ts">
-import type { MotionType } from '@energy-studio/core';
-import { computed } from 'vue';
+import type { MotionParams, MotionType } from '@energy-studio/core';
+import { Activity, MoveHorizontal, Pause, Play, TriangleAlert, Waves } from 'lucide-vue-next';
+import { computed, type Component } from 'vue';
 import { supportedVideoType } from '@/lib/render';
 import { state } from '@/lib/state';
-import DiamondSlider from './DiamondSlider.vue';
-import MotionIcon from './MotionIcon.vue';
 import OptionTile from './OptionTile.vue';
+import SettingSlider from './SettingSlider.vue';
 
-const types: { value: MotionType; label: string; hint: string }[] = [
-  { value: 'sweep', label: 'Sweep', hint: 'The axis travels across the frame' },
-  { value: 'flow', label: 'Flow', hint: 'Streak colours stream while the edge holds still' },
-  { value: 'pulse', label: 'Pulse', hint: 'The streaks breathe in and out' },
+const types: { value: MotionType; label: string; hint: string; icon: Component }[] = [
+  { value: 'sweep', label: 'Sweep', hint: 'The axis travels across the frame', icon: MoveHorizontal },
+  { value: 'flow', label: 'Flow', hint: 'Streak colours stream while the edge holds still', icon: Waves },
+  { value: 'pulse', label: 'Pulse', hint: 'The streaks breathe in and out', icon: Activity },
+];
+const loops: { value: MotionParams['loop']; label: string }[] = [
+  { value: 'pingpong', label: 'Ping-pong' },
+  { value: 'loop', label: 'Loop' },
+];
+const sizes = [
+  { value: '720', label: '720 px' },
+  { value: '1280', label: '1280 px' },
+  { value: '1920', label: '1920 px' },
 ];
 const hint = computed(() => types.find((t) => t.value === state.motion.type)?.hint);
-const videoLength = computed(() => state.motion.duration * state.videoCycles);
+const videoLength = computed(() => `Video length ${(state.motion.duration * state.videoCycles).toFixed(1)} s`);
 const canRecord = !!supportedVideoType();
-const sizes = [
-  { value: 720, label: '720' },
-  { value: 1280, label: '1280' },
-  { value: 1920, label: '1920' },
-];
 </script>
 
 <template>
   <div class="settings">
-    <section>
+    <section class="group">
       <div class="head">
-        <h3>Motion</h3>
-        <button type="button" class="play" :aria-pressed="state.playing" @click="state.playing = !state.playing">
-          <svg v-if="state.playing" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
-            <rect x="2" y="1" width="3" height="10" fill="currentColor" /><rect x="7" y="1" width="3" height="10" fill="currentColor" />
-          </svg>
-          <svg v-else viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor" /></svg>
-          {{ state.playing ? 'Pause preview' : 'Play preview' }}
-        </button>
+        <h3 class="es-heading">Motion</h3>
+        <tc-button
+          variant="secondary"
+          size="sm"
+          :label="state.playing ? 'Pause preview' : 'Play preview'"
+          :aria-pressed="state.playing"
+          @click="state.playing = !state.playing"
+        >
+          <Pause v-if="state.playing" slot="icon" />
+          <Play v-else slot="icon" />
+        </tc-button>
       </div>
-      <div class="row3">
+      <div class="tiles">
         <OptionTile
           v-for="t in types"
           :key="t.value"
-          class="mode"
+          class="type"
           :selected="state.motion.type === t.value"
           :label="t.hint"
           @select="state.motion.type = t.value"
         >
-          <MotionIcon :type="t.value" />
-          <span class="caption">{{ t.label }}</span>
+          <component :is="t.icon" class="type-icon" aria-hidden="true" />
+          <span>{{ t.label }}</span>
         </OptionTile>
       </div>
-      <p class="hint">{{ hint }}</p>
+      <p class="es-note">{{ hint }}</p>
     </section>
 
-    <DiamondSlider v-model="state.motion.amount" label="Intensity" />
-    <DiamondSlider
-      v-model="state.motion.duration"
-      label="Cycle Duration"
-      :min="1"
-      :max="12"
-      :step="0.5"
-      :format="(v) => `${v.toFixed(1)}s`"
-    />
+    <SettingSlider v-model="state.motion.amount" label="Intensity (%)" :scale="100" />
+    <SettingSlider v-model="state.motion.duration" label="Cycle duration (s)" :min="1" :max="12" :step="0.5" />
 
-    <section class="toggles">
-      <div class="seg" role="group" aria-label="Loop style">
-        <button type="button" :class="{ on: state.motion.loop === 'pingpong' }" @click="state.motion.loop = 'pingpong'">
-          Ping-pong
-        </button>
-        <button type="button" :class="{ on: state.motion.loop === 'loop' }" @click="state.motion.loop = 'loop'">Loop</button>
-      </div>
-      <label class="check">
-        <input v-model="state.motion.easing" type="checkbox" />
-        Ease in / out
-      </label>
-    </section>
-
-    <section class="export">
-      <h3>Video Export</h3>
-      <DiamondSlider
-        v-model="state.videoCycles"
-        label="Cycles"
-        :min="1"
-        :max="6"
-        :step="1"
-        :format="(v) => `${v} × = ${videoLength.toFixed(1)}s`"
+    <section class="row">
+      <tc-segmented-control
+        size="sm"
+        aria-label="Loop style"
+        :options="loops"
+        :value="state.motion.loop"
+        @tc-value-change="(e: CustomEvent<{ value: MotionParams['loop'] }>) => (state.motion.loop = e.detail.value)"
       />
-      <div class="seg sizes" role="group" aria-label="Video size (long edge)">
-        <span class="seg-label">Long edge</span>
-        <button
-          v-for="s in sizes"
-          :key="s.value"
-          type="button"
-          :class="{ on: state.videoLongEdge === s.value }"
-          @click="state.videoLongEdge = s.value"
-        >
-          {{ s.label }}
-        </button>
+      <tc-switch
+        label="Ease in / out"
+        :value="state.motion.easing"
+        @tc-value-change="(e: CustomEvent<{ value: boolean }>) => (state.motion.easing = e.detail.value)"
+      />
+    </section>
+
+    <section class="group export">
+      <h3 class="es-heading">Video export</h3>
+      <SettingSlider v-model="state.videoCycles" label="Cycles" :min="1" :max="6" :description="videoLength" />
+      <div class="group">
+        <span id="long-edge" class="es-note">Long edge</span>
+        <tc-segmented-control
+          size="sm"
+          aria-labelledby="long-edge"
+          :options="sizes"
+          :value="String(state.videoLongEdge)"
+          @tc-value-change="(e: CustomEvent<{ value: string }>) => (state.videoLongEdge = Number(e.detail.value))"
+        />
       </div>
-      <p v-if="!canRecord" class="warn">This browser can't record video. Try a recent Chrome, Edge, Firefox or Safari.</p>
+      <p v-if="!canRecord" class="es-note warn">
+        <TriangleAlert class="warn-icon" aria-hidden="true" />
+        This browser can't record video. Try a recent Chrome, Edge, Firefox or Safari.
+      </p>
     </section>
   </div>
 </template>
@@ -104,113 +100,45 @@ const sizes = [
 <style scoped>
 .settings {
   display: grid;
-  gap: 24px;
+  gap: var(--es-space-section);
 }
-h3 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 500;
-}
-.head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-.play {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--brand);
-  color: var(--brand);
-  background: transparent;
-  border-radius: 999px;
-  padding: 5px 12px;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-.play[aria-pressed='true'] {
-  background: var(--brand);
-  color: #fff;
-}
-.row3 {
+.group {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--es-space-field);
 }
-.mode {
-  padding: 10px 6px 8px;
-  aspect-ratio: 1 / 0.92;
-}
-.caption {
-  font-size: 11px;
-  align-self: flex-start;
-  padding-left: 6px;
-}
-.hint {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-  min-height: 1em;
-}
-.toggles {
+.head,
+.row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--tc-space-3);
   flex-wrap: wrap;
 }
-.seg {
-  display: inline-flex;
-  align-items: center;
-  background: var(--tile);
-  border-radius: 999px;
-  padding: 3px;
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--es-space-tile-gap);
 }
-.seg button {
-  border: none;
-  background: transparent;
-  font: inherit;
-  font-size: 12px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: var(--ink-soft);
+.type {
+  aspect-ratio: 1;
 }
-.seg button.on {
-  background: var(--brand);
-  color: #fff;
-}
-.seg-label {
-  font-size: 12px;
-  color: var(--ink-soft);
-  padding: 0 8px 0 10px;
-}
-.check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-.check input {
-  accent-color: var(--brand);
-  width: 16px;
-  height: 16px;
+.type-icon {
+  width: var(--es-size-tile-icon);
+  height: var(--es-size-tile-icon);
 }
 .export {
-  display: grid;
-  gap: 16px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
-.sizes {
-  justify-self: start;
+  padding-top: var(--es-space-section);
+  border-top: var(--tc-hairline) solid var(--tc-border-strong);
 }
 .warn {
-  margin: 0;
-  font-size: 12px;
-  color: #b3261e;
+  display: flex;
+  gap: var(--tc-space-1-5);
+  color: var(--tc-status-warning-fg);
+}
+.warn-icon {
+  flex: none;
+  width: var(--es-size-status-icon);
+  height: var(--es-size-status-icon);
+  margin-top: var(--tc-space-0-5);
 }
 </style>

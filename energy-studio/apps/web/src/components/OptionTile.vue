@@ -1,17 +1,11 @@
 <script setup lang="ts">
-defineProps<{ selected: boolean; label?: string; variant?: 'fill' | 'outline' }>();
+/** A picture tile in a row of choices (mode, affected area, motion). Pressed when it's the current choice. */
+defineProps<{ selected: boolean; label?: string }>();
 defineEmits<{ select: [] }>();
 </script>
 
 <template>
-  <button
-    type="button"
-    class="tile"
-    :class="[variant ?? 'outline', { selected }]"
-    :aria-pressed="selected"
-    :title="label"
-    @click="$emit('select')"
-  >
+  <button type="button" class="tile" :class="{ selected }" :aria-pressed="selected" :title="label" @click="$emit('select')">
     <slot />
   </button>
 </template>
@@ -22,34 +16,37 @@ defineEmits<{ select: [] }>();
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border: 1.5px solid transparent;
-  border-radius: 14px;
-  background: var(--tile);
-  color: var(--ink);
+  gap: var(--tc-space-1-5);
+  padding: var(--tc-space-2);
+  border: none;
+  border-radius: var(--es-radius-tile);
+  background: var(--es-color-tile);
+  box-shadow: var(--es-shadow-tile);
+  color: var(--tc-text-secondary);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--es-font-tile-size);
+  font-weight: var(--tc-font-weight-medium);
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 6px 16px -12px rgba(20, 16, 80, 0.4);
-  transition: background 0.15s, border-color 0.15s, transform 0.1s, color 0.15s;
+  transition:
+    box-shadow var(--es-motion-tile-duration) var(--es-motion-tile-ease),
+    color var(--es-motion-tile-duration) var(--es-motion-tile-ease),
+    background var(--es-motion-tile-duration) var(--es-motion-tile-ease),
+    transform var(--es-motion-tile-duration) var(--es-motion-tile-ease);
 }
 .tile:hover {
-  background: var(--tile-hover);
+  box-shadow: var(--es-shadow-tile-hover);
+  color: var(--tc-text-primary);
 }
 .tile:active {
-  transform: scale(0.97);
+  transform: scale(var(--es-motion-tile-press-scale));
 }
 .tile:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 2px;
+  outline: var(--tc-focus-outline);
+  outline-offset: var(--tc-focus-ring-offset);
 }
-.outline.selected {
-  border-color: var(--ink);
-  background: var(--tile-selected);
-}
-.fill.selected {
-  background: var(--brand);
-  color: #fff;
-  box-shadow: 0 8px 20px -10px var(--brand);
+.tile.selected {
+  background: var(--es-color-tile-selected);
+  box-shadow: inset 0 0 0 var(--tc-focus-ring-width) var(--es-color-tile-selected-border);
+  color: var(--es-color-tile-selected-text);
 }
 </style>

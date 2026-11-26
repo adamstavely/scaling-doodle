@@ -52,6 +52,24 @@ The default port is 3300 so it can run alongside intellect-api on 3000. If you c
 with `ENERGY_STUDIO_API_URL=http://localhost:<port> npm run dev:web`. On the client, set `VITE_API_BASE` if the API
 isn't at `/api` on the same origin.
 
+## Design system
+
+The UI uses [Trench Coat](https://github.com/adamstavely/legendary-chainsaw) in its Clean look. Trench Coat is
+vendored as `vendor/adamstavely-trenchcoat-<version>.tgz`, so installs don't need GitHub Packages.
+
+- **Components.** Trench Coat elements are used for the tabs, buttons, sliders, number fields, segmented choices,
+  switch, progress bar and the Guidance dialog (`tc-*` tags, registered in `apps/web/src/main.ts`). The picture
+  tiles for mode, affected area and motion are the app's own `OptionTile`.
+- **Tokens.** Every style value is a design token. Trench Coat's tokens come from its DTCG files. Energy Studio's
+  own tokens are in `apps/web/tokens/energy-studio.tokens.json` (DTCG format), and most of them alias Trench Coat's
+  (`{tc.surface.tray}`). Run `npm run tokens -w @energy-studio/web` after editing that file. It writes
+  `src/styles/tokens.css` as `--es-*` custom properties.
+- **Checks.** `npm run lint -w @energy-studio/web` runs as part of the build. It fails when `tokens.css` is out of
+  date, and when a stylesheet uses a raw colour, length, time or font, an inline style, or a `var()` that isn't a
+  DTCG token. It also runs `trenchcoat lint` on the templates.
+- **Type and icons.** Inter (`@fontsource-variable/inter`) for all text, and Lucide (`lucide-vue-next`) for all
+  interface icons. The mode and affected-area pictures are custom drawings of the effect.
+
 ## Controls
 
 **Image settings**

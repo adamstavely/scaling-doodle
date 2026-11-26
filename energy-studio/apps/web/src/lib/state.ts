@@ -34,6 +34,8 @@ export const state = reactive({
   imageId: null as string | null,
   sync: 'none' as SyncStatus,
   busy: null as null | string,
+  /** How far a video recording has got, 0..1; null when nothing is recording. */
+  progress: null as null | number,
   error: null as null | string,
   showGuidance: false,
 });

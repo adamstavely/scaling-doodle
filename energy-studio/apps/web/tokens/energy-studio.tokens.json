@@ -1,0 +1,89 @@
+{
+  "$description": "Energy Studio's own design tokens (DTCG format). Most values alias Trench Coat's DTCG tokens under `tc.` (Clean look, see @adamstavely/trenchcoat/tokens/dtcg). Only sizes Trench Coat has no token for are literal. `npm run tokens -w @energy-studio/web` writes them to src/styles/tokens.css as --es-* custom properties.",
+  "es": {
+    "color": {
+      "$type": "color",
+      "page": { "$value": "{tc.surface.sunken}", "$description": "Page behind the studio card" },
+      "card": { "$value": "{tc.surface.raised}", "$description": "The studio card" },
+      "panel": { "$value": "{tc.surface.tray}", "$description": "Settings panel and footer bar: a tray the tiles sit on" },
+      "tile": { "$value": "{tc.surface.on-tray}", "$description": "An option tile on the panel" },
+      "tile-selected": { "$value": "{tc.fill.selected}" },
+      "tile-selected-border": { "$value": "{tc.border.selected}" },
+      "tile-selected-text": { "$value": "{tc.accent.text}" },
+      "illustration": { "$value": "{tc.accent.text}", "$description": "The empty-state picture" },
+      "axis-guide": { "$value": "{tc.text.on-accent}", "$description": "The axis line over the image, drawn in difference blend" },
+      "drop": { "$value": "{tc.accent.subtle}", "$description": "Preview area while a file is dragged over it" },
+      "drop-outline": { "$value": "{tc.accent}" },
+      "busy": { "$value": "{tc.surface.inverse}", "$description": "Render and recording progress pill over the preview" },
+      "busy-text": { "$value": "{tc.text.on-inverse}" }
+    },
+    "size": {
+      "$type": "dimension",
+      "card-max-width": { "$value": { "value": 1480, "unit": "px" } },
+      "card-max-height": { "$value": { "value": 900, "unit": "px" } },
+      "card-min-height": { "$value": { "value": 640, "unit": "px" } },
+      "panel-min-width": { "$value": { "value": 330, "unit": "px" } },
+      "panel-max-width": { "$value": { "value": 400, "unit": "px" } },
+      "preview-min-height": { "$value": { "value": 280, "unit": "px" } },
+      "tile-icon": { "$value": { "value": 28, "unit": "px" }, "$description": "Lucide icon in a motion tile" },
+      "empty-icon": { "$value": { "value": 48, "unit": "px" }, "$description": "Lucide icon in the empty preview" },
+      "status-icon": { "$value": { "value": 14, "unit": "px" } },
+      "dimension-field": { "$value": { "value": 112, "unit": "px" }, "$description": "Custom width / height fields" },
+      "download-min-width": { "$value": { "value": 220, "unit": "px" } },
+      "axis-guide": { "$value": "{tc.hairline}" },
+      "drop-outline": { "$value": "{tc.focus-ring.width}" },
+      "backdrop-blur": { "$value": { "value": 24, "unit": "px" } },
+      "backdrop-bleed": { "$value": { "value": 40, "unit": "px" }, "$description": "How far the blurred backdrop reaches past the viewport, so its edges don't show" }
+    },
+    "space": {
+      "$type": "dimension",
+      "page": { "$value": "{tc.space.10}" },
+      "page-narrow": { "$value": "{tc.space.3}" },
+      "card": { "$value": "{tc.space.6}" },
+      "card-narrow": { "$value": "{tc.space.3}" },
+      "panel": { "$value": "{tc.space.5}" },
+      "section": { "$value": "{tc.space.6}", "$description": "Between groups of settings" },
+      "field": { "$value": "{tc.space.3}", "$description": "Between a heading and its control" },
+      "tile-gap": { "$value": "{tc.space.2}" },
+      "preview": { "$value": "{tc.space.6}" }
+    },
+    "radius": {
+      "$type": "dimension",
+      "card": { "$value": "{tc.radius.3xl}" },
+      "panel": { "$value": "{tc.radius.2xl}" },
+      "tile": { "$value": "{tc.radius.xl}" },
+      "frame": { "$value": "{tc.radius.md}" },
+      "busy": { "$value": "{tc.radius.full}" }
+    },
+    "shadow": {
+      "$type": "shadow",
+      "card": { "$value": "{tc.shadow.overlay}" },
+      "tile": { "$value": "{tc.shadow.raised}" },
+      "tile-hover": { "$value": "{tc.shadow.raised-hover}" },
+      "frame": { "$value": "{tc.shadow.overlay}" }
+    },
+    "font": {
+      "family": { "$type": "fontFamily", "$value": "{tc.font.sans}" },
+      "wordmark-size": { "$type": "dimension", "$value": "{tc.font-size.3xl}" },
+      "wordmark-weight": { "$type": "fontWeight", "$value": "{tc.font-weight.semibold}" },
+      "wordmark-line-height": { "$type": "dimension", "$value": "{tc.line-height.display}" },
+      "heading-size": { "$type": "dimension", "$value": "{tc.title.font-size}" },
+      "heading-weight": { "$type": "fontWeight", "$value": "{tc.title.font-weight}" },
+      "heading-line-height": { "$type": "dimension", "$value": "{tc.title.line-height}" },
+      "tile-size": { "$type": "dimension", "$value": "{tc.font-size.sm}" },
+      "body-size": { "$type": "dimension", "$value": "{tc.font-size.md}" },
+      "body-line-height": { "$type": "dimension", "$value": "{tc.line-height.normal}" },
+      "empty-title-size": { "$type": "dimension", "$value": "{tc.font-size.xl}" }
+    },
+    "motion": {
+      "tile-duration": { "$type": "duration", "$value": "{tc.duration.fast}" },
+      "tile-ease": { "$type": "cubicBezier", "$value": "{tc.ease.out}" },
+      "tile-press-scale": { "$type": "number", "$value": 0.97 }
+    },
+    "effect": {
+      "$type": "number",
+      "backdrop-opacity": { "$value": 0.45, "$description": "The blurred copy of the image behind the card" },
+      "backdrop-saturate": { "$value": 1.2 }
+    }
+  }
+}
