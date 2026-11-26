@@ -24,15 +24,30 @@ export function resolveAspectRatio(aspect: AspectSetting, source: Size): number 
   }
 }
 
-/** Centre crop of the source that fills `ratio` (like CSS object-fit: cover). */
-export function coverCrop(source: Size, ratio: number): { sx: number; sy: number; sw: number; sh: number } {
+/**
+ * Crop of the source that fills `ratio` (like CSS object-fit: cover), centred on the focus point (fractions of the
+ * source, default the middle) as far as the image allows.
+ */
+export function coverCrop(
+  source: Size,
+  ratio: number,
+  focusX = 0.5,
+  focusY = 0.5,
+): { sx: number; sy: number; sw: number; sh: number } {
+  const place = (focus: number, full: number, part: number) =>
+    Math.round(Math.min(full - part, Math.max(0, focus * full - part / 2)));
   const srcRatio = source.width / source.height;
   if (srcRatio > ratio) {
     const sw = Math.round(source.height * ratio);
-    return { sx: Math.round((source.width - sw) / 2), sy: 0, sw, sh: source.height };
+    return { sx: place(focusX, source.width, sw), sy: 0, sw, sh: source.height };
   }
   const sh = Math.round(source.width / ratio);
-  return { sx: 0, sy: Math.round((source.height - sh) / 2), sw: source.width, sh };
+  return { sx: 0, sy: place(focusY, source.height, sh), sw: source.width, sh };
+}
+
+/** The crop for an aspect setting, honouring its focus point. */
+export function cropFor(aspect: AspectSetting, source: Size) {
+  return coverCrop(source, resolveAspectRatio(aspect, source), aspect.focusX ?? 0.5, aspect.focusY ?? 0.5);
 }
 
 /**

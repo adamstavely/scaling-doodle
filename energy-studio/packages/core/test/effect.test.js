@@ -86,3 +86,109 @@ test('motion sweep stays within bounds and returns to start each cycle', () => {
   }
   assert.equal(paramsAtTime(base, motion, 0).axis, paramsAtTime(base, motion, 2).axis);
 });
+
+// ---- Features added with the creative controls ----
+const { normalizeEffect, MAX_EXTRA_AXES, keyframeOf, cropFor } = require('../dist');
+const solid = (w, h, rgb) => {
+  const px = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) px.set([...rgb, 255], i * 4);
+  return px;
+};
+
+test('length stops the streaks partway; the photo shows past them', () => {
+  const w = 101, h = 2, src = gradient(w, h);
+  const out = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, area: 'right', axis: 0, blending: 0, length: 0.5 });
+  assert.equal(at(out, w, 40, 0)[0], 0); // streaked (axis column is x=0)
+  assert.equal(at(out, w, 80, 0)[0], 80); // beyond the length: original
+});
+
+test('fade thins the streaks towards their end', () => {
+  const w = 101, h = 2, src = gradient(w, h);
+  const out = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, area: 'right', axis: 0, blending: 0, fade: 1 });
+  assert.equal(at(out, w, 2, 0)[0] < 3, true); // nearly pure streak near the axis
+  assert.ok(at(out, w, 95, 0)[0] > 85, 'far end is almost the photo again');
+});
+
+test('a protect mask keeps the photo where it is set', () => {
+  const w = 11, h = 2, src = gradient(w, h);
+  const mask = new Uint8Array(w * h);
+  mask[2] = 255;
+  const out = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, area: 'left', axis: 0.5, blending: 0 }, undefined, { mask });
+  assert.equal(at(out, w, 2, 0)[0], 2); // protected
+  assert.equal(at(out, w, 1, 0)[0], 5); // streaked
+});
+
+test('layer output is just the streaks, transparent elsewhere', () => {
+  const w = 11, h = 2, src = gradient(w, h);
+  const out = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, area: 'left', axis: 0.5, blending: 0 }, undefined, { layer: true });
+  assert.deepEqual(at(out, w, 1, 0), [5, 0, 0, 255]);
+  assert.equal(at(out, w, 9, 0)[3], 0);
+});
+
+test('extra axes streak too, and are capped', () => {
+  const w = 21, h = 2, src = gradient(w, h);
+  const out = applyEnergy(src, w, h, {
+    ...DEFAULT_EFFECT, area: 'left', axis: 0.25, blending: 0, extraAxes: [{ area: 'right', axis: 0.75 }],
+  });
+  assert.equal(at(out, w, 0, 0)[0], 5);
+  assert.equal(at(out, w, 20, 0)[0], 15);
+  assert.equal(at(out, w, 10, 0)[0], 10); // between the axes: untouched
+  const many = Array.from({ length: 6 }, () => ({ area: 'left', axis: 0.5 }));
+  assert.equal(normalizeEffect({ extraAxes: many }).extraAxes.length, MAX_EXTRA_AXES);
+});
+
+test('burst leaves the inside of the ring alone and streaks outside it', () => {
+  const w = 41, h = 41, src = gradient(w, h);
+  const out = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, mode: 'burst', axis: 0.2, blending: 0 });
+  assert.deepEqual(at(out, w, 20, 20), [20, 20, 0, 255]);
+  // Straight right of the centre, far out: sampled from the ring at radius ≈ 0.2 × half diagonal ≈ 5.8 px.
+  const r = at(out, w, 40, 20)[0];
+  assert.ok(r >= 25 && r <= 27, `expected the ring colour, got ${r}`);
+});
+
+test('mirror reflects the other side of the axis', () => {
+  const w = 21, h = 2, src = gradient(w, h);
+  const out = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, mode: 'mirror', area: 'left', axis: 0.5, blending: 0 });
+  assert.ok(at(out, w, 9, 0)[0] >= 10, 'just left of the axis shows what is just right of it');
+});
+
+test('wave and colour settings change the streaks', () => {
+  const w = 31, h = 31;
+  const src = gradient(w, h);
+  const plain = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, area: 'left', axis: 0.9, blending: 0 });
+  const wave = applyEnergy(src, w, h, { ...DEFAULT_EFFECT, mode: 'wave', wave: 1, area: 'left', axis: 0.9, blending: 0 });
+  assert.notDeepEqual(Array.from(plain), Array.from(wave));
+  const grey = solid(4, 2, [128, 128, 128]);
+  const tinted = applyEnergy(grey, 4, 2, { ...DEFAULT_EFFECT, area: 'left', axis: 1, blending: 0, tintAmount: 1, tintStart: '#ff0000', tintEnd: '#ff0000' });
+  assert.ok(at(tinted, 4, 0, 0)[0] > 200 && at(tinted, 4, 0, 0)[1] < 10, 'grey takes the tint');
+  const desat = applyEnergy(solid(4, 2, [255, 0, 0]), 4, 2, { ...DEFAULT_EFFECT, area: 'left', axis: 1, blending: 0, saturation: 0 });
+  const [r, g] = at(desat, 4, 0, 0);
+  assert.ok(Math.abs(r - g) < 2, 'saturation 0 is grey');
+  const glow = applyEnergy(grey, 4, 2, { ...DEFAULT_EFFECT, area: 'left', axis: 1, blending: 0, glow: 1 });
+  assert.ok(at(glow, 4, 3, 0)[0] > 128, 'glow brightens near the axis');
+});
+
+test('older settings without the new fields render as before', () => {
+  const w = 11, h = 5, src = gradient(w, h);
+  const { mode, area, axis, blending, angle, flare, sampleOffset } = DEFAULT_EFFECT;
+  const old = applyEnergy(src, w, h, { mode, area, axis, blending, angle, flare, sampleOffset });
+  assert.deepEqual(Array.from(old), Array.from(applyEnergy(src, w, h, DEFAULT_EFFECT)));
+});
+
+test('keyframes move from the start look to the end look', () => {
+  const motion = { ...DEFAULT_MOTION, type: 'keyframes', loop: 'loop', easing: false, duration: 2,
+    keyframes: { from: { axis: 0.2, hue: 0 }, to: { axis: 0.8, hue: 90 } } };
+  const mid = paramsAtTime(DEFAULT_EFFECT, motion, 1);
+  assert.ok(Math.abs(mid.axis - 0.5) < 1e-9);
+  assert.ok(Math.abs(mid.hue - 45) < 1e-9);
+  assert.equal(paramsAtTime(DEFAULT_EFFECT, motion, 0).axis, 0.2);
+  assert.equal(keyframeOf(DEFAULT_EFFECT).axis, DEFAULT_EFFECT.axis);
+});
+
+test('crops centre on the focus point as far as the image allows', () => {
+  const src = { width: 2000, height: 1000 };
+  assert.equal(coverCrop(src, 1).sx, 500);
+  assert.equal(coverCrop(src, 1, 0.9, 0.5).sx, 1000); // clamped to the right edge
+  assert.equal(coverCrop(src, 1, 0.3, 0.5).sx, 100);
+  assert.equal(cropFor({ preset: '1:1', customWidth: 1, customHeight: 1, focusX: 0 }, src).sx, 0);
+});
