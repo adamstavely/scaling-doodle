@@ -1,0 +1,15 @@
+{
+  "name": "@energy-studio/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-agnostic pixel-streak (energy) effect shared by the web client and the API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
