@@ -1,20 +1,25 @@
 <script setup lang="ts">
-import { CircleCheck, CircleHelp, Download, ImageUp, LoaderCircle, TriangleAlert } from 'lucide-vue-next';
-import { computed, ref, toRaw, watch } from 'vue';
+import { CircleCheck, CircleHelp, Download, FileDown, ImageUp, LoaderCircle, Redo2, RotateCcw, TriangleAlert, Undo2 } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import ColourSettings from './components/ColourSettings.vue';
+import ExportDialog from './components/ExportDialog.vue';
 import GuidanceDialog from './components/GuidanceDialog.vue';
 import ImageSettings from './components/ImageSettings.vue';
 import MotionSettings from './components/MotionSettings.vue';
+import PresetsPanel from './components/PresetsPanel.vue';
 import PreviewStage from './components/PreviewStage.vue';
-import { renderImage } from './lib/api';
-import { downloadBlob, recordVideo, renderImageLocally } from './lib/render';
-import { source, state, type Tab } from './lib/state';
+import { exportStill, exportVideo, runExport } from './lib/export';
+import { canRedo, canUndo, redo, startHistory, undo } from './lib/history';
+import { loadImage, loadImageFromUrl, resetLook, source, state, type Tab } from './lib/state';
 
 const backdrop = ref<HTMLCanvasElement | null>(null);
 const stage = ref<InstanceType<typeof PreviewStage>>();
 
 const tabs: { value: Tab; label: string }[] = [
-  { value: 'image', label: 'Image settings' },
-  { value: 'motion', label: 'Motion settings' },
+  { value: 'image', label: 'Image' },
+  { value: 'colour', label: 'Colour' },
+  { value: 'motion', label: 'Motion' },
+  { value: 'presets', label: 'Presets' },
 ];
 
 function selectTab(tab: Tab) {
@@ -38,66 +43,61 @@ const syncLabel = computed(
     })[state.sync],
 );
 
-async function download() {
-  const src = source.value;
-  if (!src || state.busy) return;
-  state.error = null;
-  try {
-    if (state.tab === 'image') await downloadImage();
-    else await downloadVideo();
-  } catch (e) {
-    state.error = e instanceof Error ? e.message : String(e);
-  } finally {
-    state.busy = null;
-  }
+/** The quick download: PNG on the image tabs, a video on the Motion tab. Everything else is under Export. */
+function download() {
+  runExport(() => (state.tab === 'motion' ? exportVideo() : exportStill('png')));
 }
 
-async function downloadImage() {
-  state.busy = 'Rendering…';
-  const effect = toRaw(state.effect);
-  const aspect = toRaw(state.aspect);
-  let blob: Blob | null = null;
-  if (state.imageId) {
-    try {
-      blob = await renderImage({ imageId: state.imageId, effect, aspect, format: 'png' });
-    } catch (e) {
-      console.warn('Server render failed, rendering in browser', e);
-    }
-  }
-  blob ??= await renderImageLocally(source.value!, aspect, effect);
-  downloadBlob(blob, `energy-studio-${Date.now()}.png`);
-}
-
-async function downloadVideo() {
-  const wasPlaying = state.playing;
-  state.playing = false; // free the CPU for the recorder
-  state.busy = 'Recording 0%';
-  state.progress = 0;
-  try {
-    const { blob, ext } = await recordVideo({
-      src: source.value!,
-      aspect: toRaw(state.aspect),
-      effect: toRaw(state.effect),
-      motion: toRaw(state.motion),
-      seconds: state.motion.duration * state.videoCycles,
-      longEdge: state.videoLongEdge,
-      onProgress: (f) => {
-        state.busy = `Recording ${Math.round(f * 100)}%`;
-        state.progress = f;
-      },
-    });
-    downloadBlob(blob, `energy-studio-${Date.now()}.${ext}`);
-  } finally {
-    state.progress = null;
-    state.playing = wasPlaying;
-  }
-}
-
-// Leaving the page mid-recording would lose the video.
+// Leaving the page mid-export would lose it.
 watch(
   () => state.busy,
   (busy) => (window.onbeforeunload = busy ? () => true : null),
 );
+
+const typing = (t: EventTarget | null) =>
+  t instanceof HTMLElement && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName));
+
+function onKey(e: KeyboardEvent) {
+  if (typing(e.target)) return;
+  const mod = e.metaKey || e.ctrlKey;
+  const key = e.key.toLowerCase();
+  if (mod && key === 'z') {
+    e.preventDefault();
+    if (e.shiftKey) redo();
+    else undo();
+  } else if (mod && key === 'y') {
+    e.preventDefault();
+    redo();
+  } else if (!mod && e.key === '\\' && source.value) {
+    state.compare = !state.compare;
+  }
+}
+
+/** Paste an image, or a link to one, anywhere on the page. */
+function onPaste(e: ClipboardEvent) {
+  if (typing(e.target)) return;
+  const file = [...(e.clipboardData?.files ?? [])].find((f) => f.type.startsWith('image/'));
+  if (file) {
+    e.preventDefault();
+    loadImage(file, file.name || 'pasted-image.png');
+    return;
+  }
+  const text = e.clipboardData?.getData('text/plain')?.trim();
+  if (text && /^https?:\/\/\S+$/i.test(text)) {
+    e.preventDefault();
+    loadImageFromUrl(text);
+  }
+}
+
+onMounted(() => {
+  startHistory();
+  window.addEventListener('keydown', onKey);
+  window.addEventListener('paste', onPaste);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey);
+  window.removeEventListener('paste', onPaste);
+});
 </script>
 
 <template>
@@ -107,6 +107,17 @@ watch(
       <main class="card">
         <header class="brand">
           <h1 class="wordmark">Energy Studio</h1>
+          <div class="history" role="toolbar" aria-label="History">
+            <tc-button variant="ghost" size="sm" hide-label label="Undo" title="Undo (⌘Z)" :disabled="!canUndo" @click="undo">
+              <Undo2 slot="icon" />
+            </tc-button>
+            <tc-button variant="ghost" size="sm" hide-label label="Redo" title="Redo (⇧⌘Z)" :disabled="!canRedo" @click="redo">
+              <Redo2 slot="icon" />
+            </tc-button>
+            <tc-button variant="ghost" size="sm" label="Reset look" @click="resetLook">
+              <RotateCcw slot="icon" />
+            </tc-button>
+          </div>
         </header>
 
         <div class="body">
@@ -119,14 +130,16 @@ watch(
               :value="state.tab"
               @tc-value-change="(e: CustomEvent<{ value: Tab }>) => selectTab(e.detail.value)"
             />
-            <div class="panel-body" role="tabpanel" :aria-label="state.tab === 'image' ? 'Image settings' : 'Motion settings'">
+            <div class="panel-body" role="tabpanel" :aria-label="tabs.find((t) => t.value === state.tab)?.label">
               <ImageSettings v-if="state.tab === 'image'" />
-              <MotionSettings v-else />
+              <ColourSettings v-else-if="state.tab === 'colour'" />
+              <MotionSettings v-else-if="state.tab === 'motion'" />
+              <PresetsPanel v-else />
             </div>
           </aside>
 
           <section class="workspace">
-            <div class="preview">
+            <div class="preview-area">
               <PreviewStage ref="stage" :backdrop="backdrop" />
             </div>
             <footer class="bar">
@@ -139,6 +152,15 @@ watch(
                 @click="download"
               >
                 <Download slot="icon" />
+              </tc-button>
+              <tc-button
+                variant="secondary"
+                size="lg"
+                label="Export…"
+                :disabled="!source || !!state.busy"
+                @click="state.showExport = true"
+              >
+                <FileDown slot="icon" />
               </tc-button>
               <span v-if="syncLabel" class="sync es-note" :class="state.sync">
                 <LoaderCircle v-if="state.sync === 'uploading'" class="sync-icon spin" aria-hidden="true" />
@@ -160,6 +182,7 @@ watch(
       </main>
     </div>
     <GuidanceDialog />
+    <ExportDialog />
   </tc-look-provider>
 </template>
 
@@ -194,7 +217,16 @@ watch(
   overflow: hidden;
 }
 .brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tc-space-4);
   padding: var(--es-space-card) var(--es-space-card) 0;
+}
+.history {
+  display: flex;
+  align-items: center;
+  gap: var(--tc-space-1);
 }
 .wordmark {
   font-size: var(--es-font-wordmark-size);
@@ -231,7 +263,7 @@ watch(
   gap: var(--tc-space-4);
   min-height: 0;
 }
-.preview {
+.preview-area {
   min-height: 0;
   padding: var(--es-space-preview);
 }
@@ -299,7 +331,7 @@ watch(
   .workspace {
     order: -1;
   }
-  .preview {
+  .preview-area {
     padding: 0;
   }
   .bar {

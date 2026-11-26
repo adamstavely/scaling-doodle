@@ -1,12 +1,12 @@
 import {
   applyEnergy,
-  coverCrop,
+  cropFor,
   outputSize,
   paramsAtTime,
-  resolveAspectRatio,
   type AspectSetting,
   type EffectParams,
   type MotionParams,
+  type RenderOptions,
 } from '@energy-studio/core';
 import type { SourceImage } from './state';
 
@@ -27,7 +27,7 @@ export function prepareBase(src: SourceImage, aspect: AspectSetting, maxLongEdge
     size.width = Math.max(2, size.width - (size.width % 2));
     size.height = Math.max(2, size.height - (size.height % 2));
   }
-  const crop = coverCrop(src, resolveAspectRatio(aspect, src));
+  const crop = cropFor(aspect, src);
   const { ctx } = canvas2d(size.width, size.height);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
@@ -35,9 +35,39 @@ export function prepareBase(src: SourceImage, aspect: AspectSetting, maxLongEdge
   return ctx.getImageData(0, 0, size.width, size.height);
 }
 
+/**
+ * The protect mask cropped and scaled exactly like `prepareBase`, one byte per output pixel. `maskCanvas` covers the
+ * whole source.
+ */
+export function maskForBase(
+  maskCanvas: HTMLCanvasElement | null,
+  src: SourceImage,
+  aspect: AspectSetting,
+  width: number,
+  height: number,
+): Uint8Array | null {
+  if (!maskCanvas) return null;
+  const crop = cropFor(aspect, src);
+  const kx = maskCanvas.width / src.width;
+  const ky = maskCanvas.height / src.height;
+  const { ctx } = canvas2d(width, height);
+  ctx.drawImage(maskCanvas, crop.sx * kx, crop.sy * ky, crop.sw * kx, crop.sh * ky, 0, 0, width, height);
+  const data = ctx.getImageData(0, 0, width, height).data;
+  const out = new Uint8Array(width * height);
+  for (let i = 0; i < out.length; i++) out[i] = data[i * 4];
+  return out;
+}
+
 /** Applies the effect from `base` into `out` (same dimensions). */
-export function renderInto(base: ImageData, params: EffectParams, out: ImageData) {
-  applyEnergy(base.data, base.width, base.height, params, out.data);
+export function renderInto(base: ImageData, params: EffectParams, out: ImageData, options?: RenderOptions) {
+  applyEnergy(base.data, base.width, base.height, params, out.data, options);
+}
+
+/** Encodes a canvas; `type` is a MIME type such as image/png. */
+export function toBlob(canvas: HTMLCanvasElement, type = 'image/png', quality = 0.92): Promise<Blob> {
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error(`Could not encode ${type}`))), type, quality),
+  );
 }
 
 export function downloadBlob(blob: Blob, filename: string) {
@@ -52,20 +82,22 @@ export function downloadBlob(blob: Blob, filename: string) {
 }
 
 /** Full-resolution render in the browser, used when the API is unavailable. */
-export async function renderImageLocally(
-  src: SourceImage,
-  aspect: AspectSetting,
-  effect: EffectParams,
-  maxLongEdge = 4096,
-): Promise<Blob> {
-  const base = prepareBase(src, aspect, maxLongEdge);
+export async function renderImageLocally(opts: {
+  src: SourceImage;
+  aspect: AspectSetting;
+  effect: EffectParams;
+  mask: HTMLCanvasElement | null;
+  layer?: boolean;
+  type?: string;
+  maxLongEdge?: number;
+}): Promise<Blob> {
+  const base = prepareBase(opts.src, opts.aspect, opts.maxLongEdge ?? 4096);
   const { canvas, ctx } = canvas2d(base.width, base.height);
   const out = ctx.createImageData(base.width, base.height);
-  renderInto(base, effect, out);
+  const mask = maskForBase(opts.mask, opts.src, opts.aspect, base.width, base.height);
+  renderInto(base, opts.effect, out, { mask, layer: opts.layer });
   ctx.putImageData(out, 0, 0);
-  return new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not encode PNG'))), 'image/png'),
-  );
+  return toBlob(canvas, opts.type ?? 'image/png');
 }
 
 const VIDEO_TYPES = [
@@ -90,10 +122,13 @@ export async function recordVideo(opts: {
   aspect: AspectSetting;
   effect: EffectParams;
   motion: MotionParams;
+  mask: HTMLCanvasElement | null;
   seconds: number;
   longEdge: number;
   fps?: number;
   onProgress?: (fraction: number) => void;
+  /** Stops the recording early; the promise then rejects with an AbortError. */
+  signal?: AbortSignal;
 }): Promise<{ blob: Blob; ext: string }> {
   const mimeType = supportedVideoType();
   if (!mimeType) throw new Error('This browser cannot record video. Try Chrome, Edge, Firefox or Safari 14.1+.');
@@ -101,8 +136,9 @@ export async function recordVideo(opts: {
   const base = prepareBase(opts.src, opts.aspect, opts.longEdge, true);
   const { canvas, ctx } = canvas2d(base.width, base.height);
   const out = ctx.createImageData(base.width, base.height);
+  const mask = maskForBase(opts.mask, opts.src, opts.aspect, base.width, base.height);
 
-  renderInto(base, paramsAtTime(opts.effect, opts.motion, 0), out);
+  renderInto(base, paramsAtTime(opts.effect, opts.motion, 0), out, { mask });
   ctx.putImageData(out, 0, 0);
 
   const stream = canvas.captureStream(fps);
@@ -113,15 +149,17 @@ export async function recordVideo(opts: {
   const stopped = new Promise<void>((resolve) => (recorder.onstop = () => resolve()));
   recorder.start(250);
 
+  let aborted = false;
   await new Promise<void>((resolve) => {
     const start = performance.now();
     const tick = (now: number) => {
       const t = (now - start) / 1000;
-      if (t >= opts.seconds) {
+      if (opts.signal?.aborted) aborted = true;
+      if (t >= opts.seconds || aborted) {
         resolve();
         return;
       }
-      renderInto(base, paramsAtTime(opts.effect, opts.motion, t), out);
+      renderInto(base, paramsAtTime(opts.effect, opts.motion, t), out, { mask });
       ctx.putImageData(out, 0, 0);
       opts.onProgress?.(t / opts.seconds);
       requestAnimationFrame(tick);
@@ -132,6 +170,7 @@ export async function recordVideo(opts: {
   recorder.stop();
   await stopped;
   stream.getTracks().forEach((t) => t.stop());
+  if (aborted) throw new DOMException('Recording cancelled', 'AbortError');
   const type = mimeType.split(';')[0];
   return { blob: new Blob(chunks, { type }), ext: type === 'video/mp4' ? 'mp4' : 'webm' };
 }

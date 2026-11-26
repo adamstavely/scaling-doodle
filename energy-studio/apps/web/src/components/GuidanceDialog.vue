@@ -17,14 +17,21 @@ const content = html`<ol class="es-guidance">
     <strong>Shape the streaks with Mode.</strong> Straight is clean and graphic, Angle tilts the trails for a sense of
     speed, Flare fans them out from the centre.
   </li>
-  <li><strong>Blending</strong> softens the seam between the untouched image and the streaks.</li>
+  <li>
+    <strong>Blending</strong> softens the seam between the untouched image and the streaks; <strong>Streak length</strong>
+    and <strong>Fade out</strong> let the photo show again further along.
+  </li>
+  <li>
+    <strong>Protect the subject.</strong> Find subject (or paint a mask) keeps a person or product in front of the
+    streaks. The Colour tab tints and lights the streaks; the Presets tab has ready-made looks and Surprise me.
+  </li>
   <li>
     <strong>Motion settings</strong> animate the effect: Sweep moves the edge, Flow streams the colours while the edge
     holds, Pulse breathes the streaks. Download a looping video when you're happy.
   </li>
   <li>
-    Downloads are rendered at full resolution (up to 4096&nbsp;px on the long edge). Use the aspect ratio presets to
-    match the channel you're publishing to.
+    Downloads are rendered at full resolution (up to 4096&nbsp;px on the long edge). Export… also makes every social
+    size in one zip, the streaks alone on transparency, and GIF or animated WebP.
   </li>
 </ol>`;
 </script>
@@ -36,6 +43,6 @@ const content = html`<ol class="es-guidance">
     close-label="Got it"
     :open="state.showGuidance"
     :content="content"
-    @tc-open-change="(e: CustomEvent<{ open: boolean }>) => (state.showGuidance = e.detail.open)"
+    @tc-open-change.self="(e: CustomEvent<{ open: boolean }>) => (state.showGuidance = e.detail.open)"
   />
 </template>

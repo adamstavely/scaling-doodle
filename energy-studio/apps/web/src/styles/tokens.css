@@ -14,6 +14,7 @@
   --es-color-drop-outline: var(--tc-accent);
   --es-color-busy: var(--tc-surface-inverse); /* Render and recording progress pill over the preview */
   --es-color-busy-text: var(--tc-text-on-inverse);
+  --es-color-mask: var(--tc-accent); /* Tint over protected parts of the photo while painting the mask */
   --es-size-card-max-width: 1480px;
   --es-size-card-max-height: 900px;
   --es-size-card-min-height: 640px;
@@ -29,6 +30,14 @@
   --es-size-drop-outline: var(--tc-focus-ring-width);
   --es-size-backdrop-blur: 24px;
   --es-size-backdrop-bleed: 40px; /* How far the blurred backdrop reaches past the viewport, so its edges don't show */
+  --es-size-swatch: 20px;
+  --es-size-ramp: 8px; /* The tint gradient strip */
+  --es-size-keyframe-label: 64px;
+  --es-size-zoom-label: 44px;
+  --es-size-centre-marker: 18px; /* Burst centre on the preview */
+  --es-size-handle-line: var(--tc-focus-ring-width); /* Lines drawn over the image: compare divider, brush, burst centre */
+  --es-size-url-field: 360px;
+  --es-size-visually-hidden: 1px; /* Size of text kept for screen readers only */
   --es-space-page: var(--tc-space-10);
   --es-space-page-narrow: var(--tc-space-3);
   --es-space-card: var(--tc-space-6);
@@ -63,4 +72,6 @@
   --es-motion-tile-press-scale: 0.97;
   --es-effect-backdrop-opacity: 0.45; /* The blurred copy of the image behind the card */
   --es-effect-backdrop-saturate: 1.2;
+  --es-effect-mask-opacity: 0.45;
+  --es-effect-disabled-opacity: 0.4;
 }
