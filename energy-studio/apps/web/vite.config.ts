@@ -13,6 +13,6 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: { '/api': process.env.API_URL ?? 'http://localhost:3000' },
+    proxy: { '/api': process.env.ENERGY_STUDIO_API_URL ?? 'http://localhost:3300' },
   },
 });

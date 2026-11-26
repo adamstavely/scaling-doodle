@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 export const config = {
-  port: Number(process.env.PORT ?? 3000),
+  port: Number(process.env.PORT ?? 3300),
   uploadDir: process.env.UPLOAD_DIR ?? join(process.cwd(), 'uploads'),
   /** Largest accepted upload, in bytes. */
   maxUploadBytes: Number(process.env.MAX_UPLOAD_MB ?? 40) * 1024 * 1024,

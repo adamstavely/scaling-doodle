@@ -24,12 +24,12 @@ cd energy-studio
 npm install
 
 # development: two terminals
-npm run dev:server     # API on http://localhost:3000/api (builds core first)
-npm run dev:web        # UI on http://localhost:5173, proxies /api to :3000
+npm run dev:server     # API on http://localhost:3300/api (builds core first)
+npm run dev:web        # UI on http://localhost:5173, proxies /api to :3300
 
 # production: one process serves the API and the built UI
 npm run build
-npm start              # http://localhost:3000
+npm start              # http://localhost:3300
 
 npm test               # core unit tests + API e2e tests
 ```
@@ -41,14 +41,16 @@ in-browser render. The footer shows which mode is active.
 
 | Variable          | Default                | Purpose                                         |
 | ----------------- | ---------------------- | ----------------------------------------------- |
-| `PORT`            | `3000`                 | HTTP port                                       |
+| `PORT`            | `3300`                 | HTTP port                                       |
 | `UPLOAD_DIR`      | `./uploads`            | Where uploaded source images are stored         |
 | `MAX_UPLOAD_MB`   | `40`                   | Upload size limit                               |
 | `MAX_RENDER_EDGE` | `4096`                 | Longest edge of a server render                 |
 | `WEB_DIST`        | `../web/dist`          | Built UI to serve (skipped if it doesn't exist) |
 | `CORS_ORIGIN`     | reflect request origin | CORS origin for split deployments               |
 
-On the client, set `VITE_API_BASE` if the API isn't at `/api` on the same origin.
+The default port is 3300 so it can run alongside intellect-api on 3000. If you change it, point the dev UI at it
+with `ENERGY_STUDIO_API_URL=http://localhost:<port> npm run dev:web`. On the client, set `VITE_API_BASE` if the API
+isn't at `/api` on the same origin.
 
 ## Controls
 
