@@ -10,4 +10,8 @@ export const config = {
   /** Built Vue app to serve in production (optional). */
   webDist: process.env.WEB_DIST ?? join(__dirname, '..', '..', 'web', 'dist'),
   corsOrigin: process.env.CORS_ORIGIN ?? true,
+  /** Hugging Face model used to find the subject of a photo. */
+  subjectModel: process.env.SUBJECT_MODEL ?? 'onnx-community/BiRefNet_lite-ONNX',
+  /** Where the downloaded subject model is kept between restarts. */
+  subjectModelCache: process.env.SUBJECT_MODEL_CACHE ?? join(process.cwd(), '.model-cache'),
 };

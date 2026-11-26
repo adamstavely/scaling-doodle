@@ -39,7 +39,7 @@ describe('Energy Studio API', () => {
 
   beforeAll(async () => {
     const mod = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = mod.createNestApplication();
+    app = mod.createNestApplication({ bodyParser: false });
     configureApp(app);
     await app.init();
   });
@@ -111,4 +111,85 @@ describe('Energy Studio API', () => {
       .post('/api/render')
       .send({ imageId: '00000000-0000-4000-8000-000000000000', effect, aspect: { preset: '1:1', customWidth: 100, customHeight: 100 } })
       .expect(404));
+
+  const square = { preset: '1:1', customWidth: 100, customHeight: 100 };
+  const original = { preset: 'original', customWidth: 100, customHeight: 100 };
+
+  it('accepts the newer effect settings', () =>
+    request(app.getHttpServer())
+      .post('/api/render')
+      .send({
+        imageId,
+        effect: {
+          ...effect, mode: 'wave', wave: 0.5, length: 0.6, fade: 0.3, hue: 40, saturation: 1.3, tintAmount: 0.4,
+          tintStart: '#112233', tintEnd: '#ffeedd', glow: 0.2, extraAxes: [{ area: 'right', axis: 0.8 }],
+        },
+        aspect: { ...square, focusX: 0.2, focusY: 0.8 },
+      })
+      .expect(200));
+
+  it('renders only the streaks as a transparent layer, and refuses JPEG for it', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/api/render')
+      .send({ imageId, effect: { ...effect, axis: 0.5 }, aspect: original, layer: true })
+      .expect(200);
+    const { data, info } = await pixels(res.body);
+    expect(data[3]).toBe(255); // left of the axis: streak
+    expect(data[(info.width - 1) * 4 + 3]).toBe(0); // right of it: transparent
+    await request(app.getHttpServer())
+      .post('/api/render')
+      .send({ imageId, effect, aspect: original, layer: true, format: 'jpeg' })
+      .expect(400);
+  });
+
+  it('keeps the masked subject in front of the streaks', async () => {
+    // Display image is 20x40: protect its top-left quarter.
+    const raw = Buffer.alloc(20 * 40);
+    for (let y = 0; y < 20; y++) for (let x = 0; x < 10; x++) raw[y * 20 + x] = 255;
+    const png = await sharp(raw, { raw: { width: 20, height: 40, channels: 1 } }).png().toBuffer();
+    // Axis at the bottom-right column: the streaks paint blue (the bottom half's colour) only where rows are blue,
+    // so use a vertical effect from the bottom edge instead: every column becomes its bottom (blue) pixel.
+    const res = await request(app.getHttpServer())
+      .post('/api/render')
+      .send({
+        imageId,
+        effect: { ...effect, area: 'top', axis: 1 },
+        aspect: original,
+        mask: `data:image/png;base64,${png.toString('base64')}`,
+      })
+      .expect(200);
+    const { data } = await pixels(res.body);
+    expect([data[0], data[2]]).toEqual([255, 0]); // protected: still red
+    const unprotected = (0 * 20 + 15) * 4;
+    expect([data[unprotected], data[unprotected + 2]]).toEqual([0, 255]); // streaked blue
+  });
+
+  it('renders an animated GIF and WebP of the motion', async () => {
+    for (const format of ['gif', 'webp']) {
+      const res = await request(app.getHttpServer())
+        .post('/api/render/animation')
+        .send({
+          imageId, effect: { ...effect, area: 'top', axis: 0.5 }, aspect: original, format, fps: 10, seconds: 1,
+          motion: { type: 'keyframes', amount: 0, duration: 1, loop: 'pingpong', easing: false,
+            keyframes: { from: { axis: 0.2 }, to: { axis: 0.8 } } },
+        })
+        .expect(200)
+        .expect('Content-Type', new RegExp(`image/${format}`));
+      // The encoders merge identical neighbouring frames, so count "more than one" rather than exactly 10.
+      const meta = await sharp(res.body, { animated: true }).metadata();
+      expect(meta.pages).toBeGreaterThan(1);
+    }
+  });
+
+  it('refuses animations that would be too large', () =>
+    request(app.getHttpServer())
+      .post('/api/render/animation')
+      .send({ imageId, effect, aspect: { preset: 'custom', customWidth: 1280, customHeight: 1280 }, format: 'gif',
+        fps: 30, seconds: 30, maxLongEdge: 1280, motion: { type: 'flow', amount: 0.3, duration: 4, loop: 'loop', easing: true } })
+      .expect(400));
+
+  it('refuses URLs on the private network', async () => {
+    for (const url of ['http://127.0.0.1/a.png', 'http://localhost/a.png', 'http://[::1]/x', 'ftp://example.com/x.png', 'nonsense'])
+      await request(app.getHttpServer()).post('/api/images/from-url').send({ url }).expect(400);
+  });
 });

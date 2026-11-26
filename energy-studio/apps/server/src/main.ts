@@ -9,7 +9,7 @@ import { config } from './config';
 import { configureApp } from './setup';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
   configureApp(app);
   app.enableCors({ origin: config.corsOrigin, exposedHeaders: ['Content-Disposition', 'X-Image-Width', 'X-Image-Height'] });
 
