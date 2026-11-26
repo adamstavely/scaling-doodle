@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import request from 'supertest';
 
-const uploadDir = mkdtempSync(join(tmpdir(), 'energy-studio-'));
+const uploadDir = mkdtempSync(join(tmpdir(), '.energy-studio-')); // a dot-folder, like a checkout under .claude/
 process.env.UPLOAD_DIR = uploadDir;
 
 // Imported after UPLOAD_DIR is set, since config reads it at load time.
@@ -55,6 +55,11 @@ describe('Energy Studio API', () => {
     const res = await request(app.getHttpServer()).post('/api/images').attach('image', await rotatedFixture(), 'x.png').expect(201);
     expect(res.body).toMatchObject({ width: 20, height: 40, format: 'png' });
     imageId = res.body.id;
+  });
+
+  it('serves the stored file', async () => {
+    const res = await request(app.getHttpServer()).get(`/api/images/${imageId}/file`).expect(200).expect('Content-Type', /image\/png/);
+    expect(res.body.length).toBeGreaterThan(0);
   });
 
   it('rejects non-images', () =>

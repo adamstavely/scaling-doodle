@@ -10,12 +10,26 @@ for (const [net, prefix] of [
   ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12],
   ['192.0.0.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['224.0.0.0', 4], ['240.0.0.0', 4],
 ] as const) blocked.addSubnet(net, prefix, 'ipv4');
-for (const [net, prefix] of [['::', 128], ['::1', 128], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8], ['::ffff:0:0', 96]] as const)
+// IPv4-mapped IPv6 (::ffff:a.b.c.d) is unwrapped and checked as IPv4 instead: a ::ffff:0:0/96 rule here would also
+// match every plain IPv4 address, because BlockList compares IPv4 against IPv6 rules in mapped form.
+for (const [net, prefix] of [['::', 128], ['::1', 128], ['fc00::', 7], ['fe80::', 10], ['ff00::', 8]] as const)
   blocked.addSubnet(net, prefix, 'ipv6');
 
 export function isPublicAddress(address: string): boolean {
   const family = isIP(address);
   if (!family) return false;
+  if (family === 6) {
+    const mapped = /^::ffff:(.+)$/i.exec(address);
+    if (mapped) {
+      const tail = mapped[1];
+      if (isIP(tail) === 4) return isPublicAddress(tail);
+      const hex = /^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(tail);
+      if (!hex) return false;
+      const hi = parseInt(hex[1], 16);
+      const lo = parseInt(hex[2], 16);
+      return isPublicAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+    }
+  }
   return !blocked.check(address, family === 6 ? 'ipv6' : 'ipv4');
 }
 

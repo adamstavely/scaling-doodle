@@ -115,7 +115,7 @@ export class RenderService {
     });
     const buffer =
       dto.format === 'gif'
-        ? await image.gif({ loop: 0, delay, effort: 7, dither: 0.6 }).toBuffer()
+        ? await image.gif({ loop: 0, delay, effort: 2, dither: 0.5 }).toBuffer()
         : await image.webp({ loop: 0, delay, quality: 82 }).toBuffer();
     return { buffer, mime: `image/${dto.format}`, width: base.width, height: base.height };
   }

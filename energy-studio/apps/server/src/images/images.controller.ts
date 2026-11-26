@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
+import { basename, dirname } from 'node:path';
 import { IsString, MaxLength } from 'class-validator';
 import { config } from '../config';
 import { fetchImage } from './fetch-image';
@@ -62,6 +63,7 @@ export class ImagesController {
   async file(@Param('id', new ParseUUIDPipe()) id: string, @Res() res: Response) {
     const { info, path } = await this.images.get(id);
     res.type(info.format === 'jpeg' ? 'image/jpeg' : `image/${info.format}`);
-    res.sendFile(path);
+    // Relative to the upload folder: sendFile refuses absolute paths that pass through a dot-folder.
+    res.sendFile(basename(path), { root: dirname(path) });
   }
 }
