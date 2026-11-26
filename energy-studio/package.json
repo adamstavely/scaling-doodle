@@ -1,0 +1,13 @@
+{
+  "name": "energy-studio",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "npm run build -w @energy-studio/core && npm run build -w @energy-studio/server && npm run build -w @energy-studio/web",
+    "dev:server": "npm run build -w @energy-studio/core && npm run start:dev -w @energy-studio/server",
+    "dev:web": "npm run dev -w @energy-studio/web",
+    "start": "npm run start:prod -w @energy-studio/server",
+    "test": "npm run test -w @energy-studio/core && npm run test -w @energy-studio/server"
+  }
+}

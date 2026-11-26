@@ -58,3 +58,10 @@ The typed client in `src/app/api/generated` is generated from `api/openapi.json`
 ## Auth (stub)
 
 Real auth comes later. The header's role switch picks Chief view (Helena Vance) or PI view (Marcus Okonkwo), and `userInterceptor` sends that person's id as `X-Intellect-User`.
+
+## Energy Studio
+
+`energy-studio/` is a separate Vue 3 + NestJS tool that adds motion streaks to still images. It has its own
+dependencies, tests and CI workflow, and isn't part of the Intellect build or Docker image. It runs on port 3300, so it doesn't clash with intellect-api on
+3000. See
+[`energy-studio/README.md`](energy-studio/README.md).

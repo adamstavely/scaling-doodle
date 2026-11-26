@@ -10,3 +10,4 @@ e2e
 test-results
 playwright-report
 src/app/api/generated
+energy-studio

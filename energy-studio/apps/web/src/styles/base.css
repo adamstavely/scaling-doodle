@@ -1,0 +1,69 @@
+/* Page basics. Everything comes from Trench Coat's tokens (Clean look) and Energy Studio's own (./tokens.css). */
+@import '@adamstavely/trenchcoat/tokens.css';
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--es-font-family);
+  font-size: var(--es-font-body-size);
+  line-height: var(--es-font-body-line-height);
+  color: var(--tc-text-primary);
+  background: var(--es-color-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* Section heading inside the settings panel */
+.es-heading {
+  font-size: var(--es-font-heading-size);
+  font-weight: var(--es-font-heading-weight);
+  line-height: var(--es-font-heading-line-height);
+  color: var(--tc-title-color);
+}
+
+/* A line of help or status text */
+.es-note {
+  font-size: var(--tc-subtitle-font-size);
+  line-height: var(--tc-subtitle-line-height);
+  color: var(--tc-subtitle-color);
+}
+
+/* The steps in the Guidance dialog (rendered by tc-dialog, so styled here rather than in a component) */
+.es-guidance {
+  margin: 0;
+  padding-left: var(--tc-space-5);
+  display: grid;
+  gap: var(--tc-space-2-5);
+  font-size: var(--tc-font-size-lg);
+  line-height: var(--tc-line-height-relaxed);
+  color: var(--tc-text-secondary);
+}
+.es-guidance strong {
+  color: var(--tc-text-primary);
+  font-weight: var(--tc-font-weight-semibold);
+}
+
+/* Hidden from view but still read out (and the parking spot for dialog bodies until tc-dialog takes them) */
+.es-visually-hidden {
+  position: absolute;
+  width: var(--es-size-visually-hidden);
+  height: var(--es-size-visually-hidden);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

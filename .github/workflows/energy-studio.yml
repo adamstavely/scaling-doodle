@@ -1,0 +1,28 @@
+name: Energy Studio
+
+on:
+  push:
+    branches: [main]
+    paths: ['energy-studio/**', '.github/workflows/energy-studio.yml']
+  pull_request:
+    paths: ['energy-studio/**', '.github/workflows/energy-studio.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: energy-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: energy-studio/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
